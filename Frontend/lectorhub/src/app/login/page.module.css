@@ -1,0 +1,251 @@
+
+
+.container{
+    width: 100%;
+    min-height: 100vh;
+    background-color: #f3e6cd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.card{
+    width:1150px;
+    height:650px;
+    background:#fff;
+    display:flex;
+    border-radius:22px;
+    overflow:hidden;
+    box-shadow:none;
+}
+
+/* ========================= */
+/* LADO ESQUERDO */
+/* ========================= */
+
+.leftSide{
+    width:50%;
+    background:#4A0E17;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+}
+
+.leftSide img{
+    max-width:80%;
+    height:auto;
+}
+
+/* ========================= */
+/* LADO DIREITO */
+/* ========================= */
+
+.rightSide{
+    width:50%;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    padding:70px;
+}
+
+.rightSide h2{
+    text-align:center;
+    color:#4A0E17;
+    font-size:52px;
+    font-family:Georgia, serif;
+    margin-bottom:45px;
+}
+
+/* ========================= */
+/* FORMULÁRIO */
+/* ========================= */
+
+.form{
+    width:100%;
+    max-width:420px;
+    margin:0 auto;
+}
+
+/* Bootstrap Form Floating */
+
+:global(.form-floating){
+    margin-bottom:20px;
+}
+
+:global(.form-floating > .form-control){
+    height:58px;
+    border-radius:8px;
+    border:1px solid #dbcdb4;
+}
+
+:global(.form-floating > label){
+    color:#666;
+}
+
+
+/* ========================= */
+/* OPÇÕES */
+/* ========================= */
+
+.options{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    width:100%;
+    margin:20px 0 30px;
+}
+
+.options a{
+    color:#4A0E17;
+    text-decoration:none;
+    font-size:15px;
+}
+
+.options a:hover{
+    text-decoration:underline;
+}
+
+/* ========================= */
+/* BOTÃO */
+/* ========================= */
+
+.loginButton{
+    width:100%;
+    background:#4A0E17 !important;
+    color:#fff !important;
+    border:none !important;
+    height:54px;
+    border-radius:8px;
+    font-size:18px;
+    font-weight:600;
+    transition:.3s;
+}
+
+.loginButton:hover{
+    background:#641320 !important;
+}
+
+/* ========================= */
+/* CADASTRO */
+/* ========================= */
+
+.register{
+    text-align:center;
+    margin-top:25px;
+}
+
+.register a{
+    color:#4A0E17;
+    font-weight:600;
+    text-decoration:none;
+}
+
+.register a:hover{
+    text-decoration:underline;
+}
+
+/* ========================= */
+/* DIVISOR */
+/* ========================= */
+
+.divider{
+    display:flex;
+    align-items:center;
+    width:100%;
+    margin:40px 0 25px;
+}
+
+.divider::before,
+.divider::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:#d6c7ac;
+}
+
+.divider span{
+    padding:0 18px;
+    color:#666;
+}
+
+/* ========================= */
+/* REDES SOCIAIS */
+/* ========================= */
+
+.social{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+}
+
+.social button{
+    width:58px;
+    height:58px;
+    border-radius:50%;
+    border:1px solid #dbcdb4;
+    background:#fff;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.social button:hover{
+    background:#4A0E17;
+    color:#fff;
+}
+
+/* ========================= */
+/* RESPONSIVO */
+/* ========================= */
+
+@media (max-width:992px){
+
+    .card{
+        flex-direction:column;
+        width:100%;
+        height:auto;
+    }
+
+    .leftSide{
+        width:100%;
+        height:300px;
+    }
+
+    .rightSide{
+        width:100%;
+        padding:40px 30px;
+    }
+
+    .rightSide h2{
+        font-size:42px;
+    }
+
+    .form{
+        max-width:100%;
+    }
+
+    .options{
+        flex-direction:column;
+        gap:15px;
+        align-items:flex-start;
+    }
+}
+
+.registerText{
+    margin-top:25px;
+    text-align:center;
+    font-size:16px;
+    font-weight:bold;
+    color:#4A0E17;
+}
+
+.registerText span{
+    cursor:pointer;
+    text-decoration:none;
+}
+
+.registerText span:hover{
+    text-decoration:underline;
+}
