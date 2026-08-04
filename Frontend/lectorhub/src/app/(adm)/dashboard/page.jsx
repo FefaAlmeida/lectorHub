@@ -3,7 +3,6 @@ import styles from './page.module.css';
 export default function Dashboard() {
   return (
     <div className={styles.adminLayout}>
-      {/* Menu Lateral Admin */}
       <aside className={styles.sidebar}>
         <a href="/dashboard" className={`${styles.navItem} ${styles.active}`}>Dashboard</a>
         <a href="#" className={styles.navItem}>Acervo de Livros</a>
@@ -12,8 +11,7 @@ export default function Dashboard() {
         <a href="#" className={styles.navItem}>Relatórios</a>
       </aside>
 
-      {/* Conteúdo Principal */}
-      <main className={styles.contentArea}>
+=      <main className={styles.contentArea}>
         <div className={styles.pageTitle}>
           <h1>Visão Geral do Sistema</h1>
           <p>Painel de controle e monitoramento da biblioteca.</p>
@@ -39,7 +37,6 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* Blocos de Ações e Listas */}
         <div className={styles.mainGrid}>
           <section className={styles.cardSection}>
             <h2>Operações do Balcão</h2>

@@ -4,7 +4,7 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.logo}>
-        
+        <img src="/logo.png" alt="LectorHub Logo" className={styles.logoImage} />
         <span>Minha Biblioteca</span>
       </div>
 
