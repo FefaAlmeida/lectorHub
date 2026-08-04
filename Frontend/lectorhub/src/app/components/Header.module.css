@@ -1,93 +1,43 @@
 .header {
-    height: 72px;
-    background: #FCF7F1;
-    border-bottom: 1px solid #E8DDD1;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    padding: 0 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #e2e0c9;
+  border-bottom: 1px solid #eee;
 }
 
-.header-left{
-    display:flex;
-    align-items:center;
-    gap:14px;
+.logo {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #5c1421;
 }
 
-.logo{
-    width:44px;
-    height:44px;
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.logo-text h2{
-    font-size:30px;
-    font-family: Georgia, serif;
-    color:#741A1A;
-    font-weight:600;
-    margin:0;
+.bellBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #5c1421;
+  display: flex;
+  align-items: center;
 }
 
-.logo-text span{
-    display:block;
-    margin-top:2px;
-    font-size:13px;
-    color:#666;
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
 }
 
-.header-right{
-    display:flex;
-    align-items:center;
-    gap:24px;
+.userInfo strong {
+  color: #333;
 }
 
-.notification-btn{
-    width:40px;
-    height:40px;
-    border:none;
-    background:transparent;
-    cursor:pointer;
-    color:#741A1A;
-    font-size:20px;
-}
-
-.notification-btn:hover{
-    background:#f3e8dd;
-    border-radius:50%;
-}
-
-.user-info{
-    display:flex;
-    align-items:center;
-    gap:12px;
-}
-
-.avatar{
-    width:46px;
-    height:46px;
-    border-radius:50%;
-    background:#741A1A;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    color:#fff;
-    font-size:20px;
-}
-
-.user-text{
-    display:flex;
-    flex-direction:column;
-}
-
-.user-text strong{
-    font-size:15px;
-    color:#4d2323;
-}
-
-.user-text span{
-    font-size:13px;
-    color:#7b7b7b;
+.userInfo small {
+  color: #666;
 }
