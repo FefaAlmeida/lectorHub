@@ -1,0 +1,25 @@
+import "./globals.css";
+import { Provider } from "@/components/ui/provider";
+import Header from "@/components/header";
+
+export const metadata = {
+ title: "Lector Hub",
+ description: "Descrição Lector Hub",
+};
+
+export default function RootLayout({ children }) {
+ return (
+  <html
+   lang="pt-BR"
+   className="h-full w-full antialiased"
+   suppressHydrationWarning
+  >
+   <body className="min-h-full flex flex-col">
+    <Provider>
+     <Header />
+     <main className="flex-1">{children}</main>
+    </Provider>
+   </body>
+  </html>
+ );
+}
