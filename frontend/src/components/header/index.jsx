@@ -13,13 +13,11 @@ const BORDER = "#EFEBE3";
 
 const menuItems = [{ value: "perfil", label: "Meu Perfil", icon: FiUser }];
 
-// Underline animado (igual ao do "minha biblioteca")
 const underlineVariants = {
  rest: { scaleX: 0, opacity: 0 },
  hover: { scaleX: 1, opacity: 1 },
 };
 
-// Apenas para aparecer suavemente no dropdown
 const itemVariants = {
  hidden: { opacity: 0, y: -6 },
  visible: { opacity: 1, y: 0 },
@@ -28,10 +26,8 @@ const itemVariants = {
 export default function Header({ userName = "usuario", hasUnread = true }) {
  const [isOpen, setIsOpen] = useState(false);
  const [tollTrigger, setTollTrigger] = useState(false);
+ const [hoveredItem, setHoveredItem] = useState(null); // ← corrigido
  const shouldReduceMotion = useReducedMotion();
-
- // Estado de hover para os itens do menu (perfil e sair)
- const [hoveredItem, setHoveredItem] = useState(null);
 
  useEffect(() => {
   if (shouldReduceMotion || !hasUnread) return;
@@ -42,12 +38,6 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
    clearTimeout(t2);
   };
  }, [hasUnread, shouldReduceMotion]);
-
- const handleBellHover = () => {
-  if (shouldReduceMotion) return;
-  setTollTrigger(true);
-  setTimeout(() => setTollTrigger(false), 650);
- };
 
  const initial = userName?.trim()?.[0]?.toUpperCase() || "?";
 
@@ -94,7 +84,7 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
       </Text>
      </Flex>
 
-     {/* Centro – minha biblioteca (underline no hover) */}
+     {/* Centro – minha biblioteca */}
      <Box position="relative" color="black">
       <motion.div
        initial="rest"
@@ -138,9 +128,6 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
         tollTrigger ? { rotate: [0, -14, 11, -8, 5, -2, 0] } : { rotate: 0 }
        }
        transition={{ duration: 0.9, ease: "easeInOut" }}
-       whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }}
-       whileTap={shouldReduceMotion ? undefined : { scale: 0.92 }}
-       onHoverStart={handleBellHover}
        style={{
         position: "relative",
         background: "transparent",
@@ -218,8 +205,6 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
          type="button"
          role="group"
          className="lh-focusable"
-         whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
-         whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
          style={{
           display: "flex",
           alignItems: "center",
@@ -252,26 +237,38 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
           </Text>
          </Flex>
 
-         <Flex
-          w="38px"
-          h="38px"
-          borderRadius="full"
-          align="center"
-          justify="center"
-          color="white"
-          fontWeight="medium"
-          fontSize="0.9rem"
-          bg="black"
-          border="1.5px solid"
-          borderColor={ACCENT}
-          transition="all 0.25s ease"
-          _groupHover={{
-           borderColor: ACCENT,
-           boxShadow: `0 0 0 2px ${ACCENT_SOFT}`,
-          }}
+         {/* Avatar com animação ao abrir */}
+         <motion.div
+          animate={
+           shouldReduceMotion
+            ? undefined
+            : isOpen
+              ? { scale: 1.08, rotate: -3 }
+              : { scale: 1, rotate: 0 }
+          }
+          transition={{ duration: 0.25, ease: EASE }}
          >
-          {initial}
-         </Flex>
+          <Flex
+           w="38px"
+           h="38px"
+           borderRadius="full"
+           align="center"
+           justify="center"
+           color="white"
+           fontWeight="medium"
+           fontSize="0.9rem"
+           bg="black"
+           border="1.5px solid"
+           borderColor={ACCENT}
+           transition="all 0.25s ease"
+           _groupHover={{
+            borderColor: ACCENT,
+            boxShadow: `0 0 0 2px ${ACCENT_SOFT}`,
+           }}
+          >
+           {initial}
+          </Flex>
+         </motion.div>
         </motion.button>
        </Menu.Trigger>
 
@@ -279,33 +276,29 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
         <Menu.Positioner>
          <Menu.Content
           position="relative"
-          minW="240px"
-          boxShadow="0 24px 48px -24px rgba(122,49,49,0.25), 0 6px 16px rgba(0,0,0,0.06)"
+          minW="260px"
+          boxShadow="
+                      0 24px 48px -16px rgba(122,49,49,0.18),
+                      0 12px 24px -8px rgba(0,0,0,0.08),
+                      0 0 0 1px rgba(0,0,0,0.03)
+                    "
           border="1px solid"
-          borderColor={BORDER}
-          borderRadius="xl"
-          bg="white"
-          backdropFilter="blur(4px)"
+          borderColor="rgba(122,49,49,0.12)"
+          borderRadius="2xl"
+          bg="rgba(255,255,255,0.92)"
+          backdropFilter="blur(16px)"
           zIndex={200}
-          p="0.5rem"
+          p="0.65rem"
           outline="none"
           overflow="hidden"
           _before={{
            content: '""',
            position: "absolute",
            top: 0,
-           left: "10%",
-           right: "10%",
+           left: "15%",
+           right: "15%",
            height: "1px",
            background: `linear-gradient(90deg, transparent, ${ACCENT_SOFT}, transparent)`,
-          }}
-          _open={{
-           animationName: "fade-in, scale-in",
-           animationDuration: "180ms",
-          }}
-          _closed={{
-           animationName: "fade-out, scale-out",
-           animationDuration: "120ms",
           }}
          >
           {/* Cartão do perfil */}
@@ -313,13 +306,13 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
            initial="hidden"
            animate={isOpen ? "visible" : "hidden"}
            variants={itemVariants}
-           transition={{ duration: 0.18, ease: EASE, delay: 0 }}
+           transition={{ duration: 0.2, ease: EASE, delay: 0.02 }}
           >
-           <Flex align="center" gap="0.75rem" px="0.6rem" py="0.65rem">
+           <Flex align="center" gap="0.85rem" px="0.6rem" py="0.7rem">
             <Flex
              flexShrink={0}
-             w="42px"
-             h="42px"
+             w="44px"
+             h="44px"
              borderRadius="full"
              align="center"
              justify="center"
@@ -328,7 +321,8 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
              borderColor={ACCENT}
              color="white"
              fontWeight="medium"
-             fontSize="1rem"
+             fontSize="1.05rem"
+             boxShadow={`0 0 0 2px ${ACCENT_SOFT}`}
             >
              {initial}
             </Flex>
@@ -349,9 +343,15 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
            </Flex>
           </motion.div>
 
-          <Menu.Separator my="0.3rem" borderColor={BORDER} />
+          {/* Separador estilizado */}
+          <Box
+           my="0.35rem"
+           mx="0.5rem"
+           height="1px"
+           background={`linear-gradient(90deg, transparent, ${BORDER}, transparent)`}
+          />
 
-          {/* Meu Perfil – com hover controlado manualmente */}
+          {/* Itens do menu */}
           {menuItems.map((item, i) => {
            const ItemIcon = item.icon;
            const isHovered = hoveredItem === item.value;
@@ -372,51 +372,48 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
               animate={isOpen ? "visible" : "hidden"}
               variants={itemVariants}
               transition={{
-               duration: 0.18,
+               duration: 0.2,
                ease: EASE,
-               delay: (i + 1) * 0.035,
+               delay: (i + 1) * 0.04,
               }}
               style={{
                display: "flex",
                alignItems: "center",
-               gap: "0.65rem",
+               gap: "0.7rem",
                fontSize: "0.9rem",
-               color: "black",
-               padding: "0.55rem 0.65rem",
-               borderRadius: "8px",
+               color: isHovered ? ACCENT : "black",
+               padding: "0.6rem 0.75rem",
+               borderRadius: "10px",
                width: "100%",
                position: "relative",
                cursor: "pointer",
+               background: isHovered ? "rgba(122,49,49,0.05)" : "transparent",
+               transition: "background 0.2s ease, color 0.2s ease",
               }}
              >
-              <ItemIcon size={16} style={{ flexShrink: 0 }} />
-              <span>{item.label}</span>
-              {/* Underline controlado pelo estado isHovered */}
-              <motion.div
-               initial={{ scaleX: 0, opacity: 0 }}
-               animate={{
-                scaleX: isHovered ? 1 : 0,
-                opacity: isHovered ? 1 : 0,
-               }}
-               transition={{ duration: 0.3, ease: EASE }}
+              <ItemIcon
+               size={16}
                style={{
-                position: "absolute",
-                left: "0.65rem",
-                right: "0.65rem",
-                bottom: "0",
-                height: "2px",
-                background: ACCENT,
-                transformOrigin: "left",
+                flexShrink: 0,
+                transition: "color 0.2s ease",
+                color: isHovered ? ACCENT : "currentColor",
                }}
               />
+              <span>{item.label}</span>
              </motion.div>
             </Menu.Item>
            );
           })}
 
-          <Menu.Separator my="0.3rem" borderColor={BORDER} />
+          {/* Separador estilizado */}
+          <Box
+           my="0.35rem"
+           mx="0.5rem"
+           height="1px"
+           background={`linear-gradient(90deg, transparent, ${BORDER}, transparent)`}
+          />
 
-          {/* Sair – mesmo esquema */}
+          {/* Sair */}
           <Menu.Item
            value="sair"
            p={0}
@@ -432,43 +429,29 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
             animate={isOpen ? "visible" : "hidden"}
             variants={itemVariants}
             transition={{
-             duration: 0.18,
+             duration: 0.2,
              ease: EASE,
-             delay: (menuItems.length + 1) * 0.035,
+             delay: (menuItems.length + 1) * 0.04,
             }}
             style={{
              display: "flex",
              alignItems: "center",
-             gap: "0.65rem",
+             gap: "0.7rem",
              fontSize: "0.9rem",
-             color: ACCENT,
+             color: hoveredItem === "sair" ? ACCENT : ACCENT,
              fontWeight: 500,
-             padding: "0.55rem 0.65rem",
-             borderRadius: "8px",
+             padding: "0.6rem 0.75rem",
+             borderRadius: "10px",
              width: "100%",
              position: "relative",
              cursor: "pointer",
+             background:
+              hoveredItem === "sair" ? "rgba(122,49,49,0.06)" : "transparent",
+             transition: "background 0.2s ease",
             }}
            >
             <FiLogOut size={16} style={{ flexShrink: 0 }} />
             <span>Sair</span>
-            <motion.div
-             initial={{ scaleX: 0, opacity: 0 }}
-             animate={{
-              scaleX: hoveredItem === "sair" ? 1 : 0,
-              opacity: hoveredItem === "sair" ? 1 : 0,
-             }}
-             transition={{ duration: 0.3, ease: EASE }}
-             style={{
-              position: "absolute",
-              left: "0.65rem",
-              right: "0.65rem",
-              bottom: "0",
-              height: "2px",
-              background: ACCENT,
-              transformOrigin: "left",
-             }}
-            />
            </motion.div>
           </Menu.Item>
          </Menu.Content>

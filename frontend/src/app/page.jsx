@@ -1,6 +1,6 @@
 "use client";
 
-import { Box } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 
 import NoiseOverlay from "@/components/ui/noise-overlay";
 
@@ -21,7 +21,9 @@ export default function Home() {
 
    <Hero />
    <Features />
-   <Cta />
+   <Box backgroundColor={"black"}>
+    <Cta />
+   </Box>
   </Box>
  );
 }

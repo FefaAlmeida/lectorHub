@@ -18,19 +18,19 @@ const ACCENT = "#7A3131"; // vinho — usado só como acento pontual
 const FEATURES = [
  {
   icon: FiEye,
-  title: "design invisível",
+  title: "Design invisível",
   desc:
    "nossa interface foi projetada para não ser notada. sem botões piscando, sem excesso de cores. apenas você, a tela limpa e o texto.",
  },
  {
   icon: FiFeather,
-  title: "curadoria artesanal",
+  title: "Curadoria artesanal",
   desc:
    "esqueça as recomendações genéricas de algoritmos. nosso acervo é rigorosamente selecionado por especialistas e críticos literários.",
  },
  {
   icon: FiLayout,
-  title: "tipografia fluida",
+  title: "Tipografia fluida",
   desc:
    "fontes, contrastes e espaçamentos estudados cientificamente para reduzir a fadiga visual.",
  },
@@ -69,39 +69,41 @@ function FeatureCard({ item }) {
     },
    }}
   >
-   <VStack align="flex-start" spacing={6}>
+   <VStack align="center" spacing={5}>
+    {/* Ícone centralizado */}
     <Flex
      w={14}
      h={14}
      borderRadius="full"
      align="center"
      justify="center"
-     bg={hover ? ACCENT : "white"}
      border="1.5px solid"
      borderColor={hover ? ACCENT : "#E4DED2"}
-     color={hover ? "white" : "gray.900"}
+     color={hover ? ACCENT : "gray.900"}
      transform={hover ? "scale(1.06)" : "scale(1)"}
      transition={`all 0.4s ${EASE}`}
     >
      <Icon as={item.icon} w={6} h={6} />
     </Flex>
 
-    <VStack align="flex-start" spacing={2}>
-     <Heading
-      fontSize="xl"
-      fontWeight="semibold"
-      color="gray.900"
-      fontFamily="Georgia, 'Source Serif Pro', ui-serif, serif"
-     >
-      {item.title}
-     </Heading>
-     <Box
-      w={hover ? "32px" : "0px"}
-      h="2px"
-      bg={ACCENT}
-      transition={`width 0.45s ${EASE}`}
-     />
-    </VStack>
+    {/* Linha decorativa centralizada (agora depois do ícone) */}
+    <Box
+     alignSelf="center"
+     w={hover ? "40px" : "0px"}
+     h="2px"
+     bg={ACCENT}
+     transition={`width 0.45s ${EASE}`}
+    />
+
+    {/* Título e descrição continuam à esquerda */}
+    <Heading
+     fontSize="xl"
+     fontWeight="semibold"
+     color="gray.900"
+     fontFamily="Georgia, 'Source Serif Pro', ui-serif, serif"
+    >
+     {item.title}
+    </Heading>
 
     <Text color="gray.600" lineHeight="tall" fontSize="md">
      {item.desc}
@@ -113,19 +115,26 @@ function FeatureCard({ item }) {
 
 export default function Features() {
  return (
-  <Box bg="white" py={{ base: 20, md: 32 }} position="relative" zIndex={1}>
+  <Box
+   py={{ base: 20, md: 32 }}
+   position="relative"
+   zIndex={1}
+   boxShadow="0 -8px 24px -12px rgba(0,0,0,0.15)"
+  >
    <Container maxW="6xl">
     <VStack spacing={20}>
      <FadeIn>
-      <VStack spacing={4} textAlign="center" maxW="2xl" mx="auto">
+      <VStack spacing={4} textAlign="center" maxW="2xl" mx="auto" p={50}>
        <Heading
         fontSize={{ base: "3xl", md: "5xl" }}
-        fontWeight="medium"
+        fontWeight="600"
         letterSpacing="tight"
+        lineHeight={1}
+        color={"gray.800"}
        >
-        por que escolher nossa plataforma?
+        Por que escolher nossa plataforma?
        </Heading>
-       <Text color="gray.500" fontSize="lg" lineHeight="relaxed">
+       <Text color="gray.600" fontSize="lg" lineHeight="relaxed" mt={1}>
         diferenciais pensados exclusivamente para quem leva a leitura a sério e
         não abre mão de qualidade.
        </Text>
@@ -136,6 +145,7 @@ export default function Features() {
       columns={{ base: 1, md: 3 }}
       spacing={{ base: 8, md: 10 }}
       w="full"
+      gap={4}
      >
       {FEATURES.map((item, i) => (
        <FadeIn key={item.title} delay={0.12 * (i + 1)}>
