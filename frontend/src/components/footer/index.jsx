@@ -18,7 +18,7 @@ export default function Footer() {
     align="center"
     fontSize="0.85rem"
    >
-    <Text as="span">© 2024 Sistema de Biblioteca</Text>
+    <Text as="span">© 2026 Sistema de Biblioteca</Text>
     <Text as="span">Todos os direitos reservados.</Text>
    </Flex>
   </Box>

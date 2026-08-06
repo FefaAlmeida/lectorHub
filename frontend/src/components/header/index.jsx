@@ -1,11 +1,7 @@
 "use client";
 
 import { Flex, Image, Text, Icon, Box, Menu, Portal } from "@chakra-ui/react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-
-// Componente de animação para o Menu Content
-const MenuContentMotion = motion.create(Menu.Content);
 
 export default function Header() {
  const [isOpen, setIsOpen] = useState(false);
@@ -92,7 +88,7 @@ export default function Header() {
     <Menu.Root
      open={isOpen}
      onOpenChange={(e) => setIsOpen(e.open)}
-     positioning={{ placement: "bottom-end", strategy: "fixed" }}
+     positioning={{ placement: "bottom-end" }}
     >
      <Menu.Trigger asChild>
       <Flex
@@ -151,94 +147,75 @@ export default function Header() {
      </Menu.Trigger>
 
      <Portal>
-      {/* Menu.Positioner é obrigatório: é ele quem fornece o
-                contexto de posicionamento (floating-ui) pro Menu.Content.
-                Sem ele o menu não abre corretamente. */}
       <Menu.Positioner>
-       <AnimatePresence>
-        {isOpen && (
-         <MenuContentMotion
-          initial={{
-           opacity: 0,
-           y: -8,
-           scale: 0.95,
-          }}
-          animate={{
-           opacity: 1,
-           y: 0,
-           scale: 1,
-          }}
-          exit={{
-           opacity: 0,
-           y: -8,
-           scale: 0.95,
-          }}
-          transition={{
-           duration: 0.2,
-           ease: [0.4, 0, 0.2, 1], // Curva de easing suave
-          }}
-          transformOrigin="top right"
-          minW="220px"
-          boxShadow="0 10px 40px -10px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.05)"
-          border="1px solid"
-          borderColor="gray.100"
-          borderRadius="xl"
-          bg="white"
-          zIndex={200}
-          p="0.4rem"
-          outline="none"
-         >
-          <Menu.Item
-           value="perfil"
-           fontSize="0.9rem"
-           color="gray.700"
-           cursor="pointer"
-           borderRadius="md"
-           transition="all 0.15s"
-           _hover={{ bg: "gray.50", color: "gray.900" }}
-          >
-           Meu Perfil
-          </Menu.Item>
-          <Menu.Item
-           value="config"
-           fontSize="0.9rem"
-           color="gray.700"
-           cursor="pointer"
-           borderRadius="md"
-           transition="all 0.15s"
-           _hover={{ bg: "gray.50", color: "gray.900" }}
-          >
-           Configurações
-          </Menu.Item>
-          <Menu.Item
-           value="leituras"
-           fontSize="0.9rem"
-           color="gray.700"
-           cursor="pointer"
-           borderRadius="md"
-           transition="all 0.15s"
-           _hover={{ bg: "gray.50", color: "gray.900" }}
-          >
-           Minhas Leituras
-          </Menu.Item>
+       <Menu.Content
+        minW="220px"
+        boxShadow="0 10px 40px -10px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.05)"
+        border="1px solid"
+        borderColor="gray.100"
+        borderRadius="xl"
+        bg="white"
+        zIndex={200}
+        p="0.4rem"
+        outline="none"
+        _open={{
+         animationName: "fade-in, scale-in",
+         animationDuration: "150ms",
+        }}
+        _closed={{
+         animationName: "fade-out, scale-out",
+         animationDuration: "100ms",
+        }}
+       >
+        <Menu.Item
+         value="perfil"
+         fontSize="0.9rem"
+         color="gray.700"
+         cursor="pointer"
+         borderRadius="md"
+         transition="all 0.15s"
+         _hover={{ bg: "gray.50", color: "gray.900" }}
+        >
+         Meu Perfil
+        </Menu.Item>
+        <Menu.Item
+         value="config"
+         fontSize="0.9rem"
+         color="gray.700"
+         cursor="pointer"
+         borderRadius="md"
+         transition="all 0.15s"
+         _hover={{ bg: "gray.50", color: "gray.900" }}
+        >
+         Configurações
+        </Menu.Item>
+        <Menu.Item
+         value="leituras"
+         fontSize="0.9rem"
+         color="gray.700"
+         cursor="pointer"
+         borderRadius="md"
+         transition="all 0.15s"
+         _hover={{ bg: "gray.50", color: "gray.900" }}
+        >
+         Minhas Leituras
+        </Menu.Item>
 
-          <Menu.Separator my="0.3rem" borderColor="gray.100" />
+        <Menu.Separator my="0.3rem" borderColor="gray.100" />
 
-          <Menu.Item
-           value="sair"
-           fontSize="0.9rem"
-           color="red.500"
-           fontWeight="medium"
-           cursor="pointer"
-           borderRadius="md"
-           transition="all 0.15s"
-           _hover={{ bg: "red.50", color: "red.600" }}
-          >
-           Sair
-          </Menu.Item>
-         </MenuContentMotion>
-        )}
-       </AnimatePresence>
+        <Menu.Item
+         value="sair"
+         fontSize="0.9rem"
+         color="red.500"
+         fontWeight="medium"
+         cursor="pointer"
+         borderRadius="md"
+         transition="all 0.15s"
+         _hover={{ bg: "red.50", color: "red.600" }}
+        >
+         Sair
+        </Menu.Item>
+       </Menu.Content>
       </Menu.Positioner>
      </Portal>
     </Menu.Root>
