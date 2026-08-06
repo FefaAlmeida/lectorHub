@@ -1,359 +1,451 @@
 "use client";
 
 import {
- Box,
- Flex,
- VStack,
- HStack,
- Heading,
- Text,
- Input,
- InputGroup,
- SimpleGrid,
- Icon,
- Button,
- Avatar,
- Menu,
- Container,
+  Box,
+  Flex,
+  VStack,
+  HStack,
+  Heading,
+  Text,
+  Input,
+  InputGroup,
+  Button,
+  Icon,
+  SimpleGrid,
+  Image,
+  Separator,
+  AspectRatio,
+  Link,
 } from "@chakra-ui/react";
-import { useState } from "react";
 import {
- FiHome,
- FiBookOpen,
- FiShoppingBag,
- FiUsers,
- FiSearch,
- FiSettings,
- FiLogOut,
- FiPlus,
- FiGrid,
- FiTrendingUp,
- FiClock,
- FiAward,
+  FiHome,
+  FiSearch,
+  FiBookOpen,
+  FiClock,
+  FiUser,
+  FiLogOut,
+  FiArrowRight,
+  FiPlus,
+  FiChevronRight,
+  FiAlertTriangle,
+  FiGift,
 } from "react-icons/fi";
-import FadeIn from "@/components/ui/fade-in";
 
+// --- CONFIGURAÇÕES VISUAIS ---
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
-const ACCENT = "#7A3131"; // vinho
+const PRIMARY_COLOR = "#7A3131"; // Vinho principal
+const BG_COLOR = "#FFFFFF"; // Fundo geral em branco
+const CARD_BG = "#FFFFFF"; // Fundo dos cards
+const BORDER_COLOR = "#EFEBE3"; // Cor das bordas
+const TEXT_DARK = "#333333";
+const TEXT_LIGHT = "#777777";
 
-// Itens da barra lateral
+// --- DADOS DA INTERFACE ---
+
 const NAV_ITEMS = [
- { label: "Início", icon: FiHome, active: true },
- { label: "Minhas Leituras", icon: FiBookOpen },
- { label: "Catálogo", icon: FiGrid },
- { label: "Comunidade", icon: FiUsers },
- { label: "Conquistas", icon: FiAward },
+  { label: "Início", icon: FiHome, active: true },
+  { label: "Buscar Livros", icon: FiSearch },
+  { label: "Meus Empréstimos", icon: FiBookOpen },
+  { label: "Histórico", icon: FiClock },
+  { label: "Meu Cadastro", icon: FiUser },
 ];
 
-// Cards de acesso rápido
-const QUICK_CARDS = [
- {
-  icon: FiBookOpen,
-  title: "Continue lendo",
-  description: "Retome seu livro atual exatamente de onde parou.",
-  accent: ACCENT,
- },
- {
-  icon: FiTrendingUp,
-  title: "Seu progresso",
-  description: "Você leu 12 livros este mês — melhor marca pessoal.",
-  accent: "#B54545",
- },
- {
-  icon: FiClock,
-  title: "Histórico recente",
-  description: "Acesse os últimos títulos e retome suas anotações.",
-  accent: "#8B3A3A",
- },
- {
-  icon: FiGrid,
-  title: "Explorar gêneros",
-  description: "Navegue por ficção, não-ficção, poesia e muito mais.",
-  accent: "#6E2F2F",
- },
+const QUICK_ACTIONS = [
+  { label: "Buscar Livros", icon: FiSearch, description: "Encontre livros por título, autor ou assunto" },
+  { label: "Meus Empréstimos", icon: FiBookOpen, description: "Veja seus livros emprestados e prazos" },
+  { label: "Histórico", icon: FiClock, description: "Confira seu histórico de empréstimos" },
+  { label: "Meu Cadastro", icon: FiUser, description: "Atualize seus dados cadastrais" },
 ];
 
-// Componente de card reaproveitado (mesmo estilo dos cards de Features)
-function QuickCard({ item }) {
- const [hover, setHover] = useState(false);
+const FEATURED_BOOKS = [
+  { 
+    title: "O Pequeno Príncipe", 
+    author: "Antoine de Saint-Exupéry", 
+    cover: "https://m.media-amazon.com/images/I/81TmOZIXvzL._SY466_.jpg" 
+  },
+  { 
+    title: "Harry Potter e as Relíquias da Morte", 
+    author: "J.K. Rowling", 
+    cover: "https://rocco.com.br/wp-content/uploads/2022/12/9788532522610.jpg" 
+  },
+  { 
+    title: "A Menina que Roubava Livros", 
+    author: "Markus Zusak", 
+    cover: "https://m.media-amazon.com/images/I/41pVlY-bbaL._SY445_SX342_ML2_.jpg" 
+  },
+  { 
+    title: "Reinações de Narizinho", 
+    author: "Monteiro Lobato", 
+    cover: "https://m.media-amazon.com/images/I/91YuC183KaL._SY425_.jpg" 
+  },
+];
 
- return (
-  <Box
-   as="article"
-   onMouseEnter={() => setHover(true)}
-   onMouseLeave={() => setHover(false)}
-   bg="#FAF9F6"
-   border="1px solid"
-   borderColor={hover ? "transparent" : "#EFEBE3"}
-   borderTopLeftRadius="6px"
-   borderTopRightRadius="28px"
-   borderBottomLeftRadius="28px"
-   borderBottomRightRadius="6px"
-   p={{ base: 6, md: 8 }}
-   h="full"
-   cursor="pointer"
-   transform={
-    hover ? "translateY(-8px) rotate(-0.4deg)" : "translateY(0) rotate(0deg)"
-   }
-   boxShadow={
-    hover
-     ? "0 24px 48px -24px rgba(122, 49, 49, 0.35)"
-     : "0 1px 2px rgba(0,0,0,0.03)"
-   }
-   transition={`transform 0.55s ${EASE}, box-shadow 0.55s ${EASE}, border-color 0.4s ${EASE}`}
-   sx={{
-    "@media (prefers-reduced-motion: reduce)": {
-     transform: "none !important",
-     transition: "none !important",
-    },
-   }}
-  >
-   <VStack align="center" spacing={4}>
-    {/* Ícone centralizado */}
-    <Flex
-     w={12}
-     h={12}
-     borderRadius="full"
-     align="center"
-     justify="center"
-     border="1.5px solid"
-     borderColor={hover ? item.accent : "#E4DED2"}
-     color={hover ? item.accent : "gray.900"}
-     transform={hover ? "scale(1.06)" : "scale(1)"}
-     transition={`all 0.4s ${EASE}`}
+const ANNOUNCEMENTS = [
+  { title: "Horário de Funcionamento", description: "Segunda a Sexta: 08h às 18h\nSábado: 08h às 12h", icon: FiClock, color: "#F7EAEA" },
+  { title: "Devoluções", description: "Fique atento ao prazo de devolução para evitar multas.", icon: FiAlertTriangle, color: "#FBF3EB" },
+  { title: "Novidades", description: "Novos livros adicionados ao acervo!\nConfira na busca.", icon: FiGift, color: "#FBF3EB" },
+];
+
+// --- COMPONENTES AUXILIARES ---
+
+function NavItem({ item }) {
+  return (
+    <HStack
+      as="a"
+      href="#"
+      spacing={3}
+      p={3}
+      pl={4}
+      borderRadius="6px"
+      color={item.active ? "white" : PRIMARY_COLOR}
+      bg={item.active ? PRIMARY_COLOR : "transparent"}
+      _hover={!item.active ? { bg: "#F5F1E9" } : {}}
+      transition={`all 0.2s ${EASE}`}
+      cursor="pointer"
+      fontWeight={item.active ? "semibold" : "normal"}
     >
-     <Icon as={item.icon} w={5} h={5} />
-    </Flex>
-
-    {/* Linha decorativa */}
-    <Box
-     alignSelf="center"
-     w={hover ? "32px" : "0px"}
-     h="2px"
-     bg={item.accent}
-     transition={`width 0.45s ${EASE}`}
-    />
-
-    <Heading
-     fontSize="lg"
-     fontWeight="semibold"
-     color="gray.900"
-     fontFamily="Georgia, 'Source Serif Pro', ui-serif, serif"
-     textAlign="center"
-    >
-     {item.title}
-    </Heading>
-
-    <Text color="gray.600" lineHeight="tall" fontSize="sm" textAlign="center">
-     {item.description}
-    </Text>
-   </VStack>
-  </Box>
- );
+      <Icon as={item.icon} w={5} h={5} />
+      <Text fontSize="md">{item.label}</Text>
+    </HStack>
+  );
 }
 
-export default function Dashboard() {
- return (
-  <Flex minH="100vh" bg="#FDFBF7">
-   {/* BARRA LATERAL */}
-   <Box
-    as="aside"
-    w="280px"
-    bg="#FAF9F6"
-    borderRight="1px solid"
-    borderColor="#EFEBE3"
-    p={6}
-    flexShrink={0}
-    display={{ base: "none", md: "block" }}
-   >
-    <VStack spacing={8} align="stretch" h="full">
-     {/* Navegação */}
-     <VStack as="nav" spacing={1} align="stretch">
-      {NAV_ITEMS.map((item) => (
-       <Button
-        key={item.label}
-        variant="ghost"
-        justifyContent="flex-start"
-        startIcon={<Icon as={item.icon} w={5} h={5} />}
-        fontWeight={item.active ? "semibold" : "normal"}
-        color={item.active ? ACCENT : "gray.600"}
-        bg={item.active ? "rgba(122, 49, 49, 0.06)" : "transparent"}
-        borderLeft={
-         item.active ? `3px solid ${ACCENT}` : "3px solid transparent"
-        }
-        borderRadius="6px"
-        _hover={{
-         bg: "rgba(122, 49, 49, 0.04)",
-         color: ACCENT,
-        }}
-        transition={`all 0.3s ${EASE}`}
-        pl={4}
+function QuickActionCard({ action }) {
+  return (
+    <Flex
+      align="center"
+      bg={CARD_BG}
+      p={4}
+      borderRadius="12px"
+      border="1px solid"
+      borderColor={BORDER_COLOR}
+      cursor="pointer"
+      _hover={{ borderColor: PRIMARY_COLOR, boxShadow: "sm" }}
+      transition={`all 0.2s ${EASE}`}
+    >
+      <Flex
+        w={12}
         h={12}
-        fontSize="md"
-       >
-        {item.label}
-       </Button>
-      ))}
-     </VStack>
-
-     <Box flex={1} />
-
-     {/* Perfil / Menu dropdown */}
-     <Menu.Root positioning={{ placement: "right-end" }}>
-      <Menu.Trigger asChild>
-       <Button
-        variant="ghost"
-        w="full"
-        justifyContent="flex-start"
-        startIcon={
-         <Avatar
-          size="sm"
-          name="Maria Oliveira"
-          src="https://i.pravatar.cc/150?img=5"
-          border="2px solid"
-          borderColor={ACCENT}
-         />
-        }
-        fontWeight="medium"
-        color="gray.700"
-        _hover={{ bg: "rgba(122, 49, 49, 0.04)" }}
-        borderRadius="6px"
-        h={12}
-        pl={2}
-       >
-        Maria Oliveira
-       </Button>
-      </Menu.Trigger>
-      <Menu.Content
-       bg="#FAF9F6"
-       borderColor="#EFEBE3"
-       borderRadius="12px"
-       boxShadow="0 12px 40px -12px rgba(122, 49, 49, 0.25)"
-       p={2}
+        borderRadius="full"
+        bg={PRIMARY_COLOR}
+        color="white"
+        align="center"
+        justify="center"
+        mr={3}
+        flexShrink={0}
       >
-       <Menu.Item value="settings" borderRadius="6px">
-        <Icon as={FiSettings} mr={2} />
-        Configurações
-       </Menu.Item>
-       <Menu.Item value="profile" borderRadius="6px">
-        <Icon as={FiUsers} mr={2} />
-        Perfil
-       </Menu.Item>
-       <Menu.Separator borderColor="#EFEBE3" />
-       <Menu.Item
-        value="logout"
-        color="red.500"
-        borderRadius="6px"
-        _hover={{ bg: "red.50" }}
-       >
-        <Icon as={FiLogOut} mr={2} />
-        Sair
-       </Menu.Item>
-      </Menu.Content>
-     </Menu.Root>
-    </VStack>
-   </Box>
-
-   {/* CONTEÚDO PRINCIPAL */}
-   <Box flex={1} p={{ base: 4, md: 8 }} overflowY="auto">
-    <Container maxW="6xl" px={0}>
-     <VStack spacing={10} align="stretch">
-      {/* Cabeçalho de boas-vindas + pesquisa */}
-      <FadeIn>
-       <Box
-        bg="#FAF9F6"
-        border="1px solid"
-        borderColor="#EFEBE3"
-        borderTopLeftRadius="6px"
-        borderTopRightRadius="36px"
-        borderBottomLeftRadius="36px"
-        borderBottomRightRadius="6px"
-        p={{ base: 6, md: 10 }}
-        boxShadow="0 4px 20px -8px rgba(122, 49, 49, 0.08)"
-       >
-        <VStack spacing={5} align="flex-start" maxW="3xl">
-         {/* Barra decorativa */}
-         <Box
-          w="40px"
-          h="3px"
-          borderRadius="full"
-          bgGradient={`linear(to-r, ${ACCENT}, #B54545)`}
-         />
-
-         <Heading
-          fontSize={{ base: "2xl", md: "4xl" }}
-          fontWeight="semibold"
-          letterSpacing="tight"
-          lineHeight="1.2"
-          color="gray.900"
-          fontFamily="Georgia, 'Source Serif Pro', ui-serif, serif"
-         >
-          Bom dia, Maria.
-         </Heading>
-
-         <Text fontSize="lg" color="gray.600" lineHeight="relaxed">
-          Você está a{" "}
-          <Text as="span" fontWeight="bold" color="gray.900">
-           3 capítulos
-          </Text>{" "}
-          de concluir{" "}
-          <Text as="span" fontStyle="italic">
-           “Cem Anos de Solidão”
-          </Text>
-          . Continue sua imersão literária.
-         </Text>
-
-         {/* Campo de pesquisa estilizado */}
-         <InputGroup
-          maxW="sm"
-          size="lg"
-          startElement={<Icon as={FiSearch} color="gray.400" />}
-         >
-          <Input
-           placeholder="Buscar livros, autores..."
-           bg="white"
-           border="1px solid"
-           borderColor="#E4DED2"
-           borderRadius="full"
-           color="gray.900"
-           _placeholder={{ color: "gray.400" }}
-           _hover={{ borderColor: "#C4B8A8" }}
-           _focus={{
-            borderColor: ACCENT,
-            boxShadow: `0 0 0 3px rgba(122, 49, 49, 0.15)`,
-           }}
-           transition={`all 0.3s ${EASE}`}
-          />
-         </InputGroup>
-        </VStack>
-       </Box>
-      </FadeIn>
-
-      {/* Cards de acesso rápido */}
-      <Box>
-       <FadeIn>
-        <Heading
-         fontSize="2xl"
-         fontWeight="semibold"
-         color="gray.900"
-         mb={6}
-         fontFamily="Georgia, 'Source Serif Pro', ui-serif, serif"
-        >
-         Acesse rapidamente
+        <Icon as={action.icon} w={5} h={5} />
+      </Flex>
+      <VStack align="flex-start" spacing={0} flex={1}>
+        <Heading fontSize="sm" fontWeight="semibold" color={PRIMARY_COLOR}>
+          {action.label}
         </Heading>
-       </FadeIn>
+        <Text fontSize="xs" color={TEXT_LIGHT} noOfLines={2}>
+          {action.description}
+        </Text>
+      </VStack>
+      <Icon as={FiChevronRight} color={PRIMARY_COLOR} w={4} h={4} ml={1} />
+    </Flex>
+  );
+}
 
-       <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6}>
-        {QUICK_CARDS.map((card) => (
-         <FadeIn key={card.title} delay={0.1}>
-          <QuickCard item={card} />
-         </FadeIn>
-        ))}
-       </SimpleGrid>
+function BookCard({ book }) {
+  return (
+    <VStack align="flex-start" spacing={2} w="full">
+      <AspectRatio ratio={2/3} w="full" borderRadius="8px" overflow="hidden" boxShadow="sm" bg="#F2EFE9">
+        <Image src={book.cover} alt={book.title} objectFit="cover" w="full" h="full" />
+      </AspectRatio>
+      <VStack align="flex-start" spacing={0} w="full" minH="50px">
+        <Text fontSize="xs" fontWeight="semibold" color={PRIMARY_COLOR} noOfLines={2} lineHeight="tight">
+          {book.title}
+        </Text>
+        <Text fontSize="xs" color={TEXT_LIGHT} noOfLines={1} mt={1}>
+          {book.author}
+        </Text>
+      </VStack>
+    </VStack>
+  );
+}
+
+function AnnouncementCard({ announcement }) {
+  return (
+    <Flex
+      bg={announcement.color}
+      p={5}
+      borderRadius="12px"
+      align="center"
+      border="1px solid"
+      borderColor="rgba(0,0,0,0.04)"
+      h="full"
+    >
+      <Flex
+        w={12}
+        h={12}
+        borderRadius="full"
+        border="2px solid"
+        borderColor={PRIMARY_COLOR}
+        color={PRIMARY_COLOR}
+        align="center"
+        justify="center"
+        mr={4}
+        flexShrink={0}
+      >
+        <Icon as={announcement.icon} w={5} h={5} />
+      </Flex>
+      <VStack align="flex-start" spacing={1}>
+        <Heading fontSize="sm" fontWeight="semibold" color={PRIMARY_COLOR}>
+          {announcement.title}
+        </Heading>
+        <Text fontSize="xs" color={TEXT_DARK} whiteSpace="pre-line" lineHeight="tall">
+          {announcement.description}
+        </Text>
+      </VStack>
+    </Flex>
+  );
+}
+
+// --- DASHBOARD PRINCIPAL ---
+
+export default function DashboardPage() {
+  return (
+    <Flex minH="100vh" bg={BG_COLOR}>
+      {/* BARRA LATERAL */}
+      <Box
+        as="nav"
+        w="260px"
+        bg="#FAF9F6"
+        borderRight="1px solid"
+        borderColor={BORDER_COLOR}
+        p={5}
+        flexShrink={0}
+        display={{ base: "none", md: "block" }}
+      >
+        <VStack spacing={3} align="stretch">
+          {NAV_ITEMS.map((item, index) => (
+            <NavItem key={index} item={item} />
+          ))}
+
+          <Separator borderColor={BORDER_COLOR} my={4} />
+
+          <HStack
+            as="a"
+            href="#"
+            spacing={3}
+            p={3}
+            pl={4}
+            borderRadius="6px"
+            color={PRIMARY_COLOR}
+            _hover={{ bg: "#F5F1E9" }}
+            transition={`all 0.2s ${EASE}`}
+            cursor="pointer"
+          >
+            <Icon as={FiLogOut} w={5} h={5} />
+            <Text fontSize="md">Sair</Text>
+          </HStack>
+        </VStack>
       </Box>
-     </VStack>
-    </Container>
-   </Box>
-  </Flex>
- );
+
+      {/* CONTEÚDO PRINCIPAL */}
+      <Box flex={1} p={{ base: 6, md: 8 }} pb={16}>
+        {/* Aumentado o spacing principal do container para 12 */}
+        <VStack spacing={12} align="stretch">
+          
+          {/* Boas-vindas + Busca */}
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8} align="center">
+            <VStack align="flex-start" spacing={4}>
+              <Heading
+                as="h1"
+                fontSize={{ base: "3xl", md: "4xl" }}
+                fontWeight="bold"
+                color={PRIMARY_COLOR}
+                fontFamily="Georgia, serif"
+              >
+                Bem-vinda, Natalia!
+              </Heading>
+              <Text fontSize="md" color={TEXT_LIGHT}>
+                Explore, reserve e gerencie seus livros de forma fácil e rápida.
+              </Text>
+
+              <InputGroup
+                w="full"
+                maxW="lg"
+                startElement={<Icon as={FiSearch} color={TEXT_LIGHT} ml={2} />}
+                endElement={
+                  <Button
+                    height="32px"
+                    borderRadius="full"
+                    bg={PRIMARY_COLOR}
+                    color="white"
+                    px={5}
+                    fontSize="xs"
+                    _hover={{ bg: "#632727" }}
+                    mr={1}
+                  >
+                    Buscar
+                  </Button>
+                }
+              >
+                <Input
+                  placeholder="Pesquise por título, autor ou assunto..."
+                  bg={CARD_BG}
+                  border="1px solid"
+                  borderColor={BORDER_COLOR}
+                  borderRadius="full"
+                  _placeholder={{ color: "#AAA" }}
+                  _focus={{ borderColor: PRIMARY_COLOR }}
+                  pl={10}
+                />
+              </InputGroup>
+            </VStack>
+
+            {/* Ilustração da Biblioteca - Imagem Local */}
+            <Flex justify="center" align="center">
+              <Image
+                src="livrosInicialCliente"
+                alt="Ilustração da Biblioteca"
+                maxW="300px"
+                maxH="200px"
+                objectFit="contain"
+                borderRadius="12px"
+              />
+            </Flex>
+          </SimpleGrid>
+
+          {/* Cards de Ação Rápida com margem adicional */}
+          <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap={4} my={2}>
+            {QUICK_ACTIONS.map((action, index) => (
+              <QuickActionCard key={index} action={action} />
+            ))}
+          </SimpleGrid>
+
+          {/* Empréstimos + Destaques */}
+          <SimpleGrid columns={{ base: 1, lg: 2 }} gap={8}>
+            
+            {/* Meus Empréstimos - Destaque Maior */}
+            <VStack
+              align="stretch"
+              spacing={5}
+              p={6}
+              bg={CARD_BG}
+              borderRadius="12px"
+              border="1px solid"
+              borderColor={BORDER_COLOR}
+              justify="space-between"
+            >
+              <Heading
+                as="h2"
+                fontSize="2xl"
+                fontWeight="bold"
+                color={PRIMARY_COLOR}
+                fontFamily="Georgia, serif"
+              >
+                Meus Empréstimos
+              </Heading>
+
+              <Flex border="1px solid" borderColor={BORDER_COLOR} borderRadius="8px" p={4} align="center">
+                <AspectRatio ratio={2/3} w="100px" mr={4} flexShrink={0}>
+                  <Image 
+                    src="https://m.media-amazon.com/images/I/81hCVEC0ExL._SY466_.jpg" 
+                    alt="1954" 
+                    borderRadius="4px" 
+                    objectFit="cover"
+                  />
+                </AspectRatio>
+                <VStack align="flex-start" spacing={1} flex={1}>
+                  <Heading fontSize="md" fontWeight="semibold" color={PRIMARY_COLOR}>
+                    1954
+                  </Heading>
+                  <Text fontSize="xs" color={TEXT_LIGHT} mb={1}>
+                    J.R.R. Tolkien
+                  </Text>
+                  <Text fontSize="xs" color={TEXT_DARK}>
+                    🗓️ Empréstimo: 01/09/2026
+                  </Text>
+                  <Text fontSize="xs" color={TEXT_DARK}>
+                    🗓️ Devolução: 15/10/2026
+                  </Text>
+                </VStack>
+                <Button variant="outline" size="sm" borderColor={PRIMARY_COLOR} color={PRIMARY_COLOR}>
+                  Ver detalhes
+                </Button>
+              </Flex>
+
+              <Flex
+                border="2px dashed"
+                borderColor="#DED6C9"
+                borderRadius="8px"
+                p={4}
+                h="90px"
+                align="center"
+                justify="center"
+                color={TEXT_LIGHT}
+              >
+                <VStack spacing={1}>
+                  <Icon as={FiPlus} w={5} h={5} />
+                  <Text fontSize="xs">Nenhum outro empréstimo no momento.</Text>
+                </VStack>
+              </Flex>
+
+              <Link href="#" color={PRIMARY_COLOR} fontSize="sm" fontWeight="medium" textAlign="center" pt={1}>
+                Ver todos os empréstimos <Icon as={FiArrowRight} ml={1} display="inline" />
+              </Link>
+            </VStack>
+
+            {/* Livros em Destaque - Destaque Maior */}
+            <VStack
+              align="stretch"
+              spacing={5}
+              p={6}
+              bg={CARD_BG}
+              borderRadius="12px"
+              border="1px solid"
+              borderColor={BORDER_COLOR}
+              justify="space-between"
+            >
+              <HStack justify="space-between">
+                <Heading
+                  as="h2"
+                  fontSize="2xl"
+                  fontWeight="bold"
+                  color={PRIMARY_COLOR}
+                  fontFamily="Georgia, serif"
+                >
+                  Livros em Destaque
+                </Heading>
+                <Link href="#" color={PRIMARY_COLOR} fontSize="xs" fontWeight="medium">
+                  Ver todos <Icon as={FiArrowRight} ml={1} display="inline" />
+                </Link>
+              </HStack>
+
+              <SimpleGrid columns={{ base: 2, sm: 4 }} gap={5} w="full">
+                {FEATURED_BOOKS.map((book, index) => (
+                  <BookCard key={index} book={book} />
+                ))}
+              </SimpleGrid>
+            </VStack>
+          </SimpleGrid>
+
+          {/* Avisos Importantes - Destaque Maior */}
+          <VStack align="stretch" spacing={4} pt={2}>
+            <Heading
+              as="h2"
+              fontSize="2xl"
+              fontWeight="bold"
+              color={PRIMARY_COLOR}
+              fontFamily="Georgia, serif"
+            >
+              Avisos Importantes
+            </Heading>
+
+            <SimpleGrid columns={{ base: 1, md: 3 }} gap={5}>
+              {ANNOUNCEMENTS.map((ann, index) => (
+                <AnnouncementCard key={index} announcement={ann} />
+              ))}
+            </SimpleGrid>
+          </VStack>
+
+        </VStack>
+      </Box>
+    </Flex>
+  );
 }
