@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Card,
-  Field,
   Flex,
   Heading,
   HStack,
@@ -13,7 +12,7 @@ import {
   Image,
   Input,
   InputGroup,
-  Menu, // Adicionado para substituir o NativeSelect
+  Menu,
   Stack,
   Text,
   IconButton,
@@ -31,7 +30,7 @@ import {
   FiHeart,
   FiChevronLeft,
   FiChevronRight,
-  FiChevronDown, // Adicionado para a setinha do Menu
+  FiChevronDown,
   FiHome,
   FiClock,
   FiUser,
@@ -40,10 +39,10 @@ import {
 
 // --- CONFIGURAÇÕES VISUAIS ---
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
-const PRIMARY_COLOR = "#4A0E17"; 
-const BG_COLOR="#F5F2EE"; 
-const CARD_BG = "#FFFFFF"; 
-const BORDER_COLOR = "#EFEBE3"; 
+const PRIMARY_COLOR = "#4A0E17"; // Cor principal vinho
+const BG_COLOR = "#F5F2EE";
+const CARD_BG = "#FFFFFF";
+const BORDER_COLOR = "#EFEBE3";
 const TEXT_DARK = "#333333";
 const TEXT_LIGHT = "#777777";
 
@@ -165,8 +164,6 @@ export default function BuscarLivros() {
             transition={`all 0.2s ${EASE}`}
             cursor="pointer"
           >
-            <Icon as={FiLogOut} w={5} h={5} mr={3} />
-            <Text fontSize="md">Sair</Text>
           </HStack>
         </Stack>
       </Box>
@@ -214,7 +211,7 @@ export default function BuscarLivros() {
             <Button 
               bg={PRIMARY_COLOR}
               borderRadius="14px"
-              boxShadow="0 6px 18px rgba(74,14,23,.18)"
+              boxShadow="0 4px 12px rgba(74,14,23,.15)"
               _hover={{
                   bg:"#360A11",
                   transform:"translateY(-2px)"
@@ -230,15 +227,15 @@ export default function BuscarLivros() {
             </Button>
           </Flex>
 
-          {/* Filtros - Mais harmônicos e customizados usando o Menu */}
-          <Flex gap={4} wrap="wrap" align="flex-end">
+          {/* Filtros */}
+          <Flex gap={4} wrap="wrap" align="flex-start">
             {[
               { label: "Categoria", options: ["Todas", "Romance", "Fantasia", "Ficção"] },
               { label: "Gênero", options: ["Todos", "Clássico", "Aventura", "Infantil"] },
               { label: "Disponibilidade", options: ["Todos", "Disponível", "Indisponível"] },
               { label: "Ordenar por", options: ["Mais relevantes", "A-Z", "Recentes"] },
             ].map((filtro, index) => (
-              <Field.Root key={index} flex={{ base: "1 1 100%", md: "1" }}>
+              <Box key={index} flex={{ base: "1 1 100%", md: "1" }}>
                 <Text fontSize="xs" color={TEXT_DARK} mb={1.5} fontWeight="semibold" ml={2}>
                   {filtro.label}
                 </Text>
@@ -273,41 +270,49 @@ export default function BuscarLivros() {
                     </Button>
                   </Menu.Trigger>
 
-                  <Menu.Content
-                    bg="white"
-                    borderRadius="16px" // Caixa mais redonda
-                    border="1px solid"
-                    borderColor="#E7DED8"
-                    boxShadow="0 8px 24px rgba(74,14,23,.12)" // Sombra harmônica
-                    p={2} // Respiro interno
-                    zIndex="popover"
-                  >
-                    {filtro.options.map((opt) => (
-                      <Menu.Item
-                        key={opt}
-                        value={opt}
-                        px={3}
-                        py={2.5}
-                        borderRadius="8px" // Cantos arredondados dentro das opções
-                        cursor="pointer"
-                        color={TEXT_DARK}
-                        fontWeight="500"
-                        transition="all 0.2s ease" // Transição suave
-                        _hover={{
-                          bg: "#F2E6E8", // Vinho claro lindo no hover!
-                          color: PRIMARY_COLOR,
-                        }}
-                      >
-                        {opt}
-                      </Menu.Item>
-                    ))}
-                  </Menu.Content>
+                  <Menu.Positioner>
+                    <Menu.Content
+                      bg="white"
+                      borderRadius="16px"
+                      border="1px solid"
+                      borderColor="#E7DED8"
+                      boxShadow="0 8px 24px rgba(74,14,23,.12)"
+                      p={2}
+                      zIndex="popover"
+                    >
+                      {filtro.options.map((opt) => (
+                        <Menu.Item
+                          key={opt}
+                          value={opt}
+                          px={3}
+                          py={2.5}
+                          borderRadius="8px"
+                          cursor="pointer"
+                          color={TEXT_DARK}
+                          fontWeight="500"
+                          transition="all 0.2s ease"
+                          _hover={{
+                            bg: "#F2E6E8",
+                            color: PRIMARY_COLOR,
+                          }}
+                        >
+                          {opt}
+                        </Menu.Item>
+                      ))}
+                    </Menu.Content>
+                  </Menu.Positioner>
                 </Menu.Root>
-
-              </Field.Root>
+              </Box>
             ))}
 
-            <Button variant="ghost" color={PRIMARY_COLOR} _hover={{ bg: "transparent", textDecoration: "underline" }} px={2} h="10">
+            <Button 
+              variant="ghost" 
+              color={PRIMARY_COLOR} 
+              _hover={{ bg: "transparent", textDecoration: "underline" }} 
+              px={2} 
+              h="48px"
+              mt="22px" 
+            >
               <Icon mr={2}><FiRefreshCcw /></Icon>
               Limpar filtros
             </Button>
@@ -340,11 +345,11 @@ export default function BuscarLivros() {
             </HStack>
           </Flex>
 
-          {/* Container dos Cards */}
+          {/* Container dos Cards - Ajuste no Padding e na Sombra */}
           <Flex
             gap={6}
             overflowX="auto"
-            py={4} 
+            py={8} /* Aumentei o padding vertical de 4 para 8 para a sombra não cortar */
             px={2} 
             css={{
             scrollbarWidth: "none",
@@ -366,9 +371,9 @@ export default function BuscarLivros() {
                 maxW="210px"
                 transition={`all 0.3s ${EASE}`}
                 _hover={{
-                    transform:"translateY(-8px)",
+                    transform:"translateY(-6px)", /* Pulo um pouco mais suave para acompanhar a sombra menor */
                     borderColor:PRIMARY_COLOR,
-                    boxShadow:"0 18px 35px rgba(74,14,23,.18)",
+                    boxShadow:"0 8px 20px rgba(74,14,23,.12)", /* Sombra reduzida e mais delicada */
                 }}
               >
                 <Box p={3} pb={0} position="relative">
