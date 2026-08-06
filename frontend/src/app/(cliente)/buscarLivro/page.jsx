@@ -13,8 +13,7 @@ import {
   Image,
   Input,
   InputGroup,
-  NativeSelect,
-  SimpleGrid,
+  Menu, // Adicionado para substituir o NativeSelect
   Stack,
   Text,
   IconButton,
@@ -32,31 +31,32 @@ import {
   FiHeart,
   FiChevronLeft,
   FiChevronRight,
+  FiChevronDown, // Adicionado para a setinha do Menu
   FiHome,
   FiClock,
   FiUser,
   FiLogOut,
 } from "react-icons/fi";
 
-// --- CONFIGURAÇÕES VISUAIS DA SUA AMIGA ---
+// --- CONFIGURAÇÕES VISUAIS ---
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
-const PRIMARY_COLOR = "#7A3131"; // Vinho/marrom principal
-const BG_COLOR = "#FDFBF7"; // Fundo bege claro
-const CARD_BG = "#FFFFFF"; // Fundo dos cards
-const BORDER_COLOR = "#EFEBE3"; // Cor das bordas
+const PRIMARY_COLOR = "#4A0E17"; 
+const BG_COLOR="#F5F2EE"; 
+const CARD_BG = "#FFFFFF"; 
+const BORDER_COLOR = "#EFEBE3"; 
 const TEXT_DARK = "#333333";
 const TEXT_LIGHT = "#777777";
 
 // --- DADOS DA NAVEGAÇÃO ---
 const NAV_ITEMS = [
   { label: "Início", icon: FiHome, active: false },
-  { label: "Buscar Livros", icon: FiSearch, active: true }, // Página atual ativa
+  { label: "Buscar Livros", icon: FiSearch, active: true },
   { label: "Meus Empréstimos", icon: FiBookOpen, active: false },
   { label: "Histórico", icon: FiClock, active: false },
   { label: "Meu Cadastro", icon: FiUser, active: false },
 ];
 
-// --- SEUS DADOS (CONTEÚDO INTACTO) ---
+// --- SEUS DADOS ---
 const livros = [
   {
     id: 1,
@@ -120,7 +120,7 @@ function NavItem({ item }) {
       borderRadius="6px"
       color={item.active ? "white" : TEXT_DARK}
       bg={item.active ? PRIMARY_COLOR : "transparent"}
-      _hover={!item.active ? { bg: "#F5F1E9" } : {}}
+      _hover={!item.active ? { bg: "#FFFFFF" } : {}}
       transition={`all 0.2s ${EASE}`}
       cursor="pointer"
       fontWeight={item.active ? "semibold" : "normal"}
@@ -135,11 +135,11 @@ function NavItem({ item }) {
 export default function BuscarLivros() {
   return (
     <Flex minH="100vh" bg={BG_COLOR}>
-      {/* BARRA LATERAL (Idêntica à da amiga) */}
+      {/* BARRA LATERAL */}
       <Box
         as="nav"
         w="260px"
-        bg="#FAF9F6"
+        bg="#FFFFFF"
         borderRight="1px solid"
         borderColor={BORDER_COLOR}
         p={5}
@@ -171,8 +171,8 @@ export default function BuscarLivros() {
         </Stack>
       </Box>
 
-      {/* CONTEÚDO PRINCIPAL (Seu conteúdo) */}
-      <Box flex={1} p={{ base: 6, md: 8 }} pb={16}>
+      {/* CONTEÚDO PRINCIPAL */}
+      <Box flex={1} p={{ base: 6, md: 8 }} pb={16} overflow="hidden">
         <Stack gap={8} align="stretch" maxW="8xl" mx="auto">
           
           {/* Cabeçalho */}
@@ -191,11 +191,11 @@ export default function BuscarLivros() {
             </Text>
           </Stack>
 
-          {/* Barra de Busca e Botões (Estilo arredondado igual o dela) */}
+          {/* Barra de Busca e Botões */}
           <Flex gap={4} flexWrap={{ base: "wrap", md: "nowrap" }}>
             <InputGroup
               flex="1"
-              startElement={<Icon as={FiSearch} color={TEXT_LIGHT} ml={2} />}
+              startElement={<Icon as={FiSearch} color={PRIMARY_COLOR} ml={2} />}
             >
               <Input
                 placeholder="Digite título, autor ou assunto..."
@@ -204,67 +204,110 @@ export default function BuscarLivros() {
                 borderColor={BORDER_COLOR}
                 borderRadius="full"
                 _placeholder={{ color: "#AAA" }}
-                _focus={{ borderColor: PRIMARY_COLOR }}
+                _focus={{ borderColor: PRIMARY_COLOR, boxShadow: `0 0 0 1px ${PRIMARY_COLOR}` }}
                 pl={10}
                 size="lg"
+                transition={`all 0.2s ${EASE}`}
               />
             </InputGroup>
 
-            <Button bg={PRIMARY_COLOR} color="white" _hover={{ bg: "#632727" }} size="lg" px={10} borderRadius="full">
+            <Button 
+              bg={PRIMARY_COLOR}
+              borderRadius="14px"
+              boxShadow="0 6px 18px rgba(74,14,23,.18)"
+              _hover={{
+                  bg:"#360A11",
+                  transform:"translateY(-2px)"
+              }}
+              transition=".3s"
+            >
               Buscar
             </Button>
 
-            <Button variant="outline" color={TEXT_DARK} borderColor={BORDER_COLOR} _hover={{ bg: "#F5F1E9" }} size="lg" borderRadius="full">
+            <Button variant="outline" color={PRIMARY_COLOR} borderColor={PRIMARY_COLOR} _hover={{ bg: "#f2e6e8" }} size="lg" borderRadius="full">
               <Icon mr={2}><FiSliders /></Icon>
               Busca Avançada
             </Button>
           </Flex>
 
-          {/* Filtros */}
-          <Flex gap={6} wrap="wrap" align="flex-end">
-            <Field.Root flex={{ base: "1 1 100%", md: "1" }}>
-              <Text fontSize="sm" color={TEXT_DARK} mb={2} fontWeight="medium">Categoria</Text>
-              <NativeSelect.Root>
-                <NativeSelect.Field bg={CARD_BG} borderColor={BORDER_COLOR} borderRadius="8px">
-                  <option>Todas</option>
-                  <option>Romance</option>
-                  <option>Fantasia</option>
-                </NativeSelect.Field>
-              </NativeSelect.Root>
-            </Field.Root>
+          {/* Filtros - Mais harmônicos e customizados usando o Menu */}
+          <Flex gap={4} wrap="wrap" align="flex-end">
+            {[
+              { label: "Categoria", options: ["Todas", "Romance", "Fantasia", "Ficção"] },
+              { label: "Gênero", options: ["Todos", "Clássico", "Aventura", "Infantil"] },
+              { label: "Disponibilidade", options: ["Todos", "Disponível", "Indisponível"] },
+              { label: "Ordenar por", options: ["Mais relevantes", "A-Z", "Recentes"] },
+            ].map((filtro, index) => (
+              <Field.Root key={index} flex={{ base: "1 1 100%", md: "1" }}>
+                <Text fontSize="xs" color={TEXT_DARK} mb={1.5} fontWeight="semibold" ml={2}>
+                  {filtro.label}
+                </Text>
+                
+                <Menu.Root positioning={{ sameWidth: true }}>
+                  <Menu.Trigger asChild>
+                    <Button
+                      variant="outline"
+                      bg="white"
+                      border="1px solid"
+                      borderColor="#E7DED8"
+                      borderRadius="14px"
+                      h="48px"
+                      px={4}
+                      w="full"
+                      justifyContent="space-between"
+                      color={TEXT_DARK}
+                      fontWeight="500"
+                      transition={`all .25s ${EASE}`}
+                      _hover={{
+                        borderColor: PRIMARY_COLOR,
+                        bg: "#FAF5F6",
+                        boxShadow: "md",
+                      }}
+                      _focus={{
+                        borderColor: PRIMARY_COLOR,
+                        boxShadow: "0 0 0 3px rgba(74,14,23,.15)",
+                      }}
+                    >
+                      {filtro.options[0]}
+                      <Icon as={FiChevronDown} color={PRIMARY_COLOR} fontSize="lg" />
+                    </Button>
+                  </Menu.Trigger>
 
-            <Field.Root flex={{ base: "1 1 100%", md: "1" }}>
-              <Text fontSize="sm" color={TEXT_DARK} mb={2} fontWeight="medium">Gênero</Text>
-              <NativeSelect.Root>
-                <NativeSelect.Field bg={CARD_BG} borderColor={BORDER_COLOR} borderRadius="8px">
-                  <option>Todos</option>
-                  <option>Clássico</option>
-                </NativeSelect.Field>
-              </NativeSelect.Root>
-            </Field.Root>
+                  <Menu.Content
+                    bg="white"
+                    borderRadius="16px" // Caixa mais redonda
+                    border="1px solid"
+                    borderColor="#E7DED8"
+                    boxShadow="0 8px 24px rgba(74,14,23,.12)" // Sombra harmônica
+                    p={2} // Respiro interno
+                    zIndex="popover"
+                  >
+                    {filtro.options.map((opt) => (
+                      <Menu.Item
+                        key={opt}
+                        value={opt}
+                        px={3}
+                        py={2.5}
+                        borderRadius="8px" // Cantos arredondados dentro das opções
+                        cursor="pointer"
+                        color={TEXT_DARK}
+                        fontWeight="500"
+                        transition="all 0.2s ease" // Transição suave
+                        _hover={{
+                          bg: "#F2E6E8", // Vinho claro lindo no hover!
+                          color: PRIMARY_COLOR,
+                        }}
+                      >
+                        {opt}
+                      </Menu.Item>
+                    ))}
+                  </Menu.Content>
+                </Menu.Root>
 
-            <Field.Root flex={{ base: "1 1 100%", md: "1" }}>
-              <Text fontSize="sm" color={TEXT_DARK} mb={2} fontWeight="medium">Disponibilidade</Text>
-              <NativeSelect.Root>
-                <NativeSelect.Field bg={CARD_BG} borderColor={BORDER_COLOR} borderRadius="8px">
-                  <option>Todos</option>
-                  <option>Disponível</option>
-                  <option>Indisponível</option>
-                </NativeSelect.Field>
-              </NativeSelect.Root>
-            </Field.Root>
+              </Field.Root>
+            ))}
 
-            <Field.Root flex={{ base: "1 1 100%", md: "1" }}>
-              <Text fontSize="sm" color={TEXT_DARK} mb={2} fontWeight="medium">Ordenar por</Text>
-              <NativeSelect.Root>
-                <NativeSelect.Field bg={CARD_BG} borderColor={BORDER_COLOR} borderRadius="8px">
-                  <option>Mais relevantes</option>
-                  <option>A-Z</option>
-                </NativeSelect.Field>
-              </NativeSelect.Root>
-            </Field.Root>
-
-            <Button variant="ghost" color={TEXT_LIGHT} _hover={{ bg: "transparent", color: PRIMARY_COLOR, textDecoration: "underline" }} px={2}>
+            <Button variant="ghost" color={PRIMARY_COLOR} _hover={{ bg: "transparent", textDecoration: "underline" }} px={2} h="10">
               <Icon mr={2}><FiRefreshCcw /></Icon>
               Limpar filtros
             </Button>
@@ -273,11 +316,11 @@ export default function BuscarLivros() {
           {/* Cabeçalho dos Resultados */}
           <Flex justify="space-between" align="center" mt={4} borderBottom="1px solid" borderColor={BORDER_COLOR} pb={4}>
             <HStack gap={4}>
-              <Flex bg={CARD_BG} p={3} rounded="full" border="1px solid" borderColor={BORDER_COLOR} color={PRIMARY_COLOR}>
+              <Flex bg="white" borderRadius="16px" border="1px solid" borderColor="#E8E1D8" p={5}>
                 <FiBookOpen size={18} />
               </Flex>
               <Stack gap={0}>
-                <Text fontWeight="bold" color={TEXT_DARK} fontSize="lg">
+                <Text fontWeight="bold" color={PRIMARY_COLOR} fontSize="lg">
                   {livros.length} livros encontrados
                 </Text>
                 <Text fontSize="sm" color={TEXT_LIGHT}>
@@ -297,44 +340,69 @@ export default function BuscarLivros() {
             </HStack>
           </Flex>
 
-          {/* Grid de Livros (Estilo de card da sua amiga) */}
-          <SimpleGrid columns={{ base: 1, sm: 2, lg: 3, xl: 4 }} gap={6} mt={4}>
+          {/* Container dos Cards */}
+          <Flex
+            gap={6}
+            overflowX="auto"
+            py={4} 
+            px={2} 
+            css={{
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": {
+                display: "none",
+            },
+            }}
+          >
             {livros.map((livro) => (
               <Card.Root
                 key={livro.id}
                 variant="outline"
                 bg={CARD_BG}
-                borderRadius="12px"
+                borderRadius="18px"
                 border="1px solid"
-                borderColor={BORDER_COLOR}
+                borderColor="#E7DED8" 
                 overflow="hidden"
-                transition={`all 0.2s ${EASE}`}
-                _hover={{ transform: "translateY(-4px)", boxShadow: "sm", borderColor: "#DED6C9" }}
+                minW="210px"
+                maxW="210px"
+                transition={`all 0.3s ${EASE}`}
+                _hover={{
+                    transform:"translateY(-8px)",
+                    borderColor:PRIMARY_COLOR,
+                    boxShadow:"0 18px 35px rgba(74,14,23,.18)",
+                }}
               >
-                {/* Imagem com AspectRatio igual ao dela */}
-                <Box p={4} pb={0} position="relative">
+                <Box p={3} pb={0} position="relative">
                   <Icon
                     as={FiHeart}
                     position="absolute"
-                    top={6}
-                    right={6}
+                    top={5}
+                    right={5}
                     color="gray.400"
                     cursor="pointer"
                     zIndex={2}
                     _hover={{ color: PRIMARY_COLOR }}
                   />
-                  <AspectRatio ratio={2/3} w="full" borderRadius="8px" overflow="hidden" bg="#F2EFE9">
+                  <AspectRatio ratio={2/3}
+                    borderRadius="12px"
+                    overflow="hidden"
+                    bg="#F7F3EF">
                     <Image
-                      src={livro.imagem}
-                      alt={livro.titulo}
-                      objectFit="cover"
-                      fallback={<Box w="full" h="full" bg="#EFEBE3" />}
+                    src={livro.imagem}
+                    alt={livro.titulo}
+                    objectFit="cover"
+                    w="100%"
+                    h="100%"
+                    transition=".35s"
+                    _hover={{
+                        transform: "scale(1.05)",
+                    }}
+                    fallback={<Box w="100%" h="100%" bg="#EFEBE3" />}
                     />
                   </AspectRatio>
                 </Box>
 
-                <Card.Body pt={4} pb={3} px={4} gap={2}>
-                  <Heading size="sm" color={TEXT_DARK} noOfLines={1}>
+                <Card.Body pt={3} pb={2} px={3} gap={1}>
+                  <Heading size="sm" color={TEXT_DARK} noOfLines={1} fontSize="sm">
                     {livro.titulo}
                   </Heading>
                   
@@ -346,20 +414,18 @@ export default function BuscarLivros() {
                     {livro.tags.map((tag, index) => (
                       <Badge
                         key={index}
-                        bg="#F7EAEA"
+                        bg="#FAF5F6"
                         color={PRIMARY_COLOR}
-                        fontSize="2xs"
-                        px={2}
-                        py={0.5}
-                        borderRadius="md"
-                        fontWeight="medium"
+                        fontWeight="600"
+                        borderRadius="99px"
+                        px={3}
                       >
                         {tag}
                       </Badge>
                     ))}
                   </HStack>
 
-                  <HStack align="center" gap={2}>
+                  <HStack align="center" gap={1.5}>
                     <Box
                       w={2}
                       h={2}
@@ -372,26 +438,29 @@ export default function BuscarLivros() {
                   </HStack>
                 </Card.Body>
 
-                <Card.Footer px={4} pb={4} pt={1}>
+                <Card.Footer px={3} pb={3} pt={1}>
                   <Button
                     w="full"
-                    variant="outline"
-                    color={TEXT_DARK}
-                    borderColor={BORDER_COLOR}
-                    _hover={{ bg: "#F5F1E9", color: PRIMARY_COLOR }}
-                    size="sm"
-                    borderRadius="6px"
-                    fontWeight="medium"
-                  >
+                    bg="#FAF5F6"
+                    color={PRIMARY_COLOR}
+                    border="none"
+                    borderRadius="10px"
+                    fontWeight="600"
+                    transition=".25s"
+                    _hover={{
+                        bg: PRIMARY_COLOR,
+                        color: "white",
+                    }}
+                >
                     Ver detalhes
-                  </Button>
+                </Button>
                 </Card.Footer>
               </Card.Root>
             ))}
-          </SimpleGrid>
+          </Flex>
 
           {/* Paginação */}
-          <Flex justify="center" align="center" mt={8} gap={2}>
+          <Flex justify="center" align="center" mt={4} gap={2}>
             <IconButton variant="ghost" color={TEXT_LIGHT} aria-label="Anterior" size="sm">
               <FiChevronLeft />
             </IconButton>
