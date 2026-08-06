@@ -5,7 +5,7 @@
 USE lector_hub;
 
 CREATE TABLE IF NOT EXISTS emprestimos (
-     id_emprestimo INT PRIMARY KEY AUTO_INCREMENT,
+  id_emprestimo INT PRIMARY KEY AUTO_INCREMENT,
   id_livro INT NOT NULL,
   id_usuario INT NOT NULL,
   data_solicitacao DATETIME DEFAULT CURRENT_TIMESTAMP,

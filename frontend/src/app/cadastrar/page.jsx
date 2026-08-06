@@ -1,10 +1,6 @@
 "use client";
-import { useState } from "react";
-import { loginUsuario, getPerfil, solicitarRedefinicaoSenha } from "../../../api";
-import { toast } from "sonner";
 
-  
-
+import Image from "next/image";
 import {
   Flex,
   Box,
@@ -17,105 +13,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 
-export default function Login() {
-    
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [loadingRedefinicao, setLoadingRedefinicao] = useState(false);
-
-  async function handleLogin() {
-
-    if (!email || !senha) {
-      toast.error("Preencha todos os campos.");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-      toast.error("Formato de email inválido.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-
-      const response = await loginUsuario({
-        email: email.trim().toLowerCase(),
-        senha
-      });
-
-      if (response?.sucesso) {
-
-        toast.success("Login realizado com sucesso!");
-
-        const destino =
-          response.dados?.usuario?.tipo_usuario === "ADMIN"
-            ? "/inicio-adm"
-            : "/inicio-dashboard";
-
-        window.location.href = destino;
-
-      } else {
-
-        toast.error(
-          response?.erro ||
-          response?.mensagem ||
-          "Erro ao realizar login."
-        );
-
-      }
-
-    } catch (error) {
-
-      console.error(error);
-      toast.error("Erro de conexão com o servidor.");
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  }
-
-  async function handleSolicitarRedefinicaoSenha() {
-    if (!email) {
-      toast.error("Digite seu e-mail para redefinir a senha.");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
-      toast.error("Formato de email inválido.");
-      return;
-    }
-
-    setLoadingRedefinicao(true);
-
-    try {
-      const response = await solicitarRedefinicaoSenha(email.trim().toLowerCase());
-
-      if (response?.sucesso) {
-        toast.success(response.mensagem || "Enviamos o link de redefinição para seu e-mail.");
-      } else {
-        toast.error(
-          response?.erro ||
-          response?.mensagem ||
-          "Erro ao solicitar redefinição de senha."
-        );
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro de conexão com o servidor.");
-    } finally {
-      setLoadingRedefinicao(false);
-    }
-  }
-  
+export default function Cadastrar() {
   return (
     <Flex
       as="main"
@@ -265,5 +163,4 @@ export default function Login() {
       </Flex>
     </Flex>
   );
-}
 }
