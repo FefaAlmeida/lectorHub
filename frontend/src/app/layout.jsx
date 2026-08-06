@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Provider } from "@/components/ui/provider";
 import Header from "@/components/header";
+import Footer from "@/components/footer";
 
 export const metadata = {
  title: "Lector Hub",
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
     <Provider>
      <Header />
      <main className="flex-1">{children}</main>
+     <Footer />
     </Provider>
    </body>
   </html>
