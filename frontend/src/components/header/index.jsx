@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { BsBellFill } from "react-icons/bs";
 import { FiUser, FiLogOut } from "react-icons/fi";
+import Link from "next/link";
 
 const EASE = [0.16, 1, 0.3, 1];
 const ACCENT = "#7A3131";
@@ -70,51 +71,56 @@ export default function Header({ userName = "usuario", hasUnread = true }) {
     >
      {/* Esquerda – LectorHub */}
      <Flex align="center" gap="0.75rem" userSelect="none">
-      <Text
-       fontSize="1.15rem"
-       fontWeight="medium"
-       letterSpacing="tight"
-       fontFamily="Georgia, 'Source Serif Pro', ui-serif, serif"
-       color="black"
-      >
-       Lector
-       <Text as="span" color={ACCENT}>
-        Hub
-       </Text>
-      </Text>
-     </Flex>
-
-     {/* Centro – minha biblioteca */}
-     <Box position="relative" color="black">
-      <motion.div
-       initial="rest"
-       animate="rest"
-       whileHover="hover"
-       style={{ display: "inline-block", cursor: "pointer" }}
-      >
+      <Link href="/">
        <Text
-        as="span"
         fontSize="1.15rem"
+        fontWeight="medium"
         letterSpacing="tight"
         fontFamily="Georgia, 'Source Serif Pro', ui-serif, serif"
         color="black"
+        cursor="pointer"
        >
-        minha biblioteca
+        Lector
+        <Text as="span" color={ACCENT}>
+         Hub
+        </Text>
        </Text>
+      </Link>
+     </Flex>
+
+     <Box position="relative" color="black">
+      <Link href="/inicio">
        <motion.div
-        variants={underlineVariants}
-        transition={{ duration: 0.3, ease: EASE }}
-        style={{
-         position: "absolute",
-         left: 0,
-         right: 0,
-         bottom: "-4px",
-         height: "2px",
-         background: ACCENT,
-         transformOrigin: "left",
-        }}
-       />
-      </motion.div>
+        initial="rest"
+        animate="rest"
+        whileHover="hover"
+        style={{ display: "inline-block", cursor: "pointer" }}
+       >
+        <Text
+         as="span"
+         fontSize="1.15rem"
+         letterSpacing="tight"
+         fontFamily="Georgia, 'Source Serif Pro', ui-serif, serif"
+         color="black"
+        >
+         minha biblioteca
+        </Text>
+
+        <motion.div
+         variants={underlineVariants}
+         transition={{ duration: 0.3, ease: EASE }}
+         style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: "-4px",
+          height: "2px",
+          background: ACCENT,
+          transformOrigin: "left",
+         }}
+        />
+       </motion.div>
+      </Link>
      </Box>
 
      {/* Direita – ações */}
