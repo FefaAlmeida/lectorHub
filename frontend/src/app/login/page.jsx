@@ -1,9 +1,8 @@
 "use client";
-import { useState } from "react";
-import { loginUsuario, getPerfil, solicitarRedefinicaoSenha } from "../../../api";
-import { toast } from "sonner";
 
-  
+import { useState } from "react";
+import { loginUsuario, solicitarRedefinicaoSenha } from "../../../api";
+import Image from "next/image";
 
 import {
   Flex,
@@ -17,15 +16,13 @@ import {
   VStack,
 } from "@chakra-ui/react";
 
-export default function Login() {
-    
+export default function Logar() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingRedefinicao, setLoadingRedefinicao] = useState(false);
 
   async function handleLogin() {
-
     if (!email || !senha) {
       toast.error("Preencha todos os campos.");
       return;
@@ -41,14 +38,12 @@ export default function Login() {
     setLoading(true);
 
     try {
-
       const response = await loginUsuario({
         email: email.trim().toLowerCase(),
-        senha
+        senha,
       });
 
       if (response?.sucesso) {
-
         toast.success("Login realizado com sucesso!");
 
         const destino =
@@ -57,28 +52,19 @@ export default function Login() {
             : "/inicio-dashboard";
 
         window.location.href = destino;
-
       } else {
-
         toast.error(
           response?.erro ||
-          response?.mensagem ||
-          "Erro ao realizar login."
+            response?.mensagem ||
+            "Erro ao realizar login."
         );
-
       }
-
     } catch (error) {
-
       console.error(error);
       toast.error("Erro de conexão com o servidor.");
-
     } finally {
-
       setLoading(false);
-
     }
-
   }
 
   async function handleSolicitarRedefinicaoSenha() {
@@ -97,15 +83,20 @@ export default function Login() {
     setLoadingRedefinicao(true);
 
     try {
-      const response = await solicitarRedefinicaoSenha(email.trim().toLowerCase());
+      const response = await solicitarRedefinicaoSenha(
+        email.trim().toLowerCase()
+      );
 
       if (response?.sucesso) {
-        toast.success(response.mensagem || "Enviamos o link de redefinição para seu e-mail.");
+        toast.success(
+          response.mensagem ||
+            "Enviamos o link de redefinição para seu e-mail."
+        );
       } else {
         toast.error(
           response?.erro ||
-          response?.mensagem ||
-          "Erro ao solicitar redefinição de senha."
+            response?.mensagem ||
+            "Erro ao solicitar redefinição de senha."
         );
       }
     } catch (error) {
@@ -115,7 +106,7 @@ export default function Login() {
       setLoadingRedefinicao(false);
     }
   }
-  
+
   return (
     <Flex
       as="main"
@@ -135,9 +126,7 @@ export default function Login() {
         overflow="hidden"
         direction={{ base: "column", lg: "row" }}
       >
-        {/* ========================= */}
-        {/* LADO ESQUERDO             */}
-        {/* ========================= */}
+        {/* Lado esquerdo */}
         <Flex
           w={{ base: "100%", lg: "50%" }}
           bg="#4A0E17"
@@ -146,21 +135,17 @@ export default function Login() {
           h={{ base: "300px", lg: "auto" }}
           overflow="hidden"
         >
-          <Box maxW="80%">
-            <Image
-              src="/logoLectorHub.png"
-              alt="Lector Hub"
-              width={350}
-              height={350}
-              style={{ width: "100%", height: "auto" }}
-              priority
-            />
-          </Box>
+          <Image
+            src="/logoLectorHub.png"
+            alt="Lector Hub"
+            width={350}
+            height={350}
+            style={{ width: "100%", height: "auto" }}
+            priority
+          />
         </Flex>
 
-        {/* ========================= */}
-        {/* LADO DIREITO              */}
-        {/* ========================= */}
+        {/* Lado direito */}
         <Flex
           w={{ base: "100%", lg: "50%" }}
           direction="column"
@@ -179,14 +164,25 @@ export default function Login() {
             LOGIN
           </Heading>
 
-          <VStack as="form" w="100%" maxW="420px" spacing={5}>
-            {/* Input E-mail */}
+          <VStack
+            as="form"
+            w="100%"
+            maxW="420px"
+            gap={5}
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+          >
+            {/* Email */}
             <Field.Root>
               <Field.Label color="#666">Username</Field.Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 h="58px"
                 borderRadius="8px"
                 border="1px solid"
@@ -199,13 +195,15 @@ export default function Login() {
               />
             </Field.Root>
 
-            {/* Input Senha */}
+            {/* Senha */}
             <Field.Root>
               <Field.Label color="#666">Password</Field.Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="Password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
                 h="58px"
                 borderRadius="8px"
                 border="1px solid"
@@ -218,19 +216,21 @@ export default function Login() {
               />
             </Field.Root>
 
-            {/* Opções extras (Esqueceu a senha) */}
+            {/* Esqueceu a senha */}
             <Flex w="100%" justify="flex-start" mt={2} mb={2}>
-              <Link
-                href="#"
+              <Button
+                variant="link"
                 color="#4A0E17"
-                fontSize="15px"
-                _hover={{ textDecoration: "underline" }}
+                onClick={handleSolicitarRedefinicaoSenha}
+                disabled={loadingRedefinicao}
               >
-                Esqueceu a senha?
-              </Link>
+                {loadingRedefinicao
+                  ? "Enviando link..."
+                  : "Esqueceu a senha?"}
+              </Button>
             </Flex>
 
-            {/* Botão de Login */}
+            {/* Botão Entrar */}
             <Button
               type="submit"
               w="100%"
@@ -243,11 +243,13 @@ export default function Login() {
               transition="0.3s"
               _hover={{ bg: "#641320" }}
               _active={{ bg: "#380a11" }}
+              loading={loading}
+              disabled={loading}
             >
-              Entrar
+              {loading ? "Entrando..." : "Entrar"}
             </Button>
 
-            {/* Texto de Cadastro */}
+            {/* Cadastro */}
             <Text
               mt="25px"
               textAlign="center"
@@ -256,8 +258,12 @@ export default function Login() {
               color="#4A0E17"
             >
               Não tem uma conta?{" "}
-              <Box as="span" cursor="pointer" _hover={{ textDecoration: "underline" }}>
-                Cadastra-se
+              <Box
+                as="span"
+                cursor="pointer"
+                _hover={{ textDecoration: "underline" }}
+              >
+                Cadastre-se
               </Box>
             </Text>
           </VStack>
@@ -265,5 +271,4 @@ export default function Login() {
       </Flex>
     </Flex>
   );
-}
 }

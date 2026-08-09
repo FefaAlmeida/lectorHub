@@ -74,13 +74,13 @@ export default function Cadastrar() {
             mb="45px"
             textAlign="center"
           >
-            LOGIN
+            CADASTRO
           </Heading>
 
           <VStack as="form" w="100%" maxW="420px" spacing={5}>
             {/* Input E-mail */}
             <Field.Root>
-              <Field.Label color="#666">Username</Field.Label>
+              <Field.Label color="#666">E-mail</Field.Label>
               <Input
                 id="email"
                 type="email"
@@ -97,11 +97,28 @@ export default function Cadastrar() {
               />
             </Field.Root>
 
-            {/* Input Senha */}
             <Field.Root>
-              <Field.Label color="#666">Password</Field.Label>
+              <Field.Label color="#666">Nome</Field.Label>
               <Input
-                id="password"
+                id="nome"
+                type="text"
+                placeholder="seunome"
+                h="58px"
+                borderRadius="8px"
+                border="1px solid"
+                borderColor="#dbcdb4"
+                _hover={{ borderColor: "#c4b59d" }}
+                _focus={{
+                  borderColor: "#4A0E17",
+                  boxShadow: "0 0 0 1px #4A0E17",
+                }}
+              />
+            </Field.Root>
+
+            <Field.Root>
+              <Field.Label color="#666">Insira uma senha</Field.Label>
+              <Input
+                id="senha"
                 type="password"
                 placeholder="Password"
                 h="58px"
@@ -116,17 +133,25 @@ export default function Cadastrar() {
               />
             </Field.Root>
 
-            {/* Opções extras (Esqueceu a senha) */}
-            <Flex w="100%" justify="flex-start" mt={2} mb={2}>
-              <Link
-                href="#"
-                color="#4A0E17"
-                fontSize="15px"
-                _hover={{ textDecoration: "underline" }}
-              >
-                Esqueceu a senha?
-              </Link>
-            </Flex>
+            {/* Input Senha */}
+            <Field.Root>
+              <Field.Label color="#666">Confirme a senha</Field.Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Password"
+                h="58px"
+                borderRadius="8px"
+                border="1px solid"
+                borderColor="#dbcdb4"
+                _hover={{ borderColor: "#c4b59d" }}
+                _focus={{
+                  borderColor: "#4A0E17",
+                  boxShadow: "0 0 0 1px #4A0E17",
+                }}
+              />
+            </Field.Root>
+
 
             {/* Botão de Login */}
             <Button
@@ -153,9 +178,9 @@ export default function Cadastrar() {
               fontWeight="bold"
               color="#4A0E17"
             >
-              Não tem uma conta?{" "}
+              Já tem uma conta?{" "}
               <Box as="span" cursor="pointer" _hover={{ textDecoration: "underline" }}>
-                Cadastra-se
+                Faça login
               </Box>
             </Text>
           </VStack>
