@@ -1,11 +1,9 @@
 import jwt from 'jsonwebtoken';
-import { Resend } from 'resend';
 import UsuarioModel from '../models/UsuarioModel.js';
 import { JWT_CONFIG } from '../config/jwt.js';
 import { comparePassword } from '../config/database.js';
 import { setAuthCookie, clearAuthCookie } from '../utils/authCookie.js';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { enviarEmail } from '../utils/email.js';
 
 class AuthController {
 
@@ -37,7 +35,7 @@ class AuthController {
                 {
                     id: usuario.id,
                     email: usuario.email,
-                    tipo_usuario: usuario.tipo_usuario
+                    tipo: usuario.tipo
                 },
                 JWT_CONFIG.secret,
                 { expiresIn: JWT_CONFIG.expiresIn }
@@ -53,7 +51,7 @@ class AuthController {
                         id: usuario.id,
                         nome: usuario.nome,
                         email: usuario.email,
-                        tipo_usuario: usuario.tipo_usuario
+                        tipo: usuario.tipo
                     }
                 }
             });
@@ -101,7 +99,7 @@ class AuthController {
             const emailNormalizado = email.trim().toLowerCase();
             const usuario = await UsuarioModel.buscarPorEmail(emailNormalizado);
 
-            if (!usuario || usuario.status_usuario !== 'ATIVO') {
+            if (!usuario) {
                 return res.status(404).json({
                     sucesso: false,
                     erro: 'Usuário não encontrado'
@@ -121,42 +119,46 @@ class AuthController {
             const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
             const linkRedefinicao = `${frontendUrl}/redefinir-senha?token=${token}`;
 
-            // CORREÇÃO: Bloco do Nodemailer removido. Disparo feito 100% via Resend com o e-mail solicitado
-            const { data, error } = await resend.emails.send({
-                from: 'Luminar <onboarding@gustavo-paiva.dev.br>',
-                to: usuario.email,
-                subject: 'Redefinição de senha - Luminar',
-                text: `Olá ${usuario.nome},\n\nRecebemos uma solicitação para redefinir sua senha.\n\nAcesse o link abaixo para criar uma nova senha:\n${linkRedefinicao}\n\nEste link expira em 15 minutos.\n\nSe você não solicitou isso, ignore este e-mail.\n\nAtenciosamente,\nEquipe Luminar`,
-                html: `
-                    <div style="font-family: Arial, sans-serif; color: #221f20;">
-                        <h2 style="color: #febd17;">Olá ${usuario.nome},</h2>
-                        <p>Recebemos uma solicitação para redefinir sua senha.</p>
-                        <p>Clique no botão abaixo para criar uma nova senha:</p>
-                        <p>
-                            <a href="${linkRedefinicao}" style="display: inline-block; background: #febd17; color: #221f20; padding: 14px 22px; border-radius: 10px; text-decoration: none; font-weight: bold;">
-                                Redefinir senha
-                            </a>
-                        </p>
-                        <p>Este link expira em 15 minutos.</p>
-                        <p>Se você não solicitou isso, ignore este e-mail.</p>
-                        <br>
-                        <p>Atenciosamente,<br><strong>Equipe Luminar</strong></p>
-                    </div>
-                `,
-            });
+            let enviado = false;
 
-            if (error) {
-                console.error('Erro retornado pela API do Resend:', error);
+            try {
+                const resultado = await enviarEmail({
+                    para: usuario.email,
+                    assunto: 'Redefinição de senha - Luminar',
+                    texto: `Olá ${usuario.nome},\n\nRecebemos uma solicitação para redefinir sua senha.\n\nAcesse o link abaixo para criar uma nova senha:\n${linkRedefinicao}\n\nEste link expira em 15 minutos.\n\nSe você não solicitou isso, ignore este e-mail.\n\nAtenciosamente,\nEquipe Luminar`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; color: #221f20;">
+                            <h2 style="color: #febd17;">Olá ${usuario.nome},</h2>
+                            <p>Recebemos uma solicitação para redefinir sua senha.</p>
+                            <p>Clique no botão abaixo para criar uma nova senha:</p>
+                            <p>
+                                <a href="${linkRedefinicao}" style="display: inline-block; background: #febd17; color: #221f20; padding: 14px 22px; border-radius: 10px; text-decoration: none; font-weight: bold;">
+                                    Redefinir senha
+                                </a>
+                            </p>
+                            <p>Este link expira em 15 minutos.</p>
+                            <p>Se você não solicitou isso, ignore este e-mail.</p>
+                            <br>
+                            <p>Atenciosamente,<br><strong>Equipe Luminar</strong></p>
+                        </div>
+                    `,
+                });
+
+                enviado = resultado.enviado;
+            } catch (erroEnvio) {
+                console.error('Erro ao enviar e-mail via SMTP:', erroEnvio);
                 return res.status(400).json({
                     sucesso: false,
                     erro: 'Erro ao enviar e-mail de redefinição',
-                    mensagem: error.message
+                    mensagem: erroEnvio.message
                 });
             }
 
             return res.status(200).json({
                 sucesso: true,
-                mensagem: 'Enviamos um link de redefinição para o seu e-mail.'
+                mensagem: enviado
+                    ? 'Enviamos um link de redefinição para o seu e-mail.'
+                    : 'Envio de e-mail desabilitado. O link de redefinição foi exibido no console do servidor.'
             });
 
         } catch (error) {
@@ -272,7 +274,8 @@ class AuthController {
 
             const {
                 nome,
-                senha
+                senha,
+                telefone
             } = req.body;
 
             const usuarioAtual = await UsuarioModel.buscarPorId(id);
@@ -301,6 +304,14 @@ class AuthController {
                 }
             }
 
+            if (telefone !== undefined) {
+                const telefoneNormalizado = telefone ? telefone.trim() : null;
+
+                if (telefoneNormalizado !== usuarioAtual.telefone) {
+                    dadosAtualizacao.telefone = telefoneNormalizado;
+                }
+            }
+
             if (senha !== undefined) {
                 if (senha.length < 6) {
                     return res.status(400).json({
@@ -320,10 +331,8 @@ class AuthController {
                         id: usuarioAtual.id,
                         nome: usuarioAtual.nome,
                         email: usuarioAtual.email,
-                        tipo_usuario: usuarioAtual.tipo_usuario,
-                        status_usuario: usuarioAtual.status_usuario,
-                        id_solicitacao: usuarioAtual.id_solicitacao,
-                        id_empresa: usuarioAtual.id_empresa
+                        telefone: usuarioAtual.telefone,
+                        tipo: usuarioAtual.tipo
                     }
                 });
             }
@@ -347,10 +356,8 @@ class AuthController {
                     id: atualizado.id,
                     nome: atualizado.nome,
                     email: atualizado.email,
-                    tipo_usuario: atualizado.tipo_usuario,
-                    status_usuario: atualizado.status_usuario,
-                    id_solicitacao: atualizado.id_solicitacao,
-                    id_empresa: atualizado.id_empresa
+                    telefone: atualizado.telefone,
+                    tipo: atualizado.tipo
                 }
             });
 

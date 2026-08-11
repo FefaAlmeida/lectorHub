@@ -1,8 +1,5 @@
 import FaleConoscoModel from '../models/FaleConoscoModel.js';
-import { Resend } from 'resend'; 
-
-// Inicializa o Resend com a chave cadastrada no seu arquivo .env
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { enviarEmail } from '../utils/email.js';
 
 class FaleConoscoController {
 
@@ -28,45 +25,47 @@ class FaleConoscoController {
                 });
             }
 
-            // Enviar o e-mail utilizando a API HTTP do Resend
-            const { data, error } = await resend.emails.send({
-                from: 'Luminar <onboarding@gustavo-paiva.dev.br>', // Remetente padrão do plano gratuito
-                to: mensagemOriginal.email,             // E-mail do cliente vindo do banco
-                subject: 'Resposta ao seu contato - Luminar',
-                text: `Olá ${mensagemOriginal.nome_completo},\n\nRecebemos sua mensagem: "${mensagemOriginal.mensagem}"\n\nResposta da nossa equipe:\n${resposta}\n\nAtenciosamente,\nEquipe Luminar`,
-                html: `
-                    <div style="font-family: Arial, sans-serif; color: #221f20; max-width: 600px; margin: 0 auto;">
-                        <h2 style="color: #febd17;">Olá ${mensagemOriginal.nome_completo},</h2>
-                        <p>Recebemos sua mensagem:</p>
-                        <blockquote style="background: #f9f9f9; padding: 10px; border-left: 5px solid #febd17; margin: 15px 0;">
-                            ${mensagemOriginal.mensagem}
-                        </blockquote>
-                        <p><strong>Resposta da nossa equipe:</strong></p>
-                        <p>${resposta.replace(/\n/g, '<br>')}</p>
-                        <br>
-                        <p>Atenciosamente,<br><strong>Equipe Luminar</strong></p>
-                    </div>
-                `,
-            });
+            // Enviar o e-mail via SMTP (respeita a flag EMAIL_ENABLED)
+            let enviado = false;
 
-            // Verifica se a API do Resend retornou algum erro de envio
-            if (error) {
-                console.error('Erro retornado pela API do Resend:', error);
+            try {
+                const resultado = await enviarEmail({
+                    para: mensagemOriginal.email,   // E-mail do cliente vindo do banco
+                    assunto: 'Resposta ao seu contato - Luminar',
+                    texto: `Olá ${mensagemOriginal.nome_completo},\n\nRecebemos sua mensagem: "${mensagemOriginal.mensagem}"\n\nResposta da nossa equipe:\n${resposta}\n\nAtenciosamente,\nEquipe Luminar`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; color: #221f20; max-width: 600px; margin: 0 auto;">
+                            <h2 style="color: #febd17;">Olá ${mensagemOriginal.nome_completo},</h2>
+                            <p>Recebemos sua mensagem:</p>
+                            <blockquote style="background: #f9f9f9; padding: 10px; border-left: 5px solid #febd17; margin: 15px 0;">
+                                ${mensagemOriginal.mensagem}
+                            </blockquote>
+                            <p><strong>Resposta da nossa equipe:</strong></p>
+                            <p>${resposta.replace(/\n/g, '<br>')}</p>
+                            <br>
+                            <p>Atenciosamente,<br><strong>Equipe Luminar</strong></p>
+                        </div>
+                    `,
+                });
+
+                enviado = resultado.enviado;
+            } catch (erroEnvio) {
+                console.error('Erro ao enviar e-mail via SMTP:', erroEnvio);
                 return res.status(500).json({
                     sucesso: false,
-                    erro: 'Erro ao enviar o e-mail de resposta através da API.',
-                    mensagem: error.message
+                    erro: 'Erro ao enviar o e-mail de resposta.',
+                    mensagem: erroEnvio.message
                 });
             }
-
-            console.log('E-mail enviado com sucesso via Resend:', data);
 
             // Salvar a resposta no banco de dados após a confirmação de envio
             await FaleConoscoModel.responder(id, resposta);
 
             res.status(200).json({
                 sucesso: true,
-                mensagem: 'Resposta enviada com sucesso para o cliente e registrada no sistema.'
+                mensagem: enviado
+                    ? 'Resposta enviada com sucesso para o cliente e registrada no sistema.'
+                    : 'Resposta registrada no sistema. O envio de e-mail está desabilitado (EMAIL_ENABLED).'
             });
 
         } catch (error) {

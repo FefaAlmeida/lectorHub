@@ -1,6 +1,16 @@
+"use client";
+
 import { Box, Flex, Text } from "@chakra-ui/react";
+import { usePathname } from "next/navigation";
+
+// Páginas de autenticação usam layout de tela cheia — sem footer embaixo.
+const ROTAS_SEM_FOOTER = ["/login", "/cadastrar"];
 
 export default function Footer() {
+ const pathname = usePathname();
+
+ if (ROTAS_SEM_FOOTER.includes(pathname)) return null;
+
  return (
   <Box
    as="footer"

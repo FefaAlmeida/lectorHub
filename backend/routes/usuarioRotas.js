@@ -1,6 +1,5 @@
 import express from 'express';
 import UsuarioController from '../controllers/UsuarioController.js';
-import AuthController from '../controllers/AuthController.js';
 import { authMiddleware, adminMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -26,14 +25,6 @@ router.put(
     authMiddleware,
     adminMiddleware,
     UsuarioController.atualizarUsuario
-);
-
-// INATIVAR USUÁRIO
-router.patch(
-    '/:id/inativar',
-    authMiddleware,
-    adminMiddleware,
-    UsuarioController.inativarUsuario
 );
 
 router.options('/', (req, res) => {

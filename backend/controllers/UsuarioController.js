@@ -1,41 +1,45 @@
 import UsuarioModel from '../models/UsuarioModel.js';
-import OrcamentoModel from '../models/OrcamentoModel.js';
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 class UsuarioController {
 
+    // CADASTRO PÚBLICO
     static async criarUsuario(req, res) {
         try {
-            const { senha, token } = req.body;
+            const { nome, email, senha, telefone } = req.body;
 
-            if (!senha || !token) {
+            if (!nome || !nome.trim()) {
                 return res.status(400).json({
                     sucesso: false,
-                    erro: 'Senha e token são obrigatórios'
+                    erro: 'Nome é obrigatório'
                 });
             }
 
-            const orcamento = await OrcamentoModel.buscarPorToken(token);
-
-            if (!orcamento) {
-                return res.status(403).json({
+            if (!email || !email.trim()) {
+                return res.status(400).json({
                     sucesso: false,
-                    erro: 'Token inválido ou orçamento não aceito'
+                    erro: 'E-mail é obrigatório'
                 });
             }
 
-            if (orcamento.status_solicitacao !== 'ACEITA') {
-                return res.status(403).json({
+            const emailNormalizado = email.trim().toLowerCase();
+
+            if (!EMAIL_REGEX.test(emailNormalizado)) {
+                return res.status(400).json({
                     sucesso: false,
-                    erro: 'Orçamento não aceito'
+                    erro: 'E-mail inválido'
                 });
             }
 
-            // Nome e e-mail são derivados do orçamento vinculado ao token,
-            // não do que o client envia.
-            const nome = orcamento.nome_responsavel;
-            const email = orcamento.email_contato;
+            if (!senha || senha.length < 6) {
+                return res.status(400).json({
+                    sucesso: false,
+                    erro: 'A senha deve ter pelo menos 6 caracteres'
+                });
+            }
 
-            const existe = await UsuarioModel.buscarPorEmail(email);
+            const existe = await UsuarioModel.buscarPorEmail(emailNormalizado);
 
             if (existe) {
                 return res.status(409).json({
@@ -44,28 +48,28 @@ class UsuarioController {
                 });
             }
 
+            // O tipo nunca vem do client: todo cadastro público nasce como 'cliente'.
             const id = await UsuarioModel.criar({
                 nome: nome.trim(),
-                email: email.trim().toLowerCase(),
+                email: emailNormalizado,
                 senha,
-                tipo_usuario: 'CLIENTE',
-                id_solicitacao: orcamento.id_solicitacao,
-                id_empresa: null
+                telefone: telefone ? telefone.trim() : null,
+                tipo: 'cliente'
             });
-
-            await OrcamentoModel.invalidarToken(token);
 
             return res.status(201).json({
                 sucesso: true,
                 mensagem: 'Usuário criado com sucesso',
                 dados: {
                     id,
-                    id_solicitacao: orcamento.id_solicitacao
+                    nome: nome.trim(),
+                    email: emailNormalizado,
+                    tipo: 'cliente'
                 }
             });
 
         } catch (error) {
-            console.error(error);
+            console.error('Erro ao criar usuário:', error);
             return res.status(500).json({
                 sucesso: false,
                 erro: 'Erro interno do servidor'
@@ -73,32 +77,42 @@ class UsuarioController {
         }
     }
 
+    // LISTAR USUÁRIOS (ADMIN)
     static async listarUsuarios(req, res) {
         try {
             const pagina = parseInt(req.query.pagina) || 1;
             const limite = parseInt(req.query.limite) || 10;
 
-            const resultado = await UsuarioModel.listarTodos(pagina, limite);
+            if (pagina <= 0 || limite <= 0) {
+                return res.status(400).json({
+                    sucesso: false,
+                    erro: 'Página e limite devem ser maiores que zero'
+                });
+            }
 
-            const usuarios = resultado.usuarios.map(u => {
-                delete u.senha;
-                return u;
-            });
+            const resultado = await UsuarioModel.listarTodos(pagina, limite);
 
             return res.status(200).json({
                 sucesso: true,
-                dados: usuarios,
-                paginacao: resultado
+                dados: resultado.usuarios,
+                paginacao: {
+                    pagina: resultado.pagina,
+                    limite: resultado.limite,
+                    total: resultado.total,
+                    totalPaginas: resultado.totalPaginas
+                }
             });
 
         } catch (error) {
+            console.error('Erro ao listar usuários:', error);
             return res.status(500).json({
                 sucesso: false,
-                erro: 'Erro interno'
+                erro: 'Erro interno do servidor'
             });
         }
     }
 
+    // ATUALIZAR QUALQUER USUÁRIO (ADMIN)
     static async atualizarUsuario(req, res) {
         try {
             const { id } = req.params;
@@ -112,7 +126,69 @@ class UsuarioController {
                 });
             }
 
-            await UsuarioModel.atualizar(id, req.body);
+            const { nome, email, senha, telefone, tipo } = req.body;
+            const dadosAtualizacao = {};
+
+            if (nome !== undefined) {
+                if (!nome.trim()) {
+                    return res.status(400).json({
+                        sucesso: false,
+                        erro: 'Nome é obrigatório'
+                    });
+                }
+
+                dadosAtualizacao.nome = nome.trim();
+            }
+
+            if (email !== undefined) {
+                const emailNormalizado = email.trim().toLowerCase();
+
+                if (!EMAIL_REGEX.test(emailNormalizado)) {
+                    return res.status(400).json({
+                        sucesso: false,
+                        erro: 'E-mail inválido'
+                    });
+                }
+
+                const emailEmUso = await UsuarioModel.buscarPorEmail(emailNormalizado);
+
+                if (emailEmUso && String(emailEmUso.id) !== String(usuario.id)) {
+                    return res.status(409).json({
+                        sucesso: false,
+                        erro: 'Esse e-mail já está em uso.'
+                    });
+                }
+
+                dadosAtualizacao.email = emailNormalizado;
+            }
+
+            if (senha !== undefined) {
+                if (senha.length < 6) {
+                    return res.status(400).json({
+                        sucesso: false,
+                        erro: 'A senha deve ter pelo menos 6 caracteres'
+                    });
+                }
+
+                dadosAtualizacao.senha = senha;
+            }
+
+            if (telefone !== undefined) {
+                dadosAtualizacao.telefone = telefone ? telefone.trim() : null;
+            }
+
+            if (tipo !== undefined) {
+                dadosAtualizacao.tipo = tipo;
+            }
+
+            if (Object.keys(dadosAtualizacao).length === 0) {
+                return res.status(200).json({
+                    sucesso: true,
+                    mensagem: 'Nenhuma alteração necessária'
+                });
+            }
+
+            await UsuarioModel.atualizar(id, dadosAtualizacao);
 
             return res.status(200).json({
                 sucesso: true,
@@ -120,48 +196,18 @@ class UsuarioController {
             });
 
         } catch (error) {
+            console.error('Erro ao atualizar usuário:', error);
             return res.status(500).json({
                 sucesso: false,
-                erro: 'Erro interno'
+                erro: 'Erro interno do servidor'
             });
         }
     }
 
-
-    static async inativarUsuario(req, res) {
-        try {
-            const { id } = req.params;
-
-            const usuario = await UsuarioModel.buscarPorId(id);
-
-            if (!usuario) {
-                return res.status(404).json({
-                    sucesso: false,
-                    erro: 'Usuário não encontrado'
-                });
-            }
-
-            await UsuarioModel.inativar(id);
-
-            return res.status(200).json({
-                sucesso: true,
-                mensagem: 'Usuário inativado'
-            });
-
-        } catch (error) {
-
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno'
-            });
-        }
-    }
-
+    // VER PRÓPRIO PERFIL
     static async me(req, res) {
         try {
-            const id = req.usuario.id;
-
-            const usuario = await UsuarioModel.buscarPorId(id);
+            const usuario = await UsuarioModel.buscarPorId(req.usuario.id);
 
             if (!usuario) {
                 return res.status(404).json({
@@ -178,21 +224,19 @@ class UsuarioController {
             });
 
         } catch (error) {
+            console.error('Erro ao obter perfil:', error);
             return res.status(500).json({
                 sucesso: false,
-                erro: 'Erro interno'
+                erro: 'Erro interno do servidor'
             });
         }
     }
 
+    // ATUALIZAR PRÓPRIO PERFIL
     static async atualizarMeuPerfil(req, res) {
         try {
             const id = req.usuario.id;
-
-            const {
-                nome,
-                senha
-            } = req.body;
+            const { nome, senha, telefone } = req.body;
 
             const dadosAtualizacao = {};
 
@@ -207,6 +251,10 @@ class UsuarioController {
                 dadosAtualizacao.nome = nome.trim();
             }
 
+            if (telefone !== undefined) {
+                dadosAtualizacao.telefone = telefone ? telefone.trim() : null;
+            }
+
             if (senha !== undefined) {
                 if (senha.length < 6) {
                     return res.status(400).json({
@@ -218,14 +266,14 @@ class UsuarioController {
                 dadosAtualizacao.senha = senha;
             }
 
-            const resultado = await UsuarioModel.atualizarPerfil(id, dadosAtualizacao);
-
-            if (resultado === 0) {
-                return res.status(400).json({
-                    sucesso: false,
-                    erro: 'Nenhuma alteração realizada'
+            if (Object.keys(dadosAtualizacao).length === 0) {
+                return res.status(200).json({
+                    sucesso: true,
+                    mensagem: 'Nenhuma alteração necessária'
                 });
             }
+
+            await UsuarioModel.atualizarPerfil(id, dadosAtualizacao);
 
             return res.status(200).json({
                 sucesso: true,
@@ -233,9 +281,10 @@ class UsuarioController {
             });
 
         } catch (error) {
+            console.error('Erro ao atualizar perfil:', error);
             return res.status(500).json({
                 sucesso: false,
-                erro: 'Erro interno'
+                erro: 'Erro interno do servidor'
             });
         }
     }

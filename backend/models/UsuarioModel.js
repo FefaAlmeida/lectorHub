@@ -1,44 +1,53 @@
 import { hashPassword, comparePassword, getConnection } from '../config/database.js';
 
+// Tabela `usuarios` (migration 20260804_003):
+//   id_usuario INT PK AI | nome | email UNIQUE | senha | telefone NULL
+//   tipo ENUM('admin', 'cliente') DEFAULT 'cliente'
+// O alias `id_usuario AS id` é mantido porque controllers e JWT usam `usuario.id`.
+
 class UsuarioModel {
 
-    static normalizarTipoUsuario(tipo) {
-        const tipoNormalizado = String(tipo || 'CLIENTE').trim().toUpperCase();
-        return tipoNormalizado === 'ADMIN' ? 'ADMIN' : 'CLIENTE';
+    static normalizarTipo(tipo) {
+        return String(tipo || 'cliente').trim().toLowerCase() === 'admin'
+            ? 'admin'
+            : 'cliente';
     }
 
     // LISTAR USUÁRIOS (SEM SENHA)
     static async listarTodos(pagina = 1, limite = 10) {
-        const offset = (pagina - 1) * limite;
+        // LIMIT/OFFSET não aceitam placeholder em prepared statement no MySQL,
+        // por isso são interpolados — sempre como inteiros sanitizados.
+        const limiteSeguro = Math.min(Math.max(parseInt(limite) || 10, 1), 100);
+        const paginaSegura = Math.max(parseInt(pagina) || 1, 1);
+        const offset = (paginaSegura - 1) * limiteSeguro;
+
         const connection = await getConnection();
 
         try {
             const sql = `
-                SELECT 
+                SELECT
                     id_usuario AS id,
-                    id_solicitacao,
                     nome,
                     email,
-                    tipo_usuario,
-                    status_usuario,
-                    id_empresa
+                    telefone,
+                    tipo
                 FROM usuarios
                 ORDER BY id_usuario DESC
-                LIMIT ? OFFSET ?
+                LIMIT ${limiteSeguro} OFFSET ${offset}
             `;
 
-            const [usuarios] = await connection.execute(sql, [limite, offset]);
+            const [usuarios] = await connection.execute(sql);
 
             const [totalResult] = await connection.execute(
-                'SELECT COUNT(*) as total FROM usuarios'
+                'SELECT COUNT(*) AS total FROM usuarios'
             );
 
             return {
                 usuarios,
                 total: totalResult[0].total,
-                pagina,
-                limite,
-                totalPaginas: Math.ceil(totalResult[0].total / limite)
+                pagina: paginaSegura,
+                limite: limiteSeguro,
+                totalPaginas: Math.ceil(totalResult[0].total / limiteSeguro)
             };
 
         } finally {
@@ -52,15 +61,13 @@ class UsuarioModel {
 
         try {
             const sql = `
-                SELECT 
+                SELECT
                     id_usuario AS id,
-                    id_solicitacao,
                     nome,
                     email,
                     senha,
-                    tipo_usuario,
-                    status_usuario,
-                    id_empresa
+                    telefone,
+                    tipo
                 FROM usuarios
                 WHERE id_usuario = ?
                 LIMIT 1
@@ -74,21 +81,19 @@ class UsuarioModel {
         }
     }
 
-    // BUSCAR POR EMAIL (LOGIN)
+    // BUSCAR POR EMAIL (LOGIN / CADASTRO)
     static async buscarPorEmail(email) {
         const connection = await getConnection();
 
         try {
             const sql = `
-                SELECT 
+                SELECT
                     id_usuario AS id,
-                    id_solicitacao,
                     nome,
                     email,
                     senha,
-                    tipo_usuario,
-                    status_usuario,
-                    id_empresa
+                    telefone,
+                    tipo
                 FROM usuarios
                 WHERE email = ?
                 LIMIT 1
@@ -102,33 +107,23 @@ class UsuarioModel {
         }
     }
 
-    // CRIAR USUÁRIO (SÓ APÓS ACEITE DO ORÇAMENTO)
+    // CRIAR USUÁRIO (CADASTRO PÚBLICO)
     static async criar(dados) {
-        const connection = await getConnection();
-
         const senhaHash = await hashPassword(dados.senha);
+        const connection = await getConnection();
 
         try {
             const sql = `
-                INSERT INTO usuarios (
-                    id_solicitacao,
-                    nome,
-                    email,
-                    senha,
-                    tipo_usuario,
-                    status_usuario,
-                    id_empresa
-                )
-                VALUES (?, ?, ?, ?, ?, 'ATIVO', ?)
+                INSERT INTO usuarios (nome, email, senha, telefone, tipo)
+                VALUES (?, ?, ?, ?, ?)
             `;
 
             const [result] = await connection.execute(sql, [
-                dados.id_solicitacao,
                 dados.nome,
                 dados.email,
                 senhaHash,
-                this.normalizarTipoUsuario(dados.tipo_usuario ?? dados.tipo),
-                dados.id_empresa || null
+                dados.telefone || null,
+                this.normalizarTipo(dados.tipo)
             ]);
 
             return result.insertId;
@@ -138,7 +133,7 @@ class UsuarioModel {
         }
     }
 
-    // ATUALIZAR USUÁRIO
+    // ATUALIZAR USUÁRIO (ADMIN)
     static async atualizar(id, dados) {
         const campos = [];
         const valores = [];
@@ -158,19 +153,14 @@ class UsuarioModel {
             valores.push(await hashPassword(dados.senha));
         }
 
-        if (dados.tipo_usuario !== undefined) {
-            campos.push('tipo_usuario = ?');
-            valores.push(this.normalizarTipoUsuario(dados.tipo_usuario));
+        if (dados.telefone !== undefined) {
+            campos.push('telefone = ?');
+            valores.push(dados.telefone || null);
         }
 
-        if (dados.id_empresa !== undefined) {
-            campos.push('id_empresa = ?');
-            valores.push(dados.id_empresa);
-        }
-
-        if (dados.status_usuario !== undefined) {
-            campos.push('status_usuario = ?');
-            valores.push(dados.status_usuario);
+        if (dados.tipo !== undefined) {
+            campos.push('tipo = ?');
+            valores.push(this.normalizarTipo(dados.tipo));
         }
 
         if (campos.length === 0) return 0;
@@ -184,11 +174,7 @@ class UsuarioModel {
                 WHERE id_usuario = ?
             `;
 
-            const [result] = await connection.execute(sql, [
-                ...valores,
-                id
-            ]);
-
+            const [result] = await connection.execute(sql, [...valores, id]);
             return result.affectedRows;
 
         } finally {
@@ -196,7 +182,7 @@ class UsuarioModel {
         }
     }
 
-    // ATUALIZAR PRÓPRIO PERFIL (NOME E SENHA)
+    // ATUALIZAR PRÓPRIO PERFIL (NOME, TELEFONE E SENHA)
     static async atualizarPerfil(id, dados) {
         const campos = [];
         const valores = [];
@@ -204,6 +190,11 @@ class UsuarioModel {
         if (dados.nome !== undefined) {
             campos.push('nome = ?');
             valores.push(dados.nome);
+        }
+
+        if (dados.telefone !== undefined) {
+            campos.push('telefone = ?');
+            valores.push(dados.telefone || null);
         }
 
         if (dados.senha !== undefined) {
@@ -222,30 +213,7 @@ class UsuarioModel {
                 WHERE id_usuario = ?
             `;
 
-            const [result] = await connection.execute(sql, [
-                ...valores,
-                id
-            ]);
-
-            return result.affectedRows;
-
-        } finally {
-            connection.release();
-        }
-    }
-
-    // INATIVAR USUÁRIO (NÃO DELETA)
-    static async inativar(id) {
-        const connection = await getConnection();
-
-        try {
-            const sql = `
-                UPDATE usuarios
-                SET status_usuario = 'INATIVO'
-                WHERE id_usuario = ?
-            `;
-
-            const [result] = await connection.execute(sql, [id]);
+            const [result] = await connection.execute(sql, [...valores, id]);
             return result.affectedRows;
 
         } finally {
@@ -257,8 +225,6 @@ class UsuarioModel {
     static async verificarCredenciais(email, senha) {
         const usuario = await this.buscarPorEmail(email);
         if (!usuario) return null;
-
-        if (usuario.status_usuario !== 'ATIVO') return null;
 
         const senhaOk = await comparePassword(senha, usuario.senha);
         if (!senhaOk) return null;

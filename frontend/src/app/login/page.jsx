@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { loginUsuario, solicitarRedefinicaoSenha } from "../../../api";
+import { loginUsuario, solicitarRedefinicaoSenha } from "../../api";
 import Image from "next/image";
 
 import {
@@ -10,11 +10,12 @@ import {
   Heading,
   Field,
   Input,
-  Link,
   Button,
   Text,
   VStack,
 } from "@chakra-ui/react";
+
+import { toaster } from "@/components/ui/toaster";
 
 export default function Logar() {
   const [email, setEmail] = useState("");
@@ -22,16 +23,26 @@ export default function Logar() {
   const [loading, setLoading] = useState(false);
   const [loadingRedefinicao, setLoadingRedefinicao] = useState(false);
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   async function handleLogin() {
     if (!email || !senha) {
-      toast.error("Preencha todos os campos.");
+      toaster.create({
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos.",
+        type: "error",
+      });
+
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     if (!emailRegex.test(email)) {
-      toast.error("Formato de email inválido.");
+      toaster.create({
+        title: "E-mail inválido",
+        description: "Digite um e-mail válido.",
+        type: "error",
+      });
+
       return;
     }
 
@@ -44,39 +55,59 @@ export default function Logar() {
       });
 
       if (response?.sucesso) {
-        toast.success("Login realizado com sucesso!");
+        toaster.create({
+          title: "Login realizado!",
+          description: "Redirecionando para a sua biblioteca...",
+          type: "success",
+        });
 
-        const destino =
-          response.dados?.usuario?.tipo_usuario === "ADMIN"
-            ? "/inicio-adm"
-            : "/inicio-dashboard";
-
-        window.location.href = destino;
+        // Ainda não existe área de admin no LectorHub — todos vão para /inicio.
+        setTimeout(() => {
+          window.location.href = "/inicio";
+        }, 800);
       } else {
-        toast.error(
-          response?.erro ||
+        toaster.create({
+          title: "Erro ao entrar",
+          description:
+            response?.erro ||
             response?.mensagem ||
-            "Erro ao realizar login."
-        );
+            "Erro ao realizar login.",
+          type: "error",
+        });
+
+        setLoading(false);
       }
     } catch (error) {
       console.error(error);
-      toast.error("Erro de conexão com o servidor.");
-    } finally {
+
+      toaster.create({
+        title: "Erro de conexão",
+        description: "Não foi possível conectar ao servidor.",
+        type: "error",
+      });
+
       setLoading(false);
     }
   }
 
   async function handleSolicitarRedefinicaoSenha() {
     if (!email) {
-      toast.error("Digite seu e-mail para redefinir a senha.");
+      toaster.create({
+        title: "E-mail obrigatório",
+        description: "Digite seu e-mail para redefinir a senha.",
+        type: "error",
+      });
+
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     if (!emailRegex.test(email)) {
-      toast.error("Formato de email inválido.");
+      toaster.create({
+        title: "E-mail inválido",
+        description: "Digite um e-mail válido.",
+        type: "error",
+      });
+
       return;
     }
 
@@ -88,20 +119,31 @@ export default function Logar() {
       );
 
       if (response?.sucesso) {
-        toast.success(
-          response.mensagem ||
-            "Enviamos o link de redefinição para seu e-mail."
-        );
+        toaster.create({
+          title: "Link enviado",
+          description:
+            response.mensagem ||
+            "Enviamos o link de redefinição para seu e-mail.",
+          type: "success",
+        });
       } else {
-        toast.error(
-          response?.erro ||
+        toaster.create({
+          title: "Erro ao solicitar",
+          description:
+            response?.erro ||
             response?.mensagem ||
-            "Erro ao solicitar redefinição de senha."
-        );
+            "Erro ao solicitar redefinição de senha.",
+          type: "error",
+        });
       }
     } catch (error) {
       console.error(error);
-      toast.error("Erro de conexão com o servidor.");
+
+      toaster.create({
+        title: "Erro de conexão",
+        description: "Não foi possível conectar ao servidor.",
+        type: "error",
+      });
     } finally {
       setLoadingRedefinicao(false);
     }
@@ -262,6 +304,9 @@ export default function Logar() {
                 as="span"
                 cursor="pointer"
                 _hover={{ textDecoration: "underline" }}
+                onClick={() => {
+                  window.location.href = "/cadastrar";
+                }}
               >
                 Cadastre-se
               </Box>

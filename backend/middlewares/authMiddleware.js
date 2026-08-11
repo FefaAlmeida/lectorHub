@@ -33,16 +33,9 @@ const authMiddleware = async (req, res, next) => {
             });
         }
 
-        if (usuario.status_usuario !== 'ATIVO') {
-            return res.status(403).json({
-                erro: 'Usuário inativo',
-                mensagem: 'Sua conta foi desativada'
-            });
-        }
-
         req.usuario = {
             id: usuario.id,
-            tipo_usuario: usuario.tipo_usuario,
+            tipo: usuario.tipo,
             email: usuario.email
         };
 
@@ -79,7 +72,7 @@ const adminMiddleware = (req, res, next) => {
         });
     }
 
-    if (req.usuario.tipo_usuario !== 'ADMIN') {
+    if (req.usuario.tipo !== 'admin') {
         return res.status(403).json({
             erro: 'Acesso negado',
             mensagem: 'Apenas administradores podem acessar este recurso'
