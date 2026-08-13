@@ -39,14 +39,11 @@ import {
 import FadeIn from "@/components/ui/fade-in";
 
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
-const ACCENT = "#7A3131"; // Tom de vinho selecionado
+const ACCENT = "#7A3131";
 const ACCENT_DARK = "#5C1421";
 const ACCENT_LIGHT_BG = "rgba(92, 20, 33, 0.06)";
 const ACCENT_HOVER_BG = "rgba(92, 20, 33, 0.04)";
 
-// ----------------------------------------------------------------------
-// DADOS MOCKADOS DO USUÁRIO
-// ----------------------------------------------------------------------
 const mockUserData = {
   name: "Natalia Marchiori",
   email: "natalia.marchiori@email.com",
@@ -91,6 +88,7 @@ export default function MeuCadastroPage({ initialData = mockUserData }) {
 
   return (
     <Flex minH="100vh" bg="#FDFBF7">
+      {/* BARRA LATERAL */}
       <Box
         as="aside"
         w="280px"
@@ -215,7 +213,7 @@ export default function MeuCadastroPage({ initialData = mockUserData }) {
             </Box>
 
             <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={6}>
-              {/* COLUNA ESQUERDA - DADOS PESSOAIS (SPANS 2 COLUNAS) */}
+              {/* DADOS PESSOAIS */}
               <Box
                 gridColumn={{ lg: "span 2" }}
                 bg="#FAF9F6"
@@ -453,9 +451,8 @@ export default function MeuCadastroPage({ initialData = mockUserData }) {
                 </VStack>
               </Box>
 
-              {/* COLUNA DIREITA - SEGURANÇA E PREFERÊNCIAS */}
+              {/* SEGURANÇA E PREFERÊNCIAS */}
               <VStack spacing={6} align="stretch">
-                {/* SEGURANÇA DA CONTA */}
                 <Box
                   bg="#FAF9F6"
                   p={6}
@@ -505,7 +502,6 @@ export default function MeuCadastroPage({ initialData = mockUserData }) {
                   </VStack>
                 </Box>
 
-                {/* PREFERÊNCIAS DE NOTIFICAÇÃO */}
                 <Box
                   bg="#FAF9F6"
                   p={6}
@@ -535,14 +531,13 @@ export default function MeuCadastroPage({ initialData = mockUserData }) {
                           E-mail
                         </Text>
                         <Text fontSize="xs" color="gray.500">
-                          Receber notificações sobre empréstimos, devoluções e
-                          novidades.
+                          Receber notificações sobre empréstimos e devoluções.
                         </Text>
                       </Box>
                       <Switch.Root
                         checked={formData.notifications.email}
-                        onCheckedChange={(e) =>
-                          handleNotificationChange("email", e.checked)
+                        onCheckedChange={(details) =>
+                          handleNotificationChange("email", details.checked)
                         }
                         colorPalette="red"
                       >
@@ -563,13 +558,13 @@ export default function MeuCadastroPage({ initialData = mockUserData }) {
                           SMS
                         </Text>
                         <Text fontSize="xs" color="gray.500">
-                          Receber lembretes sobre devoluções por mensagem.
+                          Receber lembretes por mensagem.
                         </Text>
                       </Box>
                       <Switch.Root
                         checked={formData.notifications.sms}
-                        onCheckedChange={(e) =>
-                          handleNotificationChange("sms", e.checked)
+                        onCheckedChange={(details) =>
+                          handleNotificationChange("sms", details.checked)
                         }
                         colorPalette="red"
                       >
@@ -587,16 +582,19 @@ export default function MeuCadastroPage({ initialData = mockUserData }) {
                           fontWeight="semibold"
                           color="gray.800"
                         >
-                          Novidades da Biblioteca
+                          Novidades
                         </Text>
                         <Text fontSize="xs" color="gray.500">
-                          Receber novidades sobre novos livros e eventos.
+                          Receber novidades sobre acervo e eventos.
                         </Text>
                       </Box>
                       <Switch.Root
                         checked={formData.notifications.newsletters}
-                        onCheckedChange={(e) =>
-                          handleNotificationChange("newsletters", e.checked)
+                        onCheckedChange={(details) =>
+                          handleNotificationChange(
+                            "newsletters",
+                            details.checked
+                          )
                         }
                         colorPalette="red"
                       >
@@ -611,7 +609,7 @@ export default function MeuCadastroPage({ initialData = mockUserData }) {
               </VStack>
             </SimpleGrid>
 
-            {/* SEÇÃO INFERIOR - INFORMAÇÕES DA CONTA */}
+            {/* INFORMAÇÕES DA CONTA */}
             <Box
               mt={6}
               bg="#FAF9F6"
