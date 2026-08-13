@@ -100,6 +100,28 @@ export async function getUsuarios(pagina = 1, limite = 10) {
   return res.json();
 }
 
+export async function getLivroPorId(id) {
+  const res = await fetch(`${BASE_URL}/livros/${id}`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  return res.json();
+}
+
+export async function atualizarEstoque(id, quantidade) {
+  const res = await fetch(`${BASE_URL}/livros/${id}/estoque`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ quantidade }),
+  });
+
+  return res.json();
+}
+
 export async function getUltimoEmprestimo(id_usuario) {
   const res = await fetch(`${BASE_URL}/emprestimos/ultimo/${id_usuario}`, {
     method: "GET",
@@ -119,6 +141,7 @@ export async function atualizarUsuario(id, data) {
     body: JSON.stringify(data),
   });
 
+  
   
 
   return res.json();
