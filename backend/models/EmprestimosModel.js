@@ -130,57 +130,53 @@ class EmprestimoModel {
     }
 }
 
+    static async buscarUltimoPorUsuario(id_usuario) {
+    const connection = await getConnection();
 
-    // 4. READ - Buscar o último empréstimo de um usuário
-    static async buscarUltimoEmprestimo(id_usuario) {
-        const connection = await getConnection();
+    try {
+        const sql = `
+            SELECT
+                e.id_emprestimo,
+                e.id_usuario,
+                e.id_livro,
+                e.data_solicitacao,
+                e.data_emprestimo,
+                e.data_devolucao_prevista,
+                e.data_devolucao_real,
+                e.status,
 
-        try {
-            const sql = `
-                SELECT
-                    e.id_emprestimo,
-                    e.data_solicitacao,
-                    e.data_emprestimo,
-                    e.data_devolucao_prevista,
-                    e.data_devolucao_real,
-                    e.status,
+                l.titulo,
+                l.autor,
+                l.categoria,
+                l.ano_publicacao,
+                l.capa_url
 
-                    l.id_livro,
-                    l.titulo,
-                    l.autor,
-                    l.categoria,
-                    l.capa_url
+            FROM emprestimos e
+            INNER JOIN livros l
+                ON e.id_livro = l.id_livro
 
-                FROM emprestimos e
+            WHERE e.id_usuario = ?
+            ORDER BY e.data_solicitacao DESC
+            LIMIT 1
+        `;
 
-                INNER JOIN livros l
-                    ON e.id_livro = l.id_livro
+        const [resultado] = await connection.execute(sql, [id_usuario]);
 
-                WHERE e.id_usuario = ?
+        // Retorna diretamente o objeto do empréstimo (ou null caso não exista)
+        return resultado[0] || null;
 
-                ORDER BY e.data_solicitacao DESC
+    } catch (error) {
+        console.error(
+            'Erro ao buscar último empréstimo do usuário:',
+            error
+        );
+        throw error;
 
-                LIMIT 1
-            `;
-
-            const [resultado] = await connection.execute(
-                sql,
-                [id_usuario]
-            );
-
-            return resultado[0] || null;
-
-        } catch (error) {
-            console.error(
-                'Erro ao buscar último empréstimo do usuário:',
-                error
-            );
-            throw error;
-
-        } finally {
-            connection.release();
-        }
+    } finally {
+        connection.release();
     }
+}
+
 }
 
 export default EmprestimoModel;

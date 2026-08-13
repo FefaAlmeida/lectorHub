@@ -16,6 +16,7 @@ import {
   Separator,
   AspectRatio,
   Link,
+  Spinner,
 } from "@chakra-ui/react";
 import {
   FiHome,
@@ -32,7 +33,8 @@ import {
 } from "react-icons/fi";
 import { useEffect, useState } from "react";
 
-import { getPerfil } from "../../../api";
+// Adicionada a função getUltimoEmprestimo da sua camada de API
+import { getPerfil, getUltimoEmprestimo } from "../../../api";
 
 // --- CONFIGURAÇÕES VISUAIS ---
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
@@ -126,6 +128,13 @@ const ANNOUNCEMENTS = [
     color: "#FBF3EB",
   },
 ];
+
+// --- FUNÇÃO AUXILIAR DE FORMATAÇÃO DE DATA ---
+function formatarData(dataIso) {
+  if (!dataIso) return "--/--/----";
+  const data = new Date(dataIso);
+  return data.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+}
 
 // --- COMPONENTES AUXILIARES ---
 
@@ -327,39 +336,50 @@ function AnnouncementCard({ announcement }) {
 export default function DashboardPage() {
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
+  
+  // Estado para armazenar o último empréstimo retornado pela API
+  const [ultimoEmprestimo, setUltimoEmprestimo] = useState(null);
+  const [carregandoEmprestimo, setCarregandoEmprestimo] = useState(true);
 
-  // Busca os dados do usuário logado
+  // Busca os dados do perfil e em seguida o empréstimo
   useEffect(() => {
     let ativo = true;
 
-    async function carregarUsuario() {
+    async function carregarDados() {
       try {
-        const response = await getPerfil();
+        const responseUsuario = await getPerfil();
 
-        if (ativo) {
-          setUsuario(
-            response?.sucesso
-              ? response.dados
-              : null
-          );
+        if (ativo && responseUsuario?.sucesso) {
+          const dadosUsuario = responseUsuario.dados;
+          setUsuario(dadosUsuario);
+
+          // Pega o ID do usuário (suporta id_usuario ou id)
+          const userId = dadosUsuario?.id_usuario || dadosUsuario?.id;
+
+          if (userId) {
+            try {
+              const responseEmprestimo = await getUltimoEmprestimo(userId);
+              if (ativo && responseEmprestimo?.sucesso) {
+                setUltimoEmprestimo(responseEmprestimo.dados);
+              }
+            } catch (errEmprestimo) {
+              console.log("Nenhum empréstimo ativo retornado para o usuário.");
+              if (ativo) setUltimoEmprestimo(null);
+            }
+          }
         }
       } catch (error) {
-        console.error(
-          "Erro ao carregar usuário:",
-          error
-        );
-
-        if (ativo) {
-          setUsuario(null);
-        }
+        console.error("Erro ao carregar dados do usuário:", error);
+        if (ativo) setUsuario(null);
       } finally {
         if (ativo) {
           setCarregando(false);
+          setCarregandoEmprestimo(false);
         }
       }
     }
 
-    carregarUsuario();
+    carregarDados();
 
     return () => {
       ativo = false;
@@ -367,14 +387,10 @@ export default function DashboardPage() {
   }, []);
 
   const nome = usuario?.nome || "";
-  const primeiroNome =
-    nome.trim().split(" ")[0] || "";
+  const primeiroNome = nome.trim().split(" ")[0] || "";
 
   return (
-    <Flex
-      minH="100vh"
-      bg={BG_COLOR}
-    >
+    <Flex minH="100vh" bg={BG_COLOR}>
       {/* BARRA LATERAL */}
       <Box
         as="nav"
@@ -384,26 +400,14 @@ export default function DashboardPage() {
         borderColor={BORDER_COLOR}
         p={5}
         flexShrink={0}
-        display={{
-          base: "none",
-          md: "block",
-        }}
+        display={{ base: "none", md: "block" }}
       >
-        <VStack
-          spacing={3}
-          align="stretch"
-        >
+        <VStack spacing={3} align="stretch">
           {NAV_ITEMS.map((item, index) => (
-            <NavItem
-              key={index}
-              item={item}
-            />
+            <NavItem key={index} item={item} />
           ))}
 
-          <Separator
-            borderColor={BORDER_COLOR}
-            my={4}
-          />
+          <Separator borderColor={BORDER_COLOR} my={4} />
 
           <HStack
             as="a"
@@ -413,21 +417,12 @@ export default function DashboardPage() {
             pl={4}
             borderRadius="6px"
             color={PRIMARY_COLOR}
-            _hover={{
-              bg: "#F5F1E9",
-            }}
+            _hover={{ bg: "#F5F1E9" }}
             transition={`all 0.2s ${EASE}`}
             cursor="pointer"
           >
-            <Icon
-              as={FiLogOut}
-              w={5}
-              h={5}
-            />
-
-            <Text fontSize="md">
-              Sair
-            </Text>
+            <Icon as={FiLogOut} w={5} h={5} />
+            <Text fontSize="md">Sair</Text>
           </HStack>
         </VStack>
       </Box>
@@ -435,36 +430,21 @@ export default function DashboardPage() {
       {/* CONTEÚDO PRINCIPAL */}
       <Box
         flex={1}
-        p={{
-          base: 6,
-          md: 8,
-        }}
+        p={{ base: 6, md: 8 }}
         pb={16}
       >
-        <VStack
-          spacing={12}
-          align="stretch"
-        >
+        <VStack spacing={12} align="stretch">
 
           {/* Boas-vindas + Busca */}
           <SimpleGrid
-            columns={{
-              base: 1,
-              md: 2,
-            }}
+            columns={{ base: 1, md: 2 }}
             spacing={8}
             align="center"
           >
-            <VStack
-              align="flex-start"
-              spacing={4}
-            >
+            <VStack align="flex-start" spacing={4}>
               <Heading
                 as="h1"
-                fontSize={{
-                  base: "3xl",
-                  md: "4xl",
-                }}
+                fontSize={{ base: "3xl", md: "4xl" }}
                 fontWeight="bold"
                 color={PRIMARY_COLOR}
                 fontFamily="Georgia, serif"
@@ -474,23 +454,15 @@ export default function DashboardPage() {
                   : `Bem-vinda, ${primeiroNome}!`}
               </Heading>
 
-              <Text
-                fontSize="md"
-                color={TEXT_LIGHT}
-              >
-                Explore, reserve e gerencie seus
-                livros de forma fácil e rápida.
+              <Text fontSize="md" color={TEXT_LIGHT}>
+                Explore, reserve e gerencie seus livros de forma fácil e rápida.
               </Text>
 
               <InputGroup
                 w="full"
                 maxW="lg"
                 startElement={
-                  <Icon
-                    as={FiSearch}
-                    color={TEXT_LIGHT}
-                    ml={2}
-                  />
+                  <Icon as={FiSearch} color={TEXT_LIGHT} ml={2} />
                 }
                 endElement={
                   <Button
@@ -500,9 +472,7 @@ export default function DashboardPage() {
                     color="white"
                     px={5}
                     fontSize="xs"
-                    _hover={{
-                      bg: "#632727",
-                    }}
+                    _hover={{ bg: "#632727" }}
                     mr={1}
                   >
                     Buscar
@@ -515,22 +485,15 @@ export default function DashboardPage() {
                   border="1px solid"
                   borderColor={BORDER_COLOR}
                   borderRadius="full"
-                  _placeholder={{
-                    color: "#AAA",
-                  }}
-                  _focus={{
-                    borderColor: PRIMARY_COLOR,
-                  }}
+                  _placeholder={{ color: "#AAA" }}
+                  _focus={{ borderColor: PRIMARY_COLOR }}
                   pl={10}
                 />
               </InputGroup>
             </VStack>
 
             {/* Ilustração da Biblioteca */}
-            <Flex
-              justify="center"
-              align="center"
-            >
+            <Flex justify="center" align="center">
               <Image
                 src="livrosInicialCliente"
                 alt="Ilustração da Biblioteca"
@@ -544,34 +507,19 @@ export default function DashboardPage() {
 
           {/* Cards de Ação Rápida */}
           <SimpleGrid
-            columns={{
-              base: 1,
-              sm: 2,
-              xl: 4,
-            }}
+            columns={{ base: 1, sm: 2, xl: 4 }}
             gap={4}
             my={2}
           >
-            {QUICK_ACTIONS.map(
-              (action, index) => (
-                <QuickActionCard
-                  key={index}
-                  action={action}
-                />
-              )
-            )}
+            {QUICK_ACTIONS.map((action, index) => (
+              <QuickActionCard key={index} action={action} />
+            ))}
           </SimpleGrid>
 
           {/* Empréstimos + Destaques */}
-          <SimpleGrid
-            columns={{
-              base: 1,
-              lg: 2,
-            }}
-            gap={8}
-          >
+          <SimpleGrid columns={{ base: 1, lg: 2 }} gap={8}>
 
-            {/* Meus Empréstimos */}
+            {/* MEUS EMPRÉSTIMOS DILIGENTEMENTE INTEGRADOS */}
             <VStack
               align="stretch"
               spacing={5}
@@ -592,95 +540,89 @@ export default function DashboardPage() {
                 Emprestado no momento
               </Heading>
 
-              <Flex
-                border="1px solid"
-                borderColor={BORDER_COLOR}
-                borderRadius="8px"
-                p={4}
-                align="center"
-              >
-                <AspectRatio
-                  ratio={2 / 3}
-                  w="100px"
-                  mr={4}
-                  flexShrink={0}
+              {carregandoEmprestimo ? (
+                <Flex justify="center" align="center" py={8}>
+                  <Spinner color={PRIMARY_COLOR} size="md" />
+                </Flex>
+              ) : ultimoEmprestimo ? (
+                /* Card com os dados dinâmicos da API */
+                <Flex
+                  border="1px solid"
+                  borderColor={BORDER_COLOR}
+                  borderRadius="8px"
+                  p={4}
+                  align="center"
                 >
-                  <Image
-                    src="https://m.media-amazon.com/images/I/81hCVEC0ExL._SY466_.jpg"
-                    alt="1954"
-                    borderRadius="4px"
-                    objectFit="cover"
-                  />
-                </AspectRatio>
+                  <AspectRatio
+                    ratio={2 / 3}
+                    w="100px"
+                    mr={4}
+                    flexShrink={0}
+                  >
+                    <Image
+                      src={
+                        ultimoEmprestimo.capa_url ||
+                        "https://via.placeholder.com/150"
+                      }
+                      alt={ultimoEmprestimo.titulo}
+                      borderRadius="4px"
+                      objectFit="cover"
+                    />
+                  </AspectRatio>
 
-                <VStack
-                  align="flex-start"
-                  spacing={1}
-                  flex={1}
-                >
-                  <Heading
-                    fontSize="md"
-                    fontWeight="semibold"
+                  <VStack align="flex-start" spacing={1} flex={1}>
+                    <Heading
+                      fontSize="md"
+                      fontWeight="semibold"
+                      color={PRIMARY_COLOR}
+                    >
+                      {ultimoEmprestimo.titulo}
+                    </Heading>
+
+                    <Text fontSize="xs" color={TEXT_LIGHT} mb={1}>
+                      {ultimoEmprestimo.autor}
+                    </Text>
+
+                    <Text fontSize="xs" color={TEXT_DARK}>
+                      🗓️ Empréstimo: {formatarData(ultimoEmprestimo.data_emprestimo || ultimoEmprestimo.data_solicitacao)}
+                    </Text>
+
+                    <Text fontSize="xs" color={TEXT_DARK}>
+                      🗓️ Devolução: {formatarData(ultimoEmprestimo.data_devolucao_prevista)}
+                    </Text>
+                  </VStack>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    borderColor={PRIMARY_COLOR}
                     color={PRIMARY_COLOR}
                   >
-                    1954
-                  </Heading>
+                    Ver detalhes
+                  </Button>
+                </Flex>
+              ) : null}
 
-                  <Text
-                    fontSize="xs"
-                    color={TEXT_LIGHT}
-                    mb={1}
-                  >
-                    J.R.R. Tolkien
-                  </Text>
-
-                  <Text
-                    fontSize="xs"
-                    color={TEXT_DARK}
-                  >
-                    🗓️ Empréstimo: 01/09/2026
-                  </Text>
-
-                  <Text
-                    fontSize="xs"
-                    color={TEXT_DARK}
-                  >
-                    🗓️ Devolução: 15/10/2026
-                  </Text>
-                </VStack>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  borderColor={PRIMARY_COLOR}
-                  color={PRIMARY_COLOR}
+              {/* Box pontilhado exibido se NÃO houver empréstimo ativo ou se for o segundo slot */}
+              {!ultimoEmprestimo && !carregandoEmprestimo && (
+                <Flex
+                  border="2px dashed"
+                  borderColor="#DED6C9"
+                  borderRadius="8px"
+                  p={4}
+                  h="90px"
+                  align="center"
+                  justify="center"
+                  color={TEXT_LIGHT}
                 >
-                  Ver detalhes
-                </Button>
-              </Flex>
-
-              <Flex
-                border="2px dashed"
-                borderColor="#DED6C9"
-                borderRadius="8px"
-                p={4}
-                h="90px"
-                align="center"
-                justify="center"
-                color={TEXT_LIGHT}
-              >
-                <VStack spacing={1}>
-                  <Icon
-                    as={FiPlus}
-                    w={5}
-                    h={5}
-                  />
-
-                  <Text fontSize="xs">
-                    Nenhum outro empréstimo no momento.
-                  </Text>
-                </VStack>
-              </Flex>
+                  <VStack spacing={1}>
+                    <Icon as={FiPlus} w={5} h={5} />
+                    <Text fontSize="xs">
+                      Nenhum outro empréstimo no momento.
+                    </Text>
+                  </VStack>
+                </Flex>
+              )}
 
               <Link
                 href="#"
@@ -691,11 +633,7 @@ export default function DashboardPage() {
                 pt={1}
               >
                 Ver todos os empréstimos{" "}
-                <Icon
-                  as={FiArrowRight}
-                  ml={1}
-                  display="inline"
-                />
+                <Icon as={FiArrowRight} ml={1} display="inline" />
               </Link>
             </VStack>
 
@@ -710,9 +648,7 @@ export default function DashboardPage() {
               borderColor={BORDER_COLOR}
               justify="space-between"
             >
-              <HStack
-                justify="space-between"
-              >
+              <HStack justify="space-between">
                 <Heading
                   as="h2"
                   fontSize="2xl"
@@ -730,40 +666,24 @@ export default function DashboardPage() {
                   fontWeight="medium"
                 >
                   Ver todos{" "}
-                  <Icon
-                    as={FiArrowRight}
-                    ml={1}
-                    display="inline"
-                  />
+                  <Icon as={FiArrowRight} ml={1} display="inline" />
                 </Link>
               </HStack>
 
               <SimpleGrid
-                columns={{
-                  base: 2,
-                  sm: 4,
-                }}
+                columns={{ base: 2, sm: 4 }}
                 gap={5}
                 w="full"
               >
-                {FEATURED_BOOKS.map(
-                  (book, index) => (
-                    <BookCard
-                      key={index}
-                      book={book}
-                    />
-                  )
-                )}
+                {FEATURED_BOOKS.map((book, index) => (
+                  <BookCard key={index} book={book} />
+                ))}
               </SimpleGrid>
             </VStack>
           </SimpleGrid>
 
           {/* Avisos Importantes */}
-          <VStack
-            align="stretch"
-            spacing={4}
-            pt={2}
-          >
+          <VStack align="stretch" spacing={4} pt={2}>
             <Heading
               as="h2"
               fontSize="2xl"
@@ -774,21 +694,10 @@ export default function DashboardPage() {
               Avisos Importantes
             </Heading>
 
-            <SimpleGrid
-              columns={{
-                base: 1,
-                md: 3,
-              }}
-              gap={5}
-            >
-              {ANNOUNCEMENTS.map(
-                (ann, index) => (
-                  <AnnouncementCard
-                    key={index}
-                    announcement={ann}
-                  />
-                )
-              )}
+            <SimpleGrid columns={{ base: 1, md: 3 }} gap={5}>
+              {ANNOUNCEMENTS.map((ann, index) => (
+                <AnnouncementCard key={index} announcement={ann} />
+              ))}
             </SimpleGrid>
           </VStack>
 

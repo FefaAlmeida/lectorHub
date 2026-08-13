@@ -100,6 +100,15 @@ export async function getUsuarios(pagina = 1, limite = 10) {
   return res.json();
 }
 
+export async function getUltimoEmprestimo(id_usuario) {
+  const res = await fetch(`${BASE_URL}/emprestimos/ultimo/${id_usuario}`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  return res.json();
+}
+
 export async function atualizarUsuario(id, data) {
   const res = await fetch(`${BASE_URL}/usuarios/${id}`, {
     method: "PUT",
@@ -109,6 +118,8 @@ export async function atualizarUsuario(id, data) {
     credentials: "include",
     body: JSON.stringify(data),
   });
+
+  
 
   return res.json();
 }

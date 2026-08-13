@@ -55,41 +55,46 @@ class EmprestimoController {
     }
     
 
+    static async emprestado(req, res) {}
 
-    // 3. Buscar último empréstimo de um usuário
+
     static async buscarUltimoEmprestimo(req, res) {
-        try {
-            const { id_usuario } = req.params;
+    try {
+        const { id_usuario } = req.params;
 
-            const emprestimo =
-                await EmprestimoModel.buscarUltimoEmprestimo(
-                    id_usuario
-                );
-
-            if (!emprestimo) {
-                return res.status(404).json({
-                    sucesso: false,
-                    mensagem: "Nenhum empréstimo encontrado para este usuário."
-                });
-            }
-
-            return res.status(200).json({
-                sucesso: true,
-                dados: emprestimo
-            });
-
-        } catch (error) {
-            console.error(
-                "Erro ao buscar último empréstimo:",
-                error
-            );
-
-            return res.status(500).json({
+        if (!id_usuario) {
+            return res.status(400).json({
                 sucesso: false,
-                mensagem: "Erro ao buscar último empréstimo."
+                mensagem: "ID do usuário não informado."
             });
         }
+
+        const emprestimo = await EmprestimoModel.buscarUltimoPorUsuario(id_usuario);
+
+        if (!emprestimo) {
+            return res.status(404).json({
+                sucesso: false,
+                mensagem: "Nenhum empréstimo encontrado para este usuário."
+            });
+        }
+
+        return res.status(200).json({
+            sucesso: true,
+            dados: emprestimo
+        });
+
+    } catch (error) {
+        console.error(
+            "Erro ao buscar último empréstimo:",
+            error
+        );
+
+        return res.status(500).json({
+            sucesso: false,
+            mensagem: "Erro ao buscar último empréstimo."
+        });
     }
+}
 
 
     // 4. Verificar se um empréstimo específico está atrasado
