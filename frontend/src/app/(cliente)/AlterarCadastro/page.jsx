@@ -1,24 +1,23 @@
+
 "use client";
+
+import { useEffect, useState } from "react";
 
 import {
   Box,
-  Flex,
-  VStack,
-  HStack,
-  Heading,
-  Text,
-  Icon,
   Button,
-  SimpleGrid,
-  Container,
+  Card,
+  Flex,
+  Heading,
+  HStack,
+  Icon,
   Input,
-  Badge,
+  Stack,
+  Text,
+  Separator,
   Switch,
-  Menu,
-  Avatar,
-  NativeSelect,
 } from "@chakra-ui/react";
-import { useState } from "react";
+
 import {
   FiHome,
   FiSearch,
@@ -26,719 +25,1184 @@ import {
   FiClock,
   FiUser,
   FiLogOut,
-  FiEdit,
   FiLock,
+  FiEdit3,
   FiBell,
   FiCalendar,
-  FiShield,
-  FiCheckCircle,
   FiCreditCard,
-  FiSettings,
-  FiUsers,
+  FiCheckCircle,
+  FiSave,
 } from "react-icons/fi";
-import FadeIn from "@/components/ui/fade-in";
+
+
+// =====================================================
+// MESMA IDENTIDADE VISUAL DA PÁGINA "BUSCAR LIVROS"
+// =====================================================
 
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
-const ACCENT = "#7A3131";
-const ACCENT_DARK = "#5C1421";
-const ACCENT_LIGHT_BG = "rgba(92, 20, 33, 0.06)";
-const ACCENT_HOVER_BG = "rgba(92, 20, 33, 0.04)";
 
-const mockUserData = {
-  name: "Natalia Marchiori",
-  email: "natalia.marchiori@email.com",
-  phone: "(11) 98765-4321",
-  birthDate: "2008-06-15",
-  address: "Rua das Flores, 123",
-  city: "São Paulo",
-  state: "SP",
-  zipCode: "01234-567",
-  registrationDate: "10/03/2024",
-  userId: "MBI-2024-0357",
-  status: "Ativa",
-  notifications: {
-    email: true,
-    sms: false,
-    newsletters: true,
-  },
-};
+const PRIMARY_COLOR = "#4A0E17";
+const PRIMARY_DARK = "#360A11";
+
+const BG_COLOR = "#F5F2EE";
+const CARD_BG = "#FFFFFF";
+const BORDER_COLOR = "#EFEBE3";
+
+const TEXT_DARK = "#333333";
+const TEXT_LIGHT = "#777777";
+
+
+// =====================================================
+// NAVEGAÇÃO
+// =====================================================
 
 const NAV_ITEMS = [
   { label: "Início", icon: FiHome },
   { label: "Buscar Livros", icon: FiSearch },
   { label: "Meus Empréstimos", icon: FiBookOpen },
   { label: "Histórico", icon: FiClock },
-  { label: "Meu Cadastro", icon: FiUser, active: true },
+  {
+    label: "Meu Cadastro",
+    icon: FiUser,
+    active: true,
+  },
 ];
 
-export default function MeuCadastroPage({ initialData = mockUserData }) {
-  const [formData, setFormData] = useState(initialData);
-  const [isEditing, setIsEditing] = useState(false);
 
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+// =====================================================
+// SIDEBAR
+// =====================================================
 
-  const handleNotificationChange = (key, checked) => {
-    setFormData((prev) => ({
-      ...prev,
-      notifications: { ...prev.notifications, [key]: checked },
+function NavItem({ item }) {
+  return (
+    <HStack
+      as="a"
+      href="#"
+      spacing={3}
+      p={3}
+      pl={4}
+      borderRadius="6px"
+      color={item.active ? "white" : TEXT_DARK}
+      bg={item.active ? PRIMARY_COLOR : "transparent"}
+      _hover={
+        !item.active
+          ? {
+              bg: "#FFFFFF",
+              color: TEXT_DARK,
+            }
+          : {}
+      }
+      transition={`all 0.2s ${EASE}`}
+      cursor="pointer"
+      fontWeight={item.active ? "semibold" : "normal"}
+    >
+      <Icon
+        as={item.icon}
+        w={5}
+        h={5}
+        mr={3}
+      />
+
+      <Text fontSize="md">
+        {item.label}
+      </Text>
+    </HStack>
+  );
+}
+
+
+// =====================================================
+// CAMPO
+// =====================================================
+
+function Campo({
+  label,
+  value,
+  onChange,
+  type = "text",
+  disabled = false,
+  placeholder,
+}) {
+  return (
+    <Stack
+      gap={1.5}
+      flex="1"
+    >
+      <Text
+        fontSize="xs"
+        color={TEXT_DARK}
+        fontWeight="semibold"
+      >
+        {label}
+      </Text>
+
+      <Input
+        value={value || ""}
+        onChange={onChange}
+        type={type}
+        disabled={disabled}
+        placeholder={placeholder}
+        bg={CARD_BG}
+        border="1px solid"
+        borderColor="#E7DED8"
+        borderRadius="6px"
+        h="38px"
+        fontSize="sm"
+        color={TEXT_DARK}
+        _placeholder={{
+          color: "#AAA",
+        }}
+        _hover={{
+          borderColor: "#D5C8C0",
+        }}
+        _focus={{
+          borderColor: PRIMARY_COLOR,
+          boxShadow: `0 0 0 1px ${PRIMARY_COLOR}`,
+        }}
+      />
+    </Stack>
+  );
+}
+
+
+// =====================================================
+// PÁGINA
+// =====================================================
+
+export default function MeuCadastro({ cliente = null }) {
+
+  const [editando, setEditando] = useState(false);
+
+  const [dados, setDados] = useState({
+    nome: "",
+    email: "",
+    telefone: "",
+    nascimento: "",
+    endereco: "",
+    cidade: "",
+    estado: "",
+    cep: "",
+
+    senha: "",
+
+    emailNotificacao: true,
+    smsNotificacao: false,
+    novidades: true,
+
+    dataCadastro: "",
+    codigoUsuario: "",
+    status: "",
+  });
+
+
+  // ===================================================
+  // DADOS VINDOS DO BACKEND
+  // ===================================================
+
+  useEffect(() => {
+
+    if (!cliente) return;
+
+    setDados({
+      nome: cliente.nome || "",
+      email: cliente.email || "",
+      telefone: cliente.telefone || "",
+      nascimento: cliente.nascimento || "",
+      endereco: cliente.endereco || "",
+      cidade: cliente.cidade || "",
+      estado: cliente.estado || "",
+      cep: cliente.cep || "",
+
+      senha: "",
+
+      emailNotificacao:
+        cliente.emailNotificacao ?? true,
+
+      smsNotificacao:
+        cliente.smsNotificacao ?? false,
+
+      novidades:
+        cliente.novidades ?? true,
+
+      dataCadastro:
+        cliente.dataCadastro || "",
+
+      codigoUsuario:
+        cliente.codigoUsuario || "",
+
+      status:
+        cliente.status || "",
+    });
+
+  }, [cliente]);
+
+
+  function alterarCampo(campo, valor) {
+
+    setDados((atual) => ({
+      ...atual,
+      [campo]: valor,
     }));
-  };
+
+  }
+
+
+  function salvarAlteracoes() {
+
+    /*
+      Aqui entrará seu PUT/PATCH:
+
+      fetch(`/api/clientes/${dados.codigoUsuario}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dados),
+      });
+    */
+
+    console.log("Dados enviados:", dados);
+
+    setEditando(false);
+  }
+
 
   return (
-    <Flex minH="100vh" bg="#FDFBF7">
-      {/* BARRA LATERAL */}
+
+    <Flex
+      minH="100vh"
+      bg={BG_COLOR}
+    >
+
+      {/* =================================================
+          SIDEBAR
+      ================================================= */}
+
       <Box
-        as="aside"
-        w="280px"
-        bg="#FAF9F6"
+        as="nav"
+        w="260px"
+        bg="#FFFFFF"
         borderRight="1px solid"
-        borderColor="#EFEBE3"
-        p={6}
+        borderColor={BORDER_COLOR}
+        p={5}
         flexShrink={0}
         display={{ base: "none", md: "block" }}
       >
-        <VStack spacing={8} align="stretch" h="full">
-          <HStack spacing={3} px={2}>
-            <Flex
-              w={10}
-              h={10}
-              bg={ACCENT}
-              color="white"
-              borderRadius="lg"
-              align="center"
-              justify="center"
-            >
-              <Icon as={FiBookOpen} w={5} h={5} />
-            </Flex>
-            <Box>
-              <Heading fontSize="md" color={ACCENT} fontFamily="serif">
-                Minha Biblioteca
-              </Heading>
-              <Text fontSize="xs" color="gray.500">
-                Sistema de Biblioteca
-              </Text>
-            </Box>
+
+        <Stack
+          spacing={3}
+          align="stretch"
+          gap={2}
+        >
+
+          {NAV_ITEMS.map((item, index) => (
+            <NavItem
+              key={index}
+              item={item}
+            />
+          ))}
+
+          <Separator
+            borderColor={BORDER_COLOR}
+            my={4}
+          />
+
+          <HStack
+            p={3}
+            pl={4}
+            spacing={3}
+            color={TEXT_DARK}
+            borderRadius="6px"
+            cursor="pointer"
+            _hover={{
+              bg: "#F5F1E9",
+              color: PRIMARY_COLOR,
+            }}
+            transition={`all 0.2s ${EASE}`}
+          >
+
+            <Icon
+              as={FiLogOut}
+              w={5}
+              h={5}
+              mr={3}
+            />
+
+            <Text fontSize="md">
+              Sair
+            </Text>
+
           </HStack>
 
-          <VStack as="nav" spacing={1} align="stretch">
-            {NAV_ITEMS.map((item) => (
-              <Button
-                key={item.label}
-                variant="ghost"
-                justifyContent="flex-start"
-                startIcon={<Icon as={item.icon} w={5} h={5} />}
-                fontWeight={item.active ? "semibold" : "normal"}
-                color={item.active ? ACCENT : "gray.600"}
-                bg={item.active ? ACCENT_LIGHT_BG : "transparent"}
-                borderLeft={
-                  item.active ? `3px solid ${ACCENT}` : "3px solid transparent"
-                }
-                borderRadius="6px"
-                _hover={{ bg: ACCENT_HOVER_BG, color: ACCENT }}
-                transition={`all 0.3s ${EASE}`}
-                pl={4}
-                h={12}
-                fontSize="md"
-              >
-                {item.label}
-              </Button>
-            ))}
-          </VStack>
+        </Stack>
 
-          <Box flex={1} />
-
-          <Menu.Root positioning={{ placement: "right-end" }}>
-            <Menu.Trigger asChild>
-              <Button
-                variant="ghost"
-                w="full"
-                justifyContent="flex-start"
-                startIcon={
-                  <Avatar.Root size="sm">
-                    <Avatar.Image src="https://i.pravatar.cc/150?img=5" />
-                    <Avatar.Fallback name={formData.name} />
-                  </Avatar.Root>
-                }
-                fontWeight="medium"
-                color="gray.700"
-                _hover={{ bg: ACCENT_HOVER_BG }}
-                borderRadius="6px"
-                h={12}
-                pl={2}
-              >
-                {formData.name.split(" ")[0]}
-              </Button>
-            </Menu.Trigger>
-            <Menu.Content
-              bg="#FAF9F6"
-              borderColor="#EFEBE3"
-              borderRadius="12px"
-              p={2}
-            >
-              <Menu.Item value="settings" borderRadius="6px">
-                <Icon as={FiSettings} mr={2} /> Configurações
-              </Menu.Item>
-              <Menu.Item value="profile" borderRadius="6px">
-                <Icon as={FiUsers} mr={2} /> Perfil
-              </Menu.Item>
-              <Menu.Separator borderColor="#EFEBE3" />
-              <Menu.Item value="logout" color="red.500" borderRadius="6px">
-                <Icon as={FiLogOut} mr={2} /> Sair
-              </Menu.Item>
-            </Menu.Content>
-          </Menu.Root>
-        </VStack>
       </Box>
 
-      {/* CONTEÚDO PRINCIPAL */}
-      <Box flex={1} p={{ base: 4, md: 8 }} overflowY="auto">
-        <Container maxW="6xl" px={0}>
-          <FadeIn>
-            {/* CABEÇALHO DA PÁGINA */}
-            <Box mb={8}>
+
+      {/* =================================================
+          CONTEÚDO
+      ================================================= */}
+
+      <Box
+        flex={1}
+        p={{ base: 6, md: 8 }}
+        pb={16}
+        overflow="hidden"
+      >
+
+        <Stack
+          gap={7}
+          align="stretch"
+          maxW="8xl"
+          mx="auto"
+        >
+
+
+          {/* =================================================
+              CABEÇALHO
+          ================================================= */}
+
+          <Flex
+            justify="space-between"
+            align="center"
+          >
+
+            <Stack gap={2}>
+
               <Heading
-                fontSize="3xl"
+                as="h1"
+                fontSize={{
+                  base: "3xl",
+                  md: "4xl",
+                }}
+                fontWeight="bold"
+                color={PRIMARY_COLOR}
                 fontFamily="Georgia, serif"
-                color={ACCENT}
-                mb={1}
               >
                 Meu Cadastro
               </Heading>
-              <Text fontSize="sm" color="gray.600">
-                Atualize seus dados cadastrais e mantenha suas informações
-                sempre em dia.
+
+              <Text
+                fontSize="md"
+                color={TEXT_LIGHT}
+              >
+                Atualize seus dados cadastrais e mantenha suas informações sempre em dia.
               </Text>
+
+            </Stack>
+
+
+            {/* ILUSTRAÇÃO SIMPLES */}
+
+            <Box
+              display={{
+                base: "none",
+                lg: "block",
+              }}
+              w="180px"
+              h="90px"
+              position="relative"
+            >
+
+              <Box
+                position="absolute"
+                right="0"
+                top="15px"
+                w="145px"
+                h="65px"
+                bg="#F0E5D6"
+                borderRadius="50px 50px 20px 20px"
+              />
+
+              <Box
+                position="absolute"
+                right="25px"
+                top="27px"
+                w="105px"
+                h="52px"
+                bg="white"
+                border="1px solid #E7DED8"
+                borderRadius="7px"
+              >
+
+                <Box
+                  position="absolute"
+                  left="12px"
+                  top="11px"
+                  w="22px"
+                  h="22px"
+                  borderRadius="full"
+                  bg={PRIMARY_COLOR}
+                />
+
+                <Box
+                  position="absolute"
+                  left="47px"
+                  top="13px"
+                  w="40px"
+                  h="4px"
+                  bg="#D8C9B8"
+                  borderRadius="full"
+                />
+
+                <Box
+                  position="absolute"
+                  left="47px"
+                  top="22px"
+                  w="30px"
+                  h="4px"
+                  bg="#E5DCD2"
+                  borderRadius="full"
+                />
+
+              </Box>
+
             </Box>
 
-            <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={6}>
+          </Flex>
+
+
+          {/* =================================================
+              CONTEÚDO EM DUAS COLUNAS
+          ================================================= */}
+
+          <Flex
+            gap={6}
+            align="flex-start"
+            direction={{
+              base: "column",
+              lg: "row",
+            }}
+          >
+
+
+            {/* =================================================
+                ESQUERDA
+            ================================================= */}
+
+            <Stack
+              flex="1"
+              w="full"
+              gap={5}
+            >
+
+
               {/* DADOS PESSOAIS */}
-              <Box
-                gridColumn={{ lg: "span 2" }}
-                bg="#FAF9F6"
-                p={6}
-                borderRadius="16px"
+
+              <Card.Root
+                bg={CARD_BG}
+                borderRadius="8px"
                 border="1px solid"
-                borderColor="#EFEBE3"
+                borderColor={BORDER_COLOR}
               >
-                <VStack spacing={6} align="stretch">
-                  <HStack spacing={3}>
-                    <Icon as={FiUser} color={ACCENT} w={5} h={5} />
+
+                <Card.Header
+                  px={5}
+                  pt={5}
+                  pb={3}
+                >
+
+                  <HStack gap={2}>
+
+                    <Icon
+                      as={FiUser}
+                      color={PRIMARY_COLOR}
+                      boxSize={4}
+                    />
+
                     <Heading
-                      fontSize="lg"
-                      fontFamily="Georgia, serif"
-                      color={ACCENT}
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color={PRIMARY_COLOR}
                     >
                       Dados Pessoais
                     </Heading>
+
                   </HStack>
 
-                  <VStack spacing={4} align="stretch">
-                    <Box>
-                      <Text
-                        fontSize="xs"
-                        fontWeight="semibold"
-                        color="gray.600"
-                        mb={1.5}
-                      >
-                        Nome Completo
-                      </Text>
-                      <Input
-                        value={formData.name}
-                        onChange={(e) =>
-                          handleInputChange("name", e.target.value)
-                        }
-                        readOnly={!isEditing}
-                        bg="white"
-                        borderColor="#E4DED2"
-                        _focus={{
-                          borderColor: ACCENT,
-                          boxShadow: `0 0 0 1px ${ACCENT}`,
-                        }}
-                      />
-                    </Box>
+                </Card.Header>
 
-                    <Box>
-                      <Text
-                        fontSize="xs"
-                        fontWeight="semibold"
-                        color="gray.600"
-                        mb={1.5}
-                      >
-                        E-mail
-                      </Text>
-                      <Input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) =>
-                          handleInputChange("email", e.target.value)
-                        }
-                        readOnly={!isEditing}
-                        bg="white"
-                        borderColor="#E4DED2"
-                        _focus={{
-                          borderColor: ACCENT,
-                          boxShadow: `0 0 0 1px ${ACCENT}`,
-                        }}
-                      />
-                    </Box>
 
-                    <SimpleGrid columns={{ base: 1, sm: 2 }} spacing={4}>
-                      <Box>
-                        <Text
-                          fontSize="xs"
-                          fontWeight="semibold"
-                          color="gray.600"
-                          mb={1.5}
-                        >
-                          Telefone
-                        </Text>
-                        <Input
-                          value={formData.phone}
-                          onChange={(e) =>
-                            handleInputChange("phone", e.target.value)
-                          }
-                          readOnly={!isEditing}
-                          bg="white"
-                          borderColor="#E4DED2"
-                          _focus={{
-                            borderColor: ACCENT,
-                            boxShadow: `0 0 0 1px ${ACCENT}`,
-                          }}
-                        />
-                      </Box>
-                      <Box>
-                        <Text
-                          fontSize="xs"
-                          fontWeight="semibold"
-                          color="gray.600"
-                          mb={1.5}
-                        >
-                          Data de Nascimento
-                        </Text>
-                        <Input
-                          type="date"
-                          value={formData.birthDate}
-                          onChange={(e) =>
-                            handleInputChange("birthDate", e.target.value)
-                          }
-                          readOnly={!isEditing}
-                          bg="white"
-                          borderColor="#E4DED2"
-                          _focus={{
-                            borderColor: ACCENT,
-                            boxShadow: `0 0 0 1px ${ACCENT}`,
-                          }}
-                        />
-                      </Box>
-                    </SimpleGrid>
-
-                    <Box>
-                      <Text
-                        fontSize="xs"
-                        fontWeight="semibold"
-                        color="gray.600"
-                        mb={1.5}
-                      >
-                        Endereço
-                      </Text>
-                      <Input
-                        value={formData.address}
-                        onChange={(e) =>
-                          handleInputChange("address", e.target.value)
-                        }
-                        readOnly={!isEditing}
-                        bg="white"
-                        borderColor="#E4DED2"
-                        _focus={{
-                          borderColor: ACCENT,
-                          boxShadow: `0 0 0 1px ${ACCENT}`,
-                        }}
-                      />
-                    </Box>
-
-                    <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={4}>
-                      <Box gridColumn={{ sm: "span 1" }}>
-                        <Text
-                          fontSize="xs"
-                          fontWeight="semibold"
-                          color="gray.600"
-                          mb={1.5}
-                        >
-                          Cidade
-                        </Text>
-                        <Input
-                          value={formData.city}
-                          onChange={(e) =>
-                            handleInputChange("city", e.target.value)
-                          }
-                          readOnly={!isEditing}
-                          bg="white"
-                          borderColor="#E4DED2"
-                          _focus={{
-                            borderColor: ACCENT,
-                            boxShadow: `0 0 0 1px ${ACCENT}`,
-                          }}
-                        />
-                      </Box>
-
-                      <Box gridColumn={{ sm: "span 1" }}>
-                        <Text
-                          fontSize="xs"
-                          fontWeight="semibold"
-                          color="gray.600"
-                          mb={1.5}
-                        >
-                          Estado
-                        </Text>
-                        <NativeSelect.Root disabled={!isEditing}>
-                          <NativeSelect.Field
-                            value={formData.state}
-                            onChange={(e) =>
-                              handleInputChange("state", e.target.value)
-                            }
-                            bg="white"
-                            borderColor="#E4DED2"
-                          >
-                            <option value="SP">SP</option>
-                            <option value="RJ">RJ</option>
-                            <option value="MG">MG</option>
-                            <option value="PR">PR</option>
-                          </NativeSelect.Field>
-                        </NativeSelect.Root>
-                      </Box>
-
-                      <Box gridColumn={{ sm: "span 1" }}>
-                        <Text
-                          fontSize="xs"
-                          fontWeight="semibold"
-                          color="gray.600"
-                          mb={1.5}
-                        >
-                          CEP
-                        </Text>
-                        <Input
-                          value={formData.zipCode}
-                          onChange={(e) =>
-                            handleInputChange("zipCode", e.target.value)
-                          }
-                          readOnly={!isEditing}
-                          bg="white"
-                          borderColor="#E4DED2"
-                          _focus={{
-                            borderColor: ACCENT,
-                            boxShadow: `0 0 0 1px ${ACCENT}`,
-                          }}
-                        />
-                      </Box>
-                    </SimpleGrid>
-                  </VStack>
-
-                  <Flex justify="flex-end" pt={2}>
-                    <Button
-                      bg={ACCENT}
-                      color="white"
-                      _hover={{ bg: ACCENT_DARK }}
-                      startIcon={<Icon as={FiEdit} />}
-                      onClick={() => setIsEditing(!isEditing)}
-                      borderRadius="8px"
-                      px={6}
-                    >
-                      {isEditing ? "Salvar Alterações" : "Editar Dados"}
-                    </Button>
-                  </Flex>
-                </VStack>
-              </Box>
-
-              {/* SEGURANÇA E PREFERÊNCIAS */}
-              <VStack spacing={6} align="stretch">
-                <Box
-                  bg="#FAF9F6"
-                  p={6}
-                  borderRadius="16px"
-                  border="1px solid"
-                  borderColor="#EFEBE3"
+                <Card.Body
+                  px={5}
+                  pb={5}
                 >
-                  <HStack spacing={3} mb={4}>
-                    <Icon as={FiLock} color={ACCENT} w={5} h={5} />
+
+                  <Stack gap={4}>
+
+                    <Campo
+                      label="Nome Completo"
+                      value={dados.nome}
+                      disabled={!editando}
+                      placeholder="Nome completo"
+                      onChange={(e) =>
+                        alterarCampo(
+                          "nome",
+                          e.target.value
+                        )
+                      }
+                    />
+
+
+                    <Campo
+                      label="E-mail"
+                      value={dados.email}
+                      disabled={!editando}
+                      type="email"
+                      placeholder="E-mail"
+                      onChange={(e) =>
+                        alterarCampo(
+                          "email",
+                          e.target.value
+                        )
+                      }
+                    />
+
+
+                    <Flex
+                      gap={4}
+                      direction={{
+                        base: "column",
+                        md: "row",
+                      }}
+                    >
+
+                      <Campo
+                        label="Telefone"
+                        value={dados.telefone}
+                        disabled={!editando}
+                        placeholder="Telefone"
+                        onChange={(e) =>
+                          alterarCampo(
+                            "telefone",
+                            e.target.value
+                          )
+                        }
+                      />
+
+                      <Campo
+                        label="Data de Nascimento"
+                        value={dados.nascimento}
+                        disabled={!editando}
+                        type="date"
+                        onChange={(e) =>
+                          alterarCampo(
+                            "nascimento",
+                            e.target.value
+                          )
+                        }
+                      />
+
+                    </Flex>
+
+
+                    <Campo
+                      label="Endereço"
+                      value={dados.endereco}
+                      disabled={!editando}
+                      placeholder="Endereço"
+                      onChange={(e) =>
+                        alterarCampo(
+                          "endereco",
+                          e.target.value
+                        )
+                      }
+                    />
+
+
+                    <Flex
+                      gap={4}
+                      direction={{
+                        base: "column",
+                        md: "row",
+                      }}
+                    >
+
+                      <Campo
+                        label="Cidade"
+                        value={dados.cidade}
+                        disabled={!editando}
+                        placeholder="Cidade"
+                        onChange={(e) =>
+                          alterarCampo(
+                            "cidade",
+                            e.target.value
+                          )
+                        }
+                      />
+
+                      <Campo
+                        label="Estado"
+                        value={dados.estado}
+                        disabled={!editando}
+                        placeholder="Estado"
+                        onChange={(e) =>
+                          alterarCampo(
+                            "estado",
+                            e.target.value
+                          )
+                        }
+                      />
+
+                      <Campo
+                        label="CEP"
+                        value={dados.cep}
+                        disabled={!editando}
+                        placeholder="CEP"
+                        onChange={(e) =>
+                          alterarCampo(
+                            "cep",
+                            e.target.value
+                          )
+                        }
+                      />
+
+                    </Flex>
+
+                  </Stack>
+
+                </Card.Body>
+
+              </Card.Root>
+
+
+              {/* INFORMAÇÕES DA CONTA */}
+
+              <Card.Root
+                bg={CARD_BG}
+                borderRadius="8px"
+                border="1px solid"
+                borderColor={BORDER_COLOR}
+              >
+
+                <Card.Header
+                  px={5}
+                  pt={5}
+                  pb={3}
+                >
+
+                  <HStack gap={2}>
+
+                    <Icon
+                      as={FiCheckCircle}
+                      color={PRIMARY_COLOR}
+                      boxSize={4}
+                    />
+
                     <Heading
-                      fontSize="lg"
-                      fontFamily="Georgia, serif"
-                      color={ACCENT}
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color={PRIMARY_COLOR}
+                    >
+                      Informações da Conta
+                    </Heading>
+
+                  </HStack>
+
+                </Card.Header>
+
+
+                <Card.Body px={5} pb={5}>
+
+                  <Flex
+                    gap={8}
+                    direction={{
+                      base: "column",
+                      md: "row",
+                    }}
+                  >
+
+                    <HStack flex="1">
+
+                      <Box
+                        w="36px"
+                        h="36px"
+                        bg="#F8EEE9"
+                        borderRadius="full"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                      >
+
+                        <Icon
+                          as={FiCalendar}
+                          color={PRIMARY_COLOR}
+                          boxSize={4}
+                        />
+
+                      </Box>
+
+                      <Stack gap={0}>
+
+                        <Text
+                          fontSize="xs"
+                          color={TEXT_LIGHT}
+                        >
+                          Data de Cadastro
+                        </Text>
+
+                        <Text
+                          fontSize="sm"
+                          fontWeight="bold"
+                          color={TEXT_DARK}
+                        >
+                          {dados.dataCadastro || "—"}
+                        </Text>
+
+                      </Stack>
+
+                    </HStack>
+
+
+                    <HStack flex="1">
+
+                      <Box
+                        w="36px"
+                        h="36px"
+                        bg="#F8EEE9"
+                        borderRadius="full"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                      >
+
+                        <Icon
+                          as={FiCreditCard}
+                          color={PRIMARY_COLOR}
+                          boxSize={4}
+                        />
+
+                      </Box>
+
+                      <Stack gap={0}>
+
+                        <Text
+                          fontSize="xs"
+                          color={TEXT_LIGHT}
+                        >
+                          Código do Usuário
+                        </Text>
+
+                        <Text
+                          fontSize="sm"
+                          fontWeight="bold"
+                          color={TEXT_DARK}
+                        >
+                          {dados.codigoUsuario || "—"}
+                        </Text>
+
+                      </Stack>
+
+                    </HStack>
+
+
+                    <HStack flex="1">
+
+                      <Box
+                        w="36px"
+                        h="36px"
+                        bg="#EAF5EC"
+                        borderRadius="full"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                      >
+
+                        <Icon
+                          as={FiCheckCircle}
+                          color="#48BB78"
+                          boxSize={4}
+                        />
+
+                      </Box>
+
+                      <Stack gap={0}>
+
+                        <Text
+                          fontSize="xs"
+                          color={TEXT_LIGHT}
+                        >
+                          Status da Conta
+                        </Text>
+
+                        <Text
+                          fontSize="sm"
+                          color="#48BB78"
+                          fontWeight="bold"
+                        >
+                          {dados.status || "—"}
+                        </Text>
+
+                      </Stack>
+
+                    </HStack>
+
+                  </Flex>
+
+                </Card.Body>
+
+              </Card.Root>
+
+            </Stack>
+
+
+            {/* =================================================
+                DIREITA
+            ================================================= */}
+
+            <Stack
+              w={{
+                base: "full",
+                lg: "390px",
+              }}
+              gap={5}
+            >
+
+
+              {/* SEGURANÇA */}
+
+              <Card.Root
+                bg={CARD_BG}
+                borderRadius="8px"
+                border="1px solid"
+                borderColor={BORDER_COLOR}
+              >
+
+                <Card.Header
+                  px={5}
+                  pt={5}
+                  pb={3}
+                >
+
+                  <HStack gap={2}>
+
+                    <Icon
+                      as={FiLock}
+                      color={PRIMARY_COLOR}
+                      boxSize={4}
+                    />
+
+                    <Heading
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color={PRIMARY_COLOR}
                     >
                       Segurança da Conta
                     </Heading>
+
                   </HStack>
 
-                  <VStack spacing={3} align="stretch">
-                    <Text
-                      fontSize="xs"
-                      fontWeight="semibold"
-                      color="gray.600"
-                    >
-                      Senha
-                    </Text>
-                    <Flex gap={3}>
-                      <Input
-                        type="password"
-                        value="••••••••••••"
-                        readOnly
-                        bg="white"
-                        borderColor="#E4DED2"
-                      />
-                      <Button
-                        variant="outline"
-                        borderColor="#E4DED2"
-                        color={ACCENT}
-                        _hover={{ bg: ACCENT_LIGHT_BG }}
-                        startIcon={<Icon as={FiLock} />}
-                        borderRadius="8px"
-                        flexShrink={0}
-                      >
-                        Alterar Senha
-                      </Button>
-                    </Flex>
-                  </VStack>
-                </Box>
+                </Card.Header>
 
-                <Box
-                  bg="#FAF9F6"
-                  p={6}
-                  borderRadius="16px"
-                  border="1px solid"
-                  borderColor="#EFEBE3"
+
+                <Card.Body px={5} pb={5}>
+
+                  <Flex
+                    gap={3}
+                    align="end"
+                  >
+
+                    <Campo
+                      label="Senha"
+                      value={dados.senha}
+                      disabled={!editando}
+                      type="password"
+                      placeholder="••••••••"
+                      onChange={(e) =>
+                        alterarCampo(
+                          "senha",
+                          e.target.value
+                        )
+                      }
+                    />
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      color={PRIMARY_COLOR}
+                      borderColor={PRIMARY_COLOR}
+                      borderRadius="6px"
+                      disabled={!editando}
+                      _hover={{
+                        bg: "#F2E6E8",
+                      }}
+                    >
+                      Alterar Senha
+                    </Button>
+
+                  </Flex>
+
+                </Card.Body>
+
+              </Card.Root>
+
+
+              {/* PREFERÊNCIAS */}
+
+              <Card.Root
+                bg={CARD_BG}
+                borderRadius="8px"
+                border="1px solid"
+                borderColor={BORDER_COLOR}
+              >
+
+                <Card.Header
+                  px={5}
+                  pt={5}
+                  pb={3}
                 >
-                  <HStack spacing={3} mb={4}>
-                    <Icon as={FiBell} color={ACCENT} w={5} h={5} />
+
+                  <HStack gap={2}>
+
+                    <Icon
+                      as={FiBell}
+                      color={PRIMARY_COLOR}
+                      boxSize={4}
+                    />
+
                     <Heading
-                      fontSize="lg"
-                      fontFamily="Georgia, serif"
-                      color={ACCENT}
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color={PRIMARY_COLOR}
                     >
                       Preferências de Notificação
                     </Heading>
+
                   </HStack>
 
-                  <VStack spacing={5} align="stretch">
-                    <Flex justify="space-between" align="center">
-                      <Box>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="semibold"
-                          color="gray.800"
-                        >
-                          E-mail
-                        </Text>
-                        <Text fontSize="xs" color="gray.500">
-                          Receber notificações sobre empréstimos e devoluções.
-                        </Text>
-                      </Box>
-                      <Switch.Root
-                        checked={formData.notifications.email}
-                        onCheckedChange={(details) =>
-                          handleNotificationChange("email", details.checked)
-                        }
-                        colorPalette="red"
-                      >
-                        <Switch.HiddenInput />
-                        <Switch.Control>
-                          <Switch.Thumb />
-                        </Switch.Control>
-                      </Switch.Root>
-                    </Flex>
+                </Card.Header>
 
-                    <Flex justify="space-between" align="center">
-                      <Box>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="semibold"
-                          color="gray.800"
-                        >
-                          SMS
-                        </Text>
-                        <Text fontSize="xs" color="gray.500">
-                          Receber lembretes por mensagem.
-                        </Text>
-                      </Box>
-                      <Switch.Root
-                        checked={formData.notifications.sms}
-                        onCheckedChange={(details) =>
-                          handleNotificationChange("sms", details.checked)
-                        }
-                        colorPalette="red"
-                      >
-                        <Switch.HiddenInput />
-                        <Switch.Control>
-                          <Switch.Thumb />
-                        </Switch.Control>
-                      </Switch.Root>
-                    </Flex>
 
-                    <Flex justify="space-between" align="center">
-                      <Box>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="semibold"
-                          color="gray.800"
-                        >
-                          Novidades
-                        </Text>
-                        <Text fontSize="xs" color="gray.500">
-                          Receber novidades sobre acervo e eventos.
-                        </Text>
-                      </Box>
-                      <Switch.Root
-                        checked={formData.notifications.newsletters}
-                        onCheckedChange={(details) =>
-                          handleNotificationChange(
-                            "newsletters",
-                            details.checked
-                          )
-                        }
-                        colorPalette="red"
-                      >
-                        <Switch.HiddenInput />
-                        <Switch.Control>
-                          <Switch.Thumb />
-                        </Switch.Control>
-                      </Switch.Root>
-                    </Flex>
-                  </VStack>
-                </Box>
-              </VStack>
-            </SimpleGrid>
+                <Card.Body px={5} pb={5}>
 
-            {/* INFORMAÇÕES DA CONTA */}
-            <Box
-              mt={6}
-              bg="#FAF9F6"
-              p={6}
-              borderRadius="16px"
-              border="1px solid"
-              borderColor="#EFEBE3"
-            >
-              <HStack spacing={3} mb={4}>
-                <Icon as={FiShield} color={ACCENT} w={5} h={5} />
-                <Heading
-                  fontSize="lg"
-                  fontFamily="Georgia, serif"
-                  color={ACCENT}
-                >
-                  Informações da Conta
-                </Heading>
-              </HStack>
 
-              <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
-                <Flex
-                  align="center"
-                  gap={3}
-                  p={3}
-                  bg="white"
-                  borderRadius="10px"
-                  border="1px solid"
-                  borderColor="#EFEBE3"
-                >
+                  {/* EMAIL */}
+
                   <Flex
-                    w={10}
-                    h={10}
-                    bg="#F7F3EC"
-                    borderRadius="8px"
+                    justify="space-between"
                     align="center"
-                    justify="center"
-                    color={ACCENT}
+                    mb={5}
                   >
-                    <Icon as={FiCalendar} w={5} h={5} />
-                  </Flex>
-                  <Box>
-                    <Text fontSize="xs" color="gray.500">
-                      Data de Cadastro
-                    </Text>
-                    <Text
-                      fontSize="sm"
-                      fontWeight="semibold"
-                      color="gray.800"
-                    >
-                      {formData.registrationDate}
-                    </Text>
-                  </Box>
-                </Flex>
 
-                <Flex
-                  align="center"
-                  gap={3}
-                  p={3}
-                  bg="white"
-                  borderRadius="10px"
-                  border="1px solid"
-                  borderColor="#EFEBE3"
-                >
-                  <Flex
-                    w={10}
-                    h={10}
-                    bg="#F7F3EC"
-                    borderRadius="8px"
-                    align="center"
-                    justify="center"
-                    color={ACCENT}
-                  >
-                    <Icon as={FiCreditCard} w={5} h={5} />
-                  </Flex>
-                  <Box>
-                    <Text fontSize="xs" color="gray.500">
-                      Código do Usuário
-                    </Text>
-                    <Text
-                      fontSize="sm"
-                      fontWeight="semibold"
-                      color="gray.800"
-                    >
-                      {formData.userId}
-                    </Text>
-                  </Box>
-                </Flex>
+                    <Stack gap={0} pr={4}>
 
-                <Flex
-                  align="center"
-                  gap={3}
-                  p={3}
-                  bg="white"
-                  borderRadius="10px"
-                  border="1px solid"
-                  borderColor="#EFEBE3"
-                >
-                  <Flex
-                    w={10}
-                    h={10}
-                    bg="green.50"
-                    borderRadius="8px"
-                    align="center"
-                    justify="center"
-                    color="green.600"
-                  >
-                    <Icon as={FiCheckCircle} w={5} h={5} />
-                  </Flex>
-                  <Box>
-                    <Text fontSize="xs" color="gray.500">
-                      Status da Conta
-                    </Text>
-                    <Badge
-                      bg="green.100"
-                      color="green.800"
-                      borderRadius="md"
-                      px={2}
-                      py={0.5}
-                      fontSize="xs"
+                      <Text
+                        fontSize="xs"
+                        fontWeight="semibold"
+                        color={TEXT_DARK}
+                      >
+                        E-mail
+                      </Text>
+
+                      <Text
+                        fontSize="10px"
+                        color={TEXT_LIGHT}
+                      >
+                        Receber notificações sobre empréstimos, devoluções e novidades.
+                      </Text>
+
+                    </Stack>
+
+                    <Switch.Root
+                      checked={dados.emailNotificacao}
+                      onCheckedChange={(e) =>
+                        alterarCampo(
+                          "emailNotificacao",
+                          e.checked
+                        )
+                      }
                     >
-                      {formData.status}
-                    </Badge>
-                  </Box>
-                </Flex>
-              </SimpleGrid>
-            </Box>
-          </FadeIn>
-        </Container>
+                      <Switch.HiddenInput />
+                      <Switch.Control />
+                    </Switch.Root>
+
+                  </Flex>
+
+
+                  {/* SMS */}
+
+                  <Flex
+                    justify="space-between"
+                    align="center"
+                    mb={5}
+                  >
+
+                    <Stack gap={0} pr={4}>
+
+                      <Text
+                        fontSize="xs"
+                        fontWeight="semibold"
+                        color={TEXT_DARK}
+                      >
+                        SMS
+                      </Text>
+
+                      <Text
+                        fontSize="10px"
+                        color={TEXT_LIGHT}
+                      >
+                        Receber lembretes sobre devoluções por mensagem.
+                      </Text>
+
+                    </Stack>
+
+                    <Switch.Root
+                      checked={dados.smsNotificacao}
+                      onCheckedChange={(e) =>
+                        alterarCampo(
+                          "smsNotificacao",
+                          e.checked
+                        )
+                      }
+                    >
+                      <Switch.HiddenInput />
+                      <Switch.Control />
+                    </Switch.Root>
+
+                  </Flex>
+
+
+                  {/* NOVIDADES */}
+
+                  <Flex
+                    justify="space-between"
+                    align="center"
+                  >
+
+                    <Stack gap={0} pr={4}>
+
+                      <Text
+                        fontSize="xs"
+                        fontWeight="semibold"
+                        color={TEXT_DARK}
+                      >
+                        Novidades da Biblioteca
+                      </Text>
+
+                      <Text
+                        fontSize="10px"
+                        color={TEXT_LIGHT}
+                      >
+                        Receber novidades sobre novos livros e eventos.
+                      </Text>
+
+                    </Stack>
+
+                    <Switch.Root
+                      checked={dados.novidades}
+                      onCheckedChange={(e) =>
+                        alterarCampo(
+                          "novidades",
+                          e.checked
+                        )
+                      }
+                    >
+                      <Switch.HiddenInput />
+                      <Switch.Control />
+                    </Switch.Root>
+
+                  </Flex>
+
+                </Card.Body>
+
+              </Card.Root>
+
+            </Stack>
+
+          </Flex>
+
+
+          {/* =================================================
+              BOTÕES
+          ================================================= */}
+
+          <Flex
+            justify="flex-end"
+            gap={3}
+            mt={1}
+          >
+
+            {editando && (
+
+              <Button
+                variant="outline"
+                color={PRIMARY_COLOR}
+                borderColor={PRIMARY_COLOR}
+                borderRadius="14px"
+                size="md"
+                onClick={() =>
+                  setEditando(false)
+                }
+              >
+                Cancelar
+              </Button>
+
+            )}
+
+
+            {!editando ? (
+
+              <Button
+                bg={PRIMARY_COLOR}
+                color="white"
+                borderRadius="14px"
+                size="md"
+                px={6}
+                boxShadow="0 4px 12px rgba(74,14,23,.15)"
+                onClick={() =>
+                  setEditando(true)
+                }
+                _hover={{
+                  bg: PRIMARY_DARK,
+                  transform: "translateY(-2px)",
+                }}
+                transition={`all .3s ${EASE}`}
+              >
+
+                <Icon
+                  as={FiEdit3}
+                  mr={2}
+                />
+
+                Editar Dados
+
+              </Button>
+
+            ) : (
+
+              <Button
+                bg={PRIMARY_COLOR}
+                color="white"
+                borderRadius="14px"
+                size="md"
+                px={6}
+                boxShadow="0 4px 12px rgba(74,14,23,.15)"
+                onClick={salvarAlteracoes}
+                _hover={{
+                  bg: PRIMARY_DARK,
+                  transform: "translateY(-2px)",
+                }}
+                transition={`all .3s ${EASE}`}
+              >
+
+                <Icon
+                  as={FiSave}
+                  mr={2}
+                />
+
+                Salvar Alterações
+
+              </Button>
+
+            )}
+
+          </Flex>
+
+        </Stack>
+
       </Box>
+
     </Flex>
   );
 }
+
