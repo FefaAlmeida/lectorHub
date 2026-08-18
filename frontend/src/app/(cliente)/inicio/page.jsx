@@ -32,9 +32,10 @@ import {
   FiGift,
 } from "react-icons/fi";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 // Adicionada a função getUltimoEmprestimo da sua camada de API
-import { getPerfil, getUltimoEmprestimo } from "../../../api";
+import { getPerfil, getUltimoEmprestimo, logoutUsuario } from "../../../api";
 
 // --- CONFIGURAÇÕES VISUAIS ---
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
@@ -48,32 +49,36 @@ const TEXT_LIGHT = "#777777";
 // --- DADOS DA INTERFACE ---
 
 const NAV_ITEMS = [
-  { label: "Início", icon: FiHome, active: true },
-  { label: "Buscar Livros", icon: FiSearch },
-  { label: "Meus Empréstimos", icon: FiBookOpen },
-  { label: "Histórico", icon: FiClock },
-  { label: "Meu Cadastro", icon: FiUser },
+  { label: "Início", icon: FiHome, href: "/inicio", active: true },
+  { label: "Buscar Livros", icon: FiSearch, href: "/buscar_livro" },
+  { label: "Meus Empréstimos", icon: FiBookOpen, href: "/emprestimo_livro" },
+  { label: "Histórico", icon: FiClock, href: "/emprestimo_livro?aba=historico" },
+  { label: "Meu Cadastro", icon: FiUser, href: "/alterar_cadastro" },
 ];
 
 const QUICK_ACTIONS = [
   {
     label: "Buscar Livros",
     icon: FiSearch,
+    href: "/buscar_livro",
     description: "Encontre livros por título, autor ou assunto",
   },
   {
     label: "Meus Empréstimos",
     icon: FiBookOpen,
+    href: "/emprestimo_livro",
     description: "Veja seus livros emprestados e prazos",
   },
   {
     label: "Histórico",
     icon: FiClock,
+    href: "/emprestimo_livro?aba=historico",
     description: "Confira seu histórico de empréstimos",
   },
   {
     label: "Meu Cadastro",
     icon: FiUser,
+    href: "/alterar_cadastro",
     description: "Atualize seus dados cadastrais",
   },
 ];
@@ -142,7 +147,7 @@ function NavItem({ item }) {
   return (
     <HStack
       as="a"
-      href="#"
+      href={item.href}
       spacing={3}
       p={3}
       pl={4}
@@ -163,6 +168,8 @@ function NavItem({ item }) {
 function QuickActionCard({ action }) {
   return (
     <Flex
+      as="a"
+      href={action.href}
       align="center"
       bg={CARD_BG}
       p={4}
@@ -334,6 +341,7 @@ function AnnouncementCard({ announcement }) {
 // --- DASHBOARD PRINCIPAL ---
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
   
@@ -410,8 +418,7 @@ export default function DashboardPage() {
           <Separator borderColor={BORDER_COLOR} my={4} />
 
           <HStack
-            as="a"
-            href="#"
+            as="button"
             spacing={3}
             p={3}
             pl={4}
@@ -420,6 +427,13 @@ export default function DashboardPage() {
             _hover={{ bg: "#F5F1E9" }}
             transition={`all 0.2s ${EASE}`}
             cursor="pointer"
+            onClick={async () => {
+              try {
+                await logoutUsuario();
+              } finally {
+                router.push("/login");
+              }
+            }}
           >
             <Icon as={FiLogOut} w={5} h={5} />
             <Text fontSize="md">Sair</Text>
@@ -625,7 +639,7 @@ export default function DashboardPage() {
               )}
 
               <Link
-                href="#"
+                href="/emprestimo_livro"
                 color={PRIMARY_COLOR}
                 fontSize="sm"
                 fontWeight="medium"
@@ -660,7 +674,7 @@ export default function DashboardPage() {
                 </Heading>
 
                 <Link
-                  href="#"
+                  href="/buscar_livro"
                   color={PRIMARY_COLOR}
                   fontSize="xs"
                   fontWeight="medium"

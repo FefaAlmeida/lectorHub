@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import {
   Box,
   Button,
@@ -101,6 +103,8 @@ function SelectVisual({ label, placeholder, options = [] }) {
 }
 
 export default function EditarLivro() {
+  const router = useRouter();
+
   return (
     <Flex
       position="fixed"
@@ -526,6 +530,7 @@ export default function EditarLivro() {
               fontWeight="normal"
               fontSize="12px"
               _hover={{ bg: "#F8EEE6" }}
+              onClick={() => router.push("/gestaoEeR")}
             >
               Cancelar
             </Button>

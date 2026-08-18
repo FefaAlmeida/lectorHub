@@ -273,51 +273,62 @@ const DEVOLUCOES_INICIAIS = [
 // MENU
 // ============================================================
 
+// `emBreve` marca os itens que ainda não têm página — ficam visíveis, porém
+// inertes, em vez de virarem links quebrados.
 const MENU = [
   {
     label: "Início",
     icon: FiHome,
+    emBreve: true,
   },
 
   {
     label: "Livros",
     icon: FiBook,
+    href: "/catalogoDeLivros",
   },
 
   {
     label: "Categorias",
     icon: FiGrid,
+    emBreve: true,
   },
 
   {
     label: "Usuários",
     icon: FiUsers,
+    emBreve: true,
   },
 
   {
     label: "Empréstimos e Reservas",
     icon: FiClock,
+    href: "/gestaoEeR",
     active: true,
   },
 
   {
     label: "Devoluções",
     icon: FiRefreshCw,
+    href: "/gestaoEeR",
   },
 
   {
-    label: "Reservas",
+    label: "Prazos",
     icon: FiRepeat,
+    href: "/editarPrazo",
   },
 
   {
     label: "Relatórios",
     icon: FiFileText,
+    emBreve: true,
   },
 
   {
     label: "Configurações",
     icon: FiSettings,
+    emBreve: true,
   },
 ];
 
@@ -328,6 +339,9 @@ const MENU = [
 function MenuItem({ item }) {
   return (
     <HStack
+      as={item.emBreve ? "div" : "a"}
+      href={item.emBreve ? undefined : item.href}
+      title={item.emBreve ? "Em breve" : undefined}
       px={3}
       py={3}
       borderRadius="5px"
@@ -339,14 +353,18 @@ function MenuItem({ item }) {
       color={
         item.active
           ? WHITE
+          : item.emBreve
+          ? "rgba(255,255,255,.35)"
           : "rgba(255,255,255,.85)"
       }
-      cursor="pointer"
+      cursor={item.emBreve ? "default" : "pointer"}
       gap={3}
       transition="all .2s ease"
       _hover={{
         bg: item.active
           ? PRIMARY_DARK
+          : item.emBreve
+          ? "transparent"
           : "rgba(255,255,255,.08)",
       }}
     >

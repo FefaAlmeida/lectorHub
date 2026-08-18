@@ -13,6 +13,8 @@ import { fileURLToPath } from 'url';
 // 1. IMPORTAR TODAS AS ROTAS DA API
 import authRotas from './routes/authRotas.js';
 import usuarioRotas from './routes/usuarioRotas.js';
+import livroRotas from './routes/livroRotas.js';
+import emprestimoRotas from './routes/emprestimoRotas.js';
 
 // Importar middlewares
 import { errorMiddleware } from './middlewares/errorMiddleware.js';
@@ -49,6 +51,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // 2. ATIVAÇÃO DAS ROTAS DA API
 app.use('/api/auth', authRotas);
 app.use('/api/usuarios', usuarioRotas);
+app.use('/api/livros', livroRotas);
+app.use('/api/emprestimos', emprestimoRotas);
 
 
 // 3. ROTA RAIZ - DOCUMENTAÇÃO
@@ -59,7 +63,9 @@ app.get('/', (req, res) => {
         versao: '1.0.0',
         rotas: {
             autenticacao: '/api/auth',
-            usuarios: '/api/usuarios'
+            usuarios: '/api/usuarios',
+            livros: '/api/livros',
+            emprestimos: '/api/emprestimos'
         },
         documentacao: {
             // Autenticação
@@ -75,7 +81,27 @@ app.get('/', (req, res) => {
             meuPerfil: 'GET /api/usuarios/me',
             atualizarMeuPerfil: 'PUT /api/usuarios/me',
             listarUsuarios: 'GET /api/usuarios (admin)',
-            atualizarUsuario: 'PUT /api/usuarios/:id (admin)'
+            atualizarUsuario: 'PUT /api/usuarios/:id (admin)',
+
+            // Livros
+            listarLivros: 'GET /api/livros?busca=&categoria=&disponivel=&ordem=&pagina=&limite=',
+            categoriasLivros: 'GET /api/livros/categorias',
+            detalhesLivro: 'GET /api/livros/:id',
+            atualizarDisponibilidade: 'PUT /api/livros/:id/disponibilidade (admin)',
+
+            // Avaliações
+            listarAvaliacoes: 'GET /api/livros/:id/avaliacoes',
+            avaliarLivro: 'POST /api/livros/:id/avaliacoes (autenticado)',
+            removerAvaliacao: 'DELETE /api/livros/:id/avaliacoes (autenticado)',
+
+            // Empréstimos — máx. 2 ativos por usuário e nenhum se houver atraso
+            solicitarEmprestimo: 'POST /api/emprestimos (autenticado)',
+            meusEmprestimos: 'GET /api/emprestimos/meus (autenticado)',
+            elegibilidade: 'GET /api/emprestimos/elegibilidade (autenticado)',
+            cancelarEmprestimo: 'PATCH /api/emprestimos/:id/cancelar (autenticado)',
+            ultimoEmprestimo: 'GET /api/emprestimos/ultimo/:id_usuario (autenticado)',
+            listarEmprestimos: 'GET /api/emprestimos?status=&pagina=&limite= (admin)',
+            atualizarStatusEmprestimo: 'PATCH /api/emprestimos/:id/status (admin)'
         }
     });
 });

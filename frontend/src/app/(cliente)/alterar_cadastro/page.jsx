@@ -2,6 +2,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { logoutUsuario } from "../../../api";
 
 import {
   Box,
@@ -57,13 +60,14 @@ const TEXT_LIGHT = "#777777";
 // =====================================================
 
 const NAV_ITEMS = [
-  { label: "Início", icon: FiHome },
-  { label: "Buscar Livros", icon: FiSearch },
-  { label: "Meus Empréstimos", icon: FiBookOpen },
-  { label: "Histórico", icon: FiClock },
+  { label: "Início", icon: FiHome, href: "/inicio" },
+  { label: "Buscar Livros", icon: FiSearch, href: "/buscar_livro" },
+  { label: "Meus Empréstimos", icon: FiBookOpen, href: "/emprestimo_livro" },
+  { label: "Histórico", icon: FiClock, href: "/emprestimo_livro?aba=historico" },
   {
     label: "Meu Cadastro",
     icon: FiUser,
+    href: "/alterar_cadastro",
     active: true,
   },
 ];
@@ -77,7 +81,7 @@ function NavItem({ item }) {
   return (
     <HStack
       as="a"
-      href="#"
+      href={item.href}
       spacing={3}
       p={3}
       pl={4}
@@ -170,6 +174,16 @@ function Campo({
 // =====================================================
 
 export default function MeuCadastro({ cliente = null }) {
+
+  const router = useRouter();
+
+  async function sair() {
+    try {
+      await logoutUsuario();
+    } finally {
+      router.push("/login");
+    }
+  }
 
   const [editando, setEditando] = useState(false);
 
@@ -308,6 +322,7 @@ export default function MeuCadastro({ cliente = null }) {
           />
 
           <HStack
+            as="button"
             p={3}
             pl={4}
             spacing={3}
@@ -319,6 +334,7 @@ export default function MeuCadastro({ cliente = null }) {
               color: PRIMARY_COLOR,
             }}
             transition={`all 0.2s ${EASE}`}
+            onClick={sair}
           >
 
             <Icon

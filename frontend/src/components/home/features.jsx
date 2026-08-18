@@ -116,10 +116,12 @@ function FeatureCard({ item }) {
 export default function Features() {
  return (
   <Box
+   id="beneficios"
    py={{ base: 20, md: 32 }}
    position="relative"
    zIndex={1}
    boxShadow="0 -8px 24px -12px rgba(0,0,0,0.15)"
+   scrollMarginTop="80px"
   >
    <Container maxW="6xl">
     <VStack spacing={20}>

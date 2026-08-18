@@ -121,6 +121,8 @@ export default function Hero() {
       {/* Botão com acento vinho */}
       <FadeIn delay={0.4}>
        <Button
+        as="a"
+        href="#beneficios"
         mt={4}
         size="lg"
         bg={ACCENT}

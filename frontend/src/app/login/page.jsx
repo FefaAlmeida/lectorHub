@@ -61,9 +61,14 @@ export default function Logar() {
           type: "success",
         });
 
-        // Ainda não existe área de admin no LectorHub — todos vão para /inicio.
+        // Admin cai no catálogo de gestão; cliente, na própria biblioteca.
+        const destino =
+          response?.dados?.usuario?.tipo === "admin"
+            ? "/catalogoDeLivros"
+            : "/inicio";
+
         setTimeout(() => {
-          window.location.href = "/inicio";
+          window.location.href = destino;
         }, 800);
       } else {
         toaster.create({

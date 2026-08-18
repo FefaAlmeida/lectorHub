@@ -111,6 +111,8 @@ export default function Cta() {
         <Stack direction={{ base: "column", sm: "row" }} spacing={4} pt={2}>
          {/* Botão primário — acento vinho */}
          <Button
+          as="a"
+          href="/cadastrar"
           size="lg"
           bg={ACCENT}
           color="white"
@@ -141,6 +143,8 @@ export default function Cta() {
 
          {/* Botão secundário — outline com tom vinho */}
          <Button
+          as="a"
+          href="/login"
           size="lg"
           variant="outline"
           borderColor={ACCENT}

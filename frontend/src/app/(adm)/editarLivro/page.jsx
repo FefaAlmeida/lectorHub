@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import {
   Box,
   Button,
@@ -163,6 +165,8 @@ function SelectVisual({
 // =====================================================
 
 export default function EditarLivro() {
+  const router = useRouter();
+
   return (
 
     <Box
@@ -916,6 +920,7 @@ export default function EditarLivro() {
                 _hover={{
                   bg: "#F8EEE6",
                 }}
+                onClick={() => router.push("/catalogoDeLivros")}
               >
                 Cancelar
               </Button>
