@@ -1,5 +1,5 @@
 "use client";
-
+import Sidebar from "../../../components/sideBar/sideBar";
 import {
   Box,
   Flex,
@@ -400,46 +400,7 @@ export default function DashboardPage() {
   return (
     <Flex minH="100vh" bg={BG_COLOR}>
       {/* BARRA LATERAL */}
-      <Box
-        as="nav"
-        w="260px"
-        bg="#FAF9F6"
-        borderRight="1px solid"
-        borderColor={BORDER_COLOR}
-        p={5}
-        flexShrink={0}
-        display={{ base: "none", md: "block" }}
-      >
-        <VStack spacing={3} align="stretch">
-          {NAV_ITEMS.map((item, index) => (
-            <NavItem key={index} item={item} />
-          ))}
-
-          <Separator borderColor={BORDER_COLOR} my={4} />
-
-          <HStack
-            as="button"
-            spacing={3}
-            p={3}
-            pl={4}
-            borderRadius="6px"
-            color={PRIMARY_COLOR}
-            _hover={{ bg: "#F5F1E9" }}
-            transition={`all 0.2s ${EASE}`}
-            cursor="pointer"
-            onClick={async () => {
-              try {
-                await logoutUsuario();
-              } finally {
-                router.push("/login");
-              }
-            }}
-          >
-            <Icon as={FiLogOut} w={5} h={5} />
-            <Text fontSize="md">Sair</Text>
-          </HStack>
-        </VStack>
-      </Box>
+      <Sidebar />
 
       {/* CONTEÚDO PRINCIPAL */}
       <Box
