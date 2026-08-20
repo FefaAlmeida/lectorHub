@@ -30,11 +30,11 @@ import {
 } from 'react-icons/fi';
 
 export default function AdminDashboardPage() {
-  // Estado para armazenar o mês selecionado e o controle do menu
+
   const [mesSelecionado, setMesSelecionado] = useState('Maio');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Lista de todos os meses do ano em ordem
+
   const meses = [
     'Janeiro',
     'Fevereiro',
@@ -52,7 +52,7 @@ export default function AdminDashboardPage() {
 
   return (
     <Flex minH="100vh" bg="#FAF7F2" color="#2D2D2D" w="100%">
-      {/* Sidebar Lateral Escura (Vinho) */}
+
       <Box
         w={{ base: 'full', md: '280px' }}
         bg="#4A0E17"
@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
         flexShrink={0}
       >
         <Flex direction="column" gap={6}>
-          {/* Logo LECTOR HUB */}
+
           <Flex direction="column" align="center" justify="center" py={4} borderBottom="1px solid rgba(232, 220, 196, 0.2)">
             <Flex
               w="70px"

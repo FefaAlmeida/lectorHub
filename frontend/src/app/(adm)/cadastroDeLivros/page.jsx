@@ -25,9 +25,11 @@ import {
   FiUploadCloud,
   FiTrash2,
   FiChevronDown,
+  FiInfo,
+  FiLayers,
+  FiCheckCircle,
 } from 'react-icons/fi';
 
-// Componente Customizado de Select com Menu Arredondado e Hover Vinho Claro
 function CustomSelect({ placeholder, options, value, onChange }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -50,20 +52,22 @@ function CustomSelect({ placeholder, options, value, onChange }) {
         align="center"
         justify="space-between"
         w="100%"
-        h="44px"
+        h="46px"
         px={4}
         borderRadius="xl"
-        border="1px solid #E8DCC4"
-        bg="#FFFFFF"
-        color={selectedOption ? '#2D2D2D' : '#9E9E9E'}
+        border="1px solid"
+        borderColor="#E8DCC4"
+        bg="#FCFAF7"
+        color={selectedOption ? '#2D2D2D' : '#8C8C8C'}
         fontSize="sm"
         cursor="pointer"
         onClick={() => setIsOpen(!isOpen)}
-        _hover={{ borderColor: '#4A0E17' }}
-        _focus={{ borderColor: '#4A0E17' }}
+        _hover={{ borderColor: '#4A0E17', bg: '#FFFFFF' }}
         transition="all 0.2s"
       >
-        <Text fontSize="sm">{selectedOption ? selectedOption.label : placeholder}</Text>
+        <Text fontSize="sm" fontWeight={selectedOption ? 'medium' : 'normal'}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </Text>
         <Box
           color="#4A0E17"
           transform={isOpen ? 'rotate(180deg)' : 'rotate(0deg)'}
@@ -82,7 +86,7 @@ function CustomSelect({ placeholder, options, value, onChange }) {
           bg="#FFFFFF"
           border="1px solid #E8DCC4"
           borderRadius="xl"
-          boxShadow="lg"
+          boxShadow="0 10px 25px -5px rgba(74, 14, 23, 0.1)"
           py={2}
           zIndex={100}
           overflow="hidden"
@@ -95,7 +99,7 @@ function CustomSelect({ placeholder, options, value, onChange }) {
               cursor="pointer"
               fontSize="sm"
               color="#2D2D2D"
-              _hover={{ bg: '#FAF0F2', color: '#4A0E17', fontWeight: 'medium' }}
+              _hover={{ bg: '#FAF0F2', color: '#4A0E17', fontWeight: 'bold' }}
               onClick={() => {
                 onChange(option.value);
                 setIsOpen(false);
@@ -130,9 +134,20 @@ export default function CadastrarLivroPage() {
     { value: 'es', label: 'Espanhol' },
   ];
 
+  const inputStyles = {
+    bg: '#FCFAF7',
+    borderColor: '#E8DCC4',
+    borderRadius: 'xl',
+    fontSize: 'sm',
+    h: '46px',
+    _hover: { borderColor: '#4A0E17', bg: '#FFFFFF' },
+    _focus: { borderColor: '#4A0E17', bg: '#FFFFFF', boxShadow: '0 0 0 1px #4A0E17' },
+    transition: 'all 0.2s',
+  };
+
   return (
     <Flex minH="100vh" bg="#FAF7F2" color="#2D2D2D" w="100%">
-      {/* Sidebar Lateral */}
+      {/* Sidebar Lateral Original */}
       <Box
         w={{ base: 'full', md: '280px' }}
         bg="#4A0E17"
@@ -219,7 +234,8 @@ export default function CadastrarLivroPage() {
       </Box>
 
       {/* Conteúdo Principal */}
-      <Box flex="1" p={{ base: 6, md: 10 }} w="100%">
+      <Box flex="1" p={{ base: 6, md: 10 }} maxW="1200px" mx="auto" w="100%">
+        {/* Cabeçalho */}
         <Box mb={8}>
           <Heading fontSize={{ base: '3xl', md: '4xl' }} color="#4A0E17" fontFamily="serif" fontWeight="bold">
             Cadastrar Novo Livro
@@ -229,240 +245,163 @@ export default function CadastrarLivroPage() {
           </Text>
         </Box>
 
-        <Box
-          bg="#FFFFFF"
-          border="1px solid #E8DCC4"
-          borderRadius="2xl"
-          p={{ base: 6, md: 8 }}
-          boxShadow="sm"
-        >
-          <Flex direction="column" gap={6}>
-            
-            {/* Título do Livro */}
-            <Box>
-              <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                Título do livro
+        {/* Form Container */}
+        <Flex direction="column" gap={6}>
+          {/* Seção 1: Informações Principais */}
+          <Box bg="#FFFFFF" border="1px solid" borderColor="#E8DCC4" borderRadius="2xl" p={{ base: 6, md: 8 }} boxShadow="0 4px 15px rgba(74, 14, 23, 0.03)">
+            <Flex align="center" gap={2} mb={6} pb={3} borderBottom="2px solid" borderColor="#FAF7F2">
+              <Box p={2} bg="#FAF0F2" color="#4A0E17" borderRadius="lg">
+                <FiInfo size={18} />
+              </Box>
+              <Text fontSize="md" fontWeight="bold" color="#4A0E17">
+                Informações da Obra
               </Text>
-              <Input
-                placeholder="Digite o título do livro"
-                borderColor="#E8DCC4"
-                _hover={{ borderColor: '#4A0E17' }}
-                _focus={{ borderColor: '#4A0E17', boxShadow: '0 0 0 1px #4A0E17' }}
-                borderRadius="xl"
-                fontSize="sm"
-                h="44px"
-              />
-            </Box>
+            </Flex>
 
-            {/* Autor e Categoria */}
-            <SimpleGrid columns={{ base: 1, md: 2 }} gap={5}>
+            <Flex direction="column" gap={5}>
               <Box>
-                <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                  Autor
+                <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={1.5}>
+                  Título do Livro
                 </Text>
-                <Input
-                  placeholder="Digite o nome do autor"
-                  borderColor="#E8DCC4"
-                  _hover={{ borderColor: '#4A0E17' }}
-                  _focus={{ borderColor: '#4A0E17', boxShadow: '0 0 0 1px #4A0E17' }}
-                  borderRadius="xl"
-                  fontSize="sm"
-                  h="44px"
-                />
+                <Input placeholder="Digite o título do livro" {...inputStyles} />
               </Box>
 
-              <Box>
-                <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                  Categoria
-                </Text>
-                <CustomSelect
-                  placeholder="Selecione uma categoria"
-                  options={opcoesCategoria}
-                  value={categoria}
-                  onChange={setCategoria}
-                />
-              </Box>
-            </SimpleGrid>
+              <SimpleGrid columns={{ base: 1, md: 2 }} gap={5}>
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={1.5}>
+                    Autor
+                  </Text>
+                  <Input placeholder="Digite o nome do autor" {...inputStyles} />
+                </Box>
 
-            {/* ISBN, Editora e Data de Publicação (Dia, Mês e Ano) */}
-            <SimpleGrid columns={{ base: 1, md: 3 }} gap={5}>
-              <Box>
-                <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                  ISBN
-                </Text>
-                <Input
-                  placeholder="Ex.: 978-65-123456-7-8"
-                  borderColor="#E8DCC4"
-                  _hover={{ borderColor: '#4A0E17' }}
-                  _focus={{ borderColor: '#4A0E17', boxShadow: '0 0 0 1px #4A0E17' }}
-                  borderRadius="xl"
-                  fontSize="sm"
-                  h="44px"
-                />
-              </Box>
-
-              <Box>
-                <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                  Editora
-                </Text>
-                <Input
-                  placeholder="Digite a editora"
-                  borderColor="#E8DCC4"
-                  _hover={{ borderColor: '#4A0E17' }}
-                  _focus={{ borderColor: '#4A0E17', boxShadow: '0 0 0 1px #4A0E17' }}
-                  borderRadius="xl"
-                  fontSize="sm"
-                  h="44px"
-                />
-              </Box>
-
-              {/* Data de Publicação Separada */}
-              <Box>
-                <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                  Data de publicação
-                </Text>
-                <Flex gap={2}>
-                  <Input
-                    placeholder="Dia"
-                    type="number"
-                    min={1}
-                    max={31}
-                    borderColor="#E8DCC4"
-                    _hover={{ borderColor: '#4A0E17' }}
-                    _focus={{ borderColor: '#4A0E17', boxShadow: '0 0 0 1px #4A0E17' }}
-                    borderRadius="xl"
-                    fontSize="sm"
-                    h="44px"
-                    px={2}
-                    textAlign="center"
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={1.5}>
+                    Categoria
+                  </Text>
+                  <CustomSelect
+                    placeholder="Selecione uma categoria"
+                    options={opcoesCategoria}
+                    value={categoria}
+                    onChange={setCategoria}
                   />
-                  <Input
-                    placeholder="Mês"
-                    type="number"
-                    min={1}
-                    max={12}
-                    borderColor="#E8DCC4"
-                    _hover={{ borderColor: '#4A0E17' }}
-                    _focus={{ borderColor: '#4A0E17', boxShadow: '0 0 0 1px #4A0E17' }}
-                    borderRadius="xl"
-                    fontSize="sm"
-                    h="44px"
-                    px={2}
-                    textAlign="center"
-                  />
-                  <Input
-                    placeholder="Ano"
-                    type="number"
-                    borderColor="#E8DCC4"
-                    _hover={{ borderColor: '#4A0E17' }}
-                    _focus={{ borderColor: '#4A0E17', boxShadow: '0 0 0 1px #4A0E17' }}
-                    borderRadius="xl"
-                    fontSize="sm"
-                    h="44px"
-                    px={2}
-                    textAlign="center"
-                  />
-                </Flex>
-              </Box>
-            </SimpleGrid>
+                </Box>
+              </SimpleGrid>
 
-            {/* Quantidade, Localização e Idioma */}
-            <SimpleGrid columns={{ base: 1, md: 3 }} gap={5}>
               <Box>
-                <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                  Quantidade de exemplares
+                <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={1.5}>
+                  Sinopse / Descrição
                 </Text>
-                <Input
-                  placeholder="Ex.: 3"
-                  type="number"
+                <Textarea
+                  placeholder="Digite uma breve sinopse ou descrição do livro..."
+                  bg="#FCFAF7"
                   borderColor="#E8DCC4"
-                  _hover={{ borderColor: '#4A0E17' }}
-                  _focus={{ borderColor: '#4A0E17', boxShadow: '0 0 0 1px #4A0E17' }}
+                  _hover={{ borderColor: '#4A0E17', bg: '#FFFFFF' }}
+                  _focus={{ borderColor: '#4A0E17', bg: '#FFFFFF', boxShadow: '0 0 0 1px #4A0E17' }}
                   borderRadius="xl"
                   fontSize="sm"
-                  h="44px"
+                  rows={4}
+                  resize="vertical"
+                  transition="all 0.2s"
                 />
-              </Box>
-
-              <Box>
-                <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                  Localização / prateleira
+                <Text fontSize="10px" color="#9E9E9E" textAlign="right" mt={1}>
+                  0 / 2000
                 </Text>
-                <Input
-                  placeholder="Ex.: Estante A - Prateleira 3"
-                  borderColor="#E8DCC4"
-                  _hover={{ borderColor: '#4A0E17' }}
-                  _focus={{ borderColor: '#4A0E17', boxShadow: '0 0 0 1px #4A0E17' }}
-                  borderRadius="xl"
-                  fontSize="sm"
-                  h="44px"
-                />
               </Box>
+            </Flex>
+          </Box>
 
-              <Box>
-                <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                  Idioma
-                </Text>
-                <CustomSelect
-                  placeholder="Selecione o idioma"
-                  options={opcoesIdioma}
-                  value={idioma}
-                  onChange={setIdioma}
-                />
+          {/* Seção 2: Detalhes de Edição e Acervo */}
+          <Box bg="#FFFFFF" border="1px solid" borderColor="#E8DCC4" borderRadius="2xl" p={{ base: 6, md: 8 }} boxShadow="0 4px 15px rgba(74, 14, 23, 0.03)">
+            <Flex align="center" gap={2} mb={6} pb={3} borderBottom="2px solid" borderColor="#FAF7F2">
+              <Box p={2} bg="#FAF0F2" color="#4A0E17" borderRadius="lg">
+                <FiLayers size={18} />
               </Box>
-            </SimpleGrid>
-
-            {/* Número de Páginas */}
-            <SimpleGrid columns={{ base: 1, md: 3 }} gap={5}>
-              <Box>
-                <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                  Número de páginas
-                </Text>
-                <Input
-                  placeholder="Ex.: 320"
-                  type="number"
-                  borderColor="#E8DCC4"
-                  _hover={{ borderColor: '#4A0E17' }}
-                  _focus={{ borderColor: '#4A0E17', boxShadow: '0 0 0 1px #4A0E17' }}
-                  borderRadius="xl"
-                  fontSize="sm"
-                  h="44px"
-                />
-              </Box>
-            </SimpleGrid>
-
-            {/* Sinopse / Descrição */}
-            <Box>
-              <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                Sinopse / descrição
+              <Text fontSize="md" fontWeight="bold" color="#4A0E17">
+                Detalhes de Edição & Localização
               </Text>
-              <Textarea
-                placeholder="Digite uma breve sinopse ou descrição do livro..."
-                borderColor="#E8DCC4"
-                _hover={{ borderColor: '#4A0E17' }}
-                _focus={{ borderColor: '#4A0E17', boxShadow: '0 0 0 1px #4A0E17' }}
-                borderRadius="xl"
-                fontSize="sm"
-                rows={4}
-                resize="vertical"
-              />
-              <Text fontSize="10px" color="#9E9E9E" textAlign="right" mt={1}>
-                0 / 2000
-              </Text>
-            </Box>
+            </Flex>
 
-            {/* Upload da Capa e Disponibilidade */}
-            <SimpleGrid columns={{ base: 1, md: 2 }} gap={6}>
+            <Flex direction="column" gap={5}>
+              <SimpleGrid columns={{ base: 1, md: 3 }} gap={5}>
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={1.5}>
+                    ISBN
+                  </Text>
+                  <Input placeholder="Ex.: 978-65-123456-7-8" {...inputStyles} />
+                </Box>
+
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={1.5}>
+                    Editora
+                  </Text>
+                  <Input placeholder="Digite a editora" {...inputStyles} />
+                </Box>
+
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={1.5}>
+                    Data de Publicação
+                  </Text>
+                  <Flex gap={2}>
+                    <Input placeholder="Dia" type="number" min={1} max={31} textAlign="center" px={1} {...inputStyles} />
+                    <Input placeholder="Mês" type="number" min={1} max={12} textAlign="center" px={1} {...inputStyles} />
+                    <Input placeholder="Ano" type="number" textAlign="center" px={1} {...inputStyles} />
+                  </Flex>
+                </Box>
+              </SimpleGrid>
+
+              <SimpleGrid columns={{ base: 1, md: 3 }} gap={5}>
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={1.5}>
+                    Quantidade de Exemplares
+                  </Text>
+                  <Input placeholder="Ex.: 3" type="number" min={1} {...inputStyles} />
+                </Box>
+
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={1.5}>
+                    Localização / Prateleira
+                  </Text>
+                  <Input placeholder="Ex.: Estante A - Prateleira 3" {...inputStyles} />
+                </Box>
+
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={1.5}>
+                    Idioma
+                  </Text>
+                  <CustomSelect
+                    placeholder="Selecione o idioma"
+                    options={opcoesIdioma}
+                    value={idioma}
+                    onChange={setIdioma}
+                  />
+                </Box>
+              </SimpleGrid>
+
+              <SimpleGrid columns={{ base: 1, md: 3 }} gap={5}>
+                <Box>
+                  <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={1.5}>
+                    Número de Páginas
+                  </Text>
+                  <Input placeholder="Ex.: 320" type="number" {...inputStyles} />
+                </Box>
+              </SimpleGrid>
+            </Flex>
+          </Box>
+
+          {/* Seção 3: Capa e Disponibilidade */}
+          <Box bg="#FFFFFF" border="1px solid" borderColor="#E8DCC4" borderRadius="2xl" p={{ base: 6, md: 8 }} boxShadow="0 4px 15px rgba(74, 14, 23, 0.03)">
+            <SimpleGrid columns={{ base: 1, md: 2 }} gap={8}>
+              {/* Upload da Capa */}
               <Box>
-                <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={1.5}>
-                  Upload da capa do livro
+                <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={2}>
+                  Upload da Capa do Livro
                 </Text>
                 <Flex
                   direction="column"
                   align="center"
                   justify="center"
-                  border="1px dashed #E8DCC4"
-                  bg="#FAF7F2"
+                  border="2px dashed #E8DCC4"
+                  bg="#FCFAF7"
                   borderRadius="xl"
                   p={6}
                   textAlign="center"
@@ -473,15 +412,15 @@ export default function CadastrarLivroPage() {
                   <Flex
                     align="center"
                     justify="center"
-                    w="44px"
-                    h="44px"
+                    w="52px"
+                    h="52px"
                     borderRadius="full"
                     bg="#FFFFFF"
                     color="#4A0E17"
-                    mb={2}
-                    boxShadow="xs"
+                    mb={3}
+                    boxShadow="0 2px 8px rgba(74, 14, 23, 0.08)"
                   >
-                    <FiUploadCloud size={22} />
+                    <FiUploadCloud size={24} />
                   </Flex>
                   <Text fontSize="xs" fontWeight="bold" color="#2D2D2D">
                     Arraste e solte a imagem aqui{' '}
@@ -489,21 +428,35 @@ export default function CadastrarLivroPage() {
                       ou clique para selecionar
                     </Text>
                   </Text>
-                  <Text fontSize="10px" color="#8C8C8C" mt={1}>
+                  <Text fontSize="10px" color="#8C8C8C" mt={2}>
                     PNG, JPG ou JPEG até 5MB
                   </Text>
                 </Flex>
               </Box>
 
-              <Box display="flex" flexDirection="column" justify="center">
-                <Text fontSize="xs" fontWeight="bold" color="#2D2D2D" mb={2}>
-                  Disponibilidade inicial / status
+              {/* Status / Disponibilidade */}
+              <Flex direction="column" justify="center" bg="#FCFAF7" p={6} borderRadius="xl" border="1px solid #E8DCC4">
+                <Text fontSize="xs" fontWeight="bold" color="#4A0E17" mb={3}>
+                  Disponibilidade Inicial / Status
                 </Text>
-                <Flex align="center" gap={3}>
+                <Flex align="center" justify="space-between" bg="#FFFFFF" p={4} borderRadius="xl" border="1px solid #E8DCC4">
+                  <Flex align="center" gap={3}>
+                    <Box color={disponivel ? '#4A0E17' : '#9E9E9E'}>
+                      <FiCheckCircle size={22} />
+                    </Box>
+                    <Box>
+                      <Text fontSize="xs" fontWeight="bold" color="#2D2D2D">
+                        Disponível
+                      </Text>
+                      <Text fontSize="10px" color="#6B6B6B">
+                        O livro ficará disponível para empréstimo após ser salvo.
+                      </Text>
+                    </Box>
+                  </Flex>
                   <Flex
                     align="center"
-                    w="48px"
-                    h="26px"
+                    w="50px"
+                    h="28px"
                     bg={disponivel ? '#4A0E17' : '#D1D1D1'}
                     borderRadius="full"
                     p="3px"
@@ -512,27 +465,21 @@ export default function CadastrarLivroPage() {
                     onClick={() => setDisponivel(!disponivel)}
                   >
                     <Box
-                      w="20px"
-                      h="20px"
+                      w="22px"
+                      h="22px"
                       bg="#FFFFFF"
                       borderRadius="full"
-                      boxShadow="sm"
+                      boxShadow="md"
                       transform={disponivel ? 'translateX(22px)' : 'translateX(0px)'}
                       transition="transform 0.2s"
                     />
                   </Flex>
-                  <Text fontSize="xs" fontWeight="bold" color="#2D2D2D">
-                    Disponível
-                  </Text>
                 </Flex>
-                <Text fontSize="xs" color="#6B6B6B" mt={2}>
-                  O livro ficará disponível para empréstimo após ser salvo.
-                </Text>
-              </Box>
+              </Flex>
             </SimpleGrid>
 
-            {/* Botões de Ação Inferiores */}
-            <Flex justify="space-between" align="center" mt={4} pt={4} borderTop="1px solid #FAF7F2">
+            {/* Ações Inferiores */}
+            <Flex justify="space-between" align="center" mt={8} pt={6} borderTop="1px solid" borderColor="#FAF7F2">
               <Button
                 variant="outline"
                 borderColor="#E8DCC4"
@@ -540,12 +487,13 @@ export default function CadastrarLivroPage() {
                 _hover={{ bg: '#FAF0F2', borderColor: '#4A0E17' }}
                 borderRadius="xl"
                 px={6}
-                h="40px"
+                h="44px"
                 fontSize="xs"
                 fontWeight="medium"
                 display="flex"
                 alignItems="center"
                 gap={2}
+                transition="all 0.2s"
               >
                 <FiTrash2 size={16} />
                 Limpar
@@ -554,23 +502,25 @@ export default function CadastrarLivroPage() {
               <Button
                 bg="#4A0E17"
                 color="#FFFFFF"
-                _hover={{ bg: '#360A11' }}
+                _hover={{ bg: '#360A11', transform: 'translateY(-1px)', boxShadow: '0 4px 12px rgba(74, 14, 23, 0.25)' }}
+                _active={{ transform: 'translateY(0)' }}
                 borderRadius="xl"
                 px={8}
-                h="40px"
+                h="44px"
                 fontSize="xs"
                 fontWeight="medium"
                 display="flex"
                 alignItems="center"
                 gap={2}
+                boxShadow="0 2px 8px rgba(74, 14, 23, 0.15)"
+                transition="all 0.2s"
               >
                 <FiBook size={16} />
                 Salvar Livro
               </Button>
             </Flex>
-
-          </Flex>
-        </Box>
+          </Box>
+        </Flex>
       </Box>
     </Flex>
   );
