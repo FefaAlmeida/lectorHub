@@ -37,6 +37,7 @@ import {
   FiAlertCircle,
   FiEye,
 } from "react-icons/fi";
+import SideBarAdm from "@/components/sideBarADM/sideBarADM";
 
 // ============================================================
 // CORES
@@ -273,62 +274,51 @@ const DEVOLUCOES_INICIAIS = [
 // MENU
 // ============================================================
 
-// `emBreve` marca os itens que ainda não têm página — ficam visíveis, porém
-// inertes, em vez de virarem links quebrados.
 const MENU = [
   {
     label: "Início",
     icon: FiHome,
-    emBreve: true,
   },
 
   {
     label: "Livros",
     icon: FiBook,
-    href: "/catalogoDeLivros",
   },
 
   {
     label: "Categorias",
     icon: FiGrid,
-    emBreve: true,
   },
 
   {
     label: "Usuários",
     icon: FiUsers,
-    emBreve: true,
   },
 
   {
     label: "Empréstimos e Reservas",
     icon: FiClock,
-    href: "/gestaoEeR",
     active: true,
   },
 
   {
     label: "Devoluções",
     icon: FiRefreshCw,
-    href: "/gestaoEeR",
   },
 
   {
-    label: "Prazos",
+    label: "Reservas",
     icon: FiRepeat,
-    href: "/editarPrazo",
   },
 
   {
     label: "Relatórios",
     icon: FiFileText,
-    emBreve: true,
   },
 
   {
     label: "Configurações",
     icon: FiSettings,
-    emBreve: true,
   },
 ];
 
@@ -339,9 +329,6 @@ const MENU = [
 function MenuItem({ item }) {
   return (
     <HStack
-      as={item.emBreve ? "div" : "a"}
-      href={item.emBreve ? undefined : item.href}
-      title={item.emBreve ? "Em breve" : undefined}
       px={3}
       py={3}
       borderRadius="5px"
@@ -353,18 +340,14 @@ function MenuItem({ item }) {
       color={
         item.active
           ? WHITE
-          : item.emBreve
-          ? "rgba(255,255,255,.35)"
           : "rgba(255,255,255,.85)"
       }
-      cursor={item.emBreve ? "default" : "pointer"}
+      cursor="pointer"
       gap={3}
       transition="all .2s ease"
       _hover={{
         bg: item.active
           ? PRIMARY_DARK
-          : item.emBreve
-          ? "transparent"
           : "rgba(255,255,255,.08)",
       }}
     >
@@ -1361,79 +1344,7 @@ export default function GestaoEmprestimosReservas() {
           SIDEBAR
       ===================================================== */}
 
-      <Box
-        w="225px"
-        bg={PRIMARY}
-        color={WHITE}
-        p={5}
-        flexShrink={0}
-        position="relative"
-        display={{
-          base: "none",
-          md: "block",
-        }}
-      >
-        <Stack
-          align="center"
-          gap={2}
-          mb={8}
-          pt={2}
-        >
-          <Box
-            w="58px"
-            h="58px"
-            borderRadius="full"
-            border="1px solid"
-            borderColor="rgba(255,255,255,.4)"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Icon
-              as={FiBookOpen}
-              boxSize={7}
-            />
-          </Box>
-
-          <Text
-            fontFamily="Georgia, serif"
-            fontSize="13px"
-            fontWeight="bold"
-            letterSpacing="1px"
-          >
-            LECTOR HUB
-          </Text>
-        </Stack>
-
-        <Stack gap={1.5}>
-          {MENU.map(
-            (item, index) => (
-              <MenuItem
-                key={index}
-                item={item}
-              />
-            )
-          )}
-        </Stack>
-
-        <HStack
-          position="absolute"
-          bottom="24px"
-          left="20px"
-          gap={3}
-          color="rgba(255,255,255,.85)"
-          cursor="pointer"
-        >
-          <Icon
-            as={FiLogOut}
-            boxSize={4}
-          />
-
-          <Text fontSize="12px">
-            Sair
-          </Text>
-        </HStack>
-      </Box>
+      <SideBarAdm/>
 
       {/* =====================================================
           CONTEÚDO

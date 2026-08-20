@@ -1,5 +1,5 @@
 'use client';
-
+import SideBarADM from "../../../components/sideBarADM/sideBarADM";
 import React, { useState } from 'react';
 import {
   Box,
@@ -52,94 +52,7 @@ export default function AdminDashboardPage() {
 
   return (
     <Flex minH="100vh" bg="#FAF7F2" color="#2D2D2D" w="100%">
-
-      <Box
-        w={{ base: 'full', md: '280px' }}
-        bg="#4A0E17"
-        color="#FFFFFF"
-        p={6}
-        display={{ base: 'none', md: 'flex' }}
-        flexDir="column"
-        justifyContent="space-between"
-        flexShrink={0}
-      >
-        <Flex direction="column" gap={6}>
-
-          <Flex direction="column" align="center" justify="center" py={4} borderBottom="1px solid rgba(232, 220, 196, 0.2)">
-            <Flex
-              w="70px"
-              h="70px"
-              borderRadius="full"
-              border="2px solid #E8DCC4"
-              align="center"
-              justify="center"
-              mb={3}
-            >
-              <FiBook size={32} color="#E8DCC4" />
-            </Flex>
-            <Heading size="md" color="#E8DCC4" letterSpacing="widest" textAlign="center" fontFamily="serif">
-              LECTOR HUB
-            </Heading>
-            <Text fontSize="xs" color="#E8DCC4" opacity={0.8} letterSpacing="wider">
-              MINHA BIBLIOTECA
-            </Text>
-          </Flex>
-
-          {/* Navegação */}
-          <Flex direction="column" gap={1.5}>
-            <Flex align="center" p={3} borderRadius="xl" bg="rgba(255, 255, 255, 0.12)" color="#FFFFFF" fontWeight="bold" cursor="pointer">
-              <FiGrid size={20} style={{ marginRight: '12px' }} />
-              <Text fontSize="sm">Dashboard <Text as="span" fontSize="xs" opacity={0.7} display="block">Início</Text></Text>
-            </Flex>
-
-            <Flex align="center" p={3} borderRadius="xl" color="#E8DCC4" _hover={{ bg: 'rgba(255, 255, 255, 0.08)' }} cursor="pointer">
-              <FiBook size={20} style={{ marginRight: '12px' }} />
-              <Text fontSize="sm">Livros</Text>
-            </Flex>
-
-            <Flex align="center" p={3} borderRadius="xl" color="#E8DCC4" _hover={{ bg: 'rgba(255, 255, 255, 0.08)' }} cursor="pointer">
-              <FiFolder size={20} style={{ marginRight: '12px' }} />
-              <Text fontSize="sm">Categorias</Text>
-            </Flex>
-
-            <Flex align="center" p={3} borderRadius="xl" color="#E8DCC4" _hover={{ bg: 'rgba(255, 255, 255, 0.08)' }} cursor="pointer">
-              <FiUsers size={20} style={{ marginRight: '12px' }} />
-              <Text fontSize="sm">Usuários</Text>
-            </Flex>
-
-            <Flex align="center" p={3} borderRadius="xl" color="#E8DCC4" _hover={{ bg: 'rgba(255, 255, 255, 0.08)' }} cursor="pointer">
-              <FiRepeat size={20} style={{ marginRight: '12px' }} />
-              <Text fontSize="sm">Empréstimos</Text>
-            </Flex>
-
-            <Flex align="center" p={3} borderRadius="xl" color="#E8DCC4" _hover={{ bg: 'rgba(255, 255, 255, 0.08)' }} cursor="pointer">
-              <FiRotateCcw size={20} style={{ marginRight: '12px' }} />
-              <Text fontSize="sm">Devoluções</Text>
-            </Flex>
-
-            <Flex align="center" p={3} borderRadius="xl" color="#E8DCC4" _hover={{ bg: 'rgba(255, 255, 255, 0.08)' }} cursor="pointer">
-              <FiBookmark size={20} style={{ marginRight: '12px' }} />
-              <Text fontSize="sm">Reservas</Text>
-            </Flex>
-
-            <Flex align="center" p={3} borderRadius="xl" color="#E8DCC4" _hover={{ bg: 'rgba(255, 255, 255, 0.08)' }} cursor="pointer">
-              <FiBarChart2 size={20} style={{ marginRight: '12px' }} />
-              <Text fontSize="sm">Relatórios</Text>
-            </Flex>
-
-            <Flex align="center" p={3} borderRadius="xl" color="#E8DCC4" _hover={{ bg: 'rgba(255, 255, 255, 0.08)' }} cursor="pointer">
-              <FiSettings size={20} style={{ marginRight: '14px' }} />
-              <Text fontSize="sm">Configurações</Text>
-            </Flex>
-          </Flex>
-        </Flex>
-
-        {/* Botão de Sair */}
-        <Flex align="center" p={3} borderRadius="xl" color="#E8DCC4" _hover={{ bg: 'rgba(255, 255, 255, 0.08)' }} cursor="pointer" pt={6}>
-          <FiLogOut size={20} style={{ marginRight: '12px' }} />
-          <Text fontSize="sm">Sair</Text>
-        </Flex>
-      </Box>
+      <SideBarADM />
 
       {/* Conteúdo Principal */}
       <Box flex="1" p={{ base: 6, md: 10 }} w="100%">
@@ -160,7 +73,7 @@ export default function AdminDashboardPage() {
 
         {/* Grid de Cards Superiores */}
         <SimpleGrid columns={{ base: 1, md: 2, xl: 4 }} gap={8} w="100%" mb={12}>
-          
+
           {/* Card 1: Alertas e Pendências */}
           <Flex direction="column" justify="space-between" bg="#FFFFFF" border="1px solid #E8DCC4" borderRadius="2xl" p={8} boxShadow="sm" h="100%">
             <Flex align="center" gap={3} color="#4A0E17" mb={6}>

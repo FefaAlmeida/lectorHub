@@ -1,5 +1,5 @@
 "use client";
-
+import SideBarADM from "@/components/sideBarADM/sideBarADM";
 import { useState } from "react";
 
 import {
@@ -314,13 +314,13 @@ function Indicador({
       borderRadius="7px"
       boxShadow="none"
     >
-      <Card.Body p={3}>
+      <Card.Body p={5}>
 
         <HStack gap={3}>
 
           <Box
-            w="34px"
-            h="34px"
+            w="48px"
+            h="48px"
             flexShrink={0}
             borderRadius="full"
             bg={PRIMARY}
@@ -331,21 +331,21 @@ function Indicador({
             <Icon
               as={icon}
               color={WHITE}
-              boxSize={4}
+              boxSize={5}
             />
           </Box>
 
           <Stack gap={0}>
 
             <Text
-              fontSize="8px"
+              fontSize="11px"
               color={TEXT_LIGHT}
             >
               {titulo}
             </Text>
 
             <Text
-              fontSize="14px"
+              fontSize="20px"
               fontWeight="700"
               color={TEXT}
             >
@@ -376,7 +376,7 @@ function FiltroSelect({
     <Stack gap={1}>
 
       <Text
-        fontSize="8px"
+        fontSize="11px"
         color={TEXT_LIGHT}
       >
         {label}
@@ -388,9 +388,9 @@ function FiltroSelect({
         onChange={(e) =>
           onChange(e.target.value)
         }
-        h="32px"
+        h="42px"
         px={2}
-        fontSize="9px"
+        fontSize="12px"
         bg={WHITE}
         color={TEXT}
         border="1px solid"
@@ -452,7 +452,7 @@ function LivroCard({
         {/* CAPA */}
 
         <Box
-          h="150px"
+          h="220px"
           bg="#F1EDE7"
           borderRadius="5px"
           overflow="hidden"
@@ -490,7 +490,7 @@ function LivroCard({
         >
 
           <Text
-            fontSize="9px"
+            fontSize="12px"
             fontWeight="700"
             color={TEXT}
             overflow="hidden"
@@ -539,7 +539,7 @@ function LivroCard({
           <Button
             flex="1"
             h="25px"
-            fontSize="8px"
+            fontSize="11px"
             bg={PRIMARY}
             color={WHITE}
             borderRadius="4px"
@@ -557,8 +557,8 @@ function LivroCard({
           {/* EDITAR */}
 
           <Button
-            minW="25px"
-            h="25px"
+            minW="36px"
+            h="36px"
             p={0}
             bg="#F4E8E8"
             color={PRIMARY}
@@ -704,7 +704,7 @@ function ModalLivro({
             >
               <Icon
                 as={FiX}
-                boxSize={4}
+                boxSize={5}
               />
             </Button>
 
@@ -722,7 +722,7 @@ function ModalLivro({
             <Stack gap={1}>
 
               <Text
-                fontSize="9px"
+                fontSize="12px"
                 fontWeight="600"
                 color={TEXT}
               >
@@ -750,7 +750,7 @@ function ModalLivro({
             <Stack gap={1}>
 
               <Text
-                fontSize="9px"
+                fontSize="12px"
                 fontWeight="600"
                 color={TEXT}
               >
@@ -805,7 +805,7 @@ function ModalLivro({
               >
 
                 <Text
-                  fontSize="8px"
+                  fontSize="11px"
                   color={TEXT_LIGHT}
                 >
                   Ano
@@ -820,8 +820,8 @@ function ModalLivro({
                       e.target.value
                     )
                   }
-                  h="32px"
-                  fontSize="9px"
+                  h="42px"
+                  fontSize="12px"
                   placeholder="Ex: 2026"
                 />
 
@@ -835,7 +835,7 @@ function ModalLivro({
             <Stack gap={1}>
 
               <Text
-                fontSize="9px"
+                fontSize="12px"
                 fontWeight="600"
                 color={TEXT}
               >
@@ -863,7 +863,7 @@ function ModalLivro({
             <Stack gap={1}>
 
               <Text
-                fontSize="9px"
+                fontSize="12px"
                 fontWeight="600"
                 color={TEXT}
               >
@@ -907,7 +907,7 @@ function ModalLivro({
                 </Text>
 
                 <Text
-                  fontSize="8px"
+                  fontSize="11px"
                   color={TEXT_LIGHT}
                 >
                   Indica se o livro está disponível para empréstimo.
@@ -1520,97 +1520,10 @@ export default function CatalogoLivros() {
       minH="100vh"
       bg={BACKGROUND}
     >
+      <SideBarADM />
 
 
-      {/* =================================================
-          SIDEBAR
-      ================================================= */}
-
-      <Box
-        w="205px"
-        bg={PRIMARY}
-        color={WHITE}
-        p={4}
-        flexShrink={0}
-        position="relative"
-        display={{
-          base: "none",
-          md: "block",
-        }}
-      >
-
-        <Stack
-          align="center"
-          gap={1}
-          mb={7}
-          pt={1}
-        >
-
-          <Box
-            w="52px"
-            h="52px"
-            borderRadius="full"
-            border="1px solid"
-            borderColor="rgba(255,255,255,.4)"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-
-            <Icon
-              as={FiBookOpen}
-              boxSize={6}
-            />
-
-          </Box>
-
-          <Text
-            fontFamily="Georgia, serif"
-            fontSize="12px"
-            fontWeight="bold"
-            letterSpacing="1px"
-          >
-            LECTOR HUB
-          </Text>
-
-        </Stack>
-
-
-        <Stack gap={1}>
-
-          {MENU.map(
-            (item, index) => (
-              <MenuItem
-                key={index}
-                item={item}
-              />
-            )
-          )}
-
-        </Stack>
-
-
-        <HStack
-          position="absolute"
-          bottom="20px"
-          left="16px"
-          gap={3}
-          cursor="pointer"
-          color="rgba(255,255,255,.85)"
-        >
-
-          <Icon
-            as={FiLogOut}
-            boxSize={3.5}
-          />
-
-          <Text fontSize="11px">
-            Sair
-          </Text>
-
-        </HStack>
-
-      </Box>
+     
 
 
       {/* =================================================
@@ -1651,8 +1564,8 @@ export default function CatalogoLivros() {
               <Heading
                 fontFamily="Georgia, serif"
                 fontSize={{
-                  base: "28px",
-                  md: "34px",
+                  base: "36px",
+                  md: "42px",
                 }}
                 color={PRIMARY}
                 lineHeight="1"
@@ -1661,7 +1574,7 @@ export default function CatalogoLivros() {
               </Heading>
 
               <Text
-                fontSize="10px"
+                fontSize="13px"
                 color={TEXT_LIGHT}
               >
                 Gerencie os livros cadastrados no
@@ -1679,7 +1592,7 @@ export default function CatalogoLivros() {
               borderRadius="8px"
               px={5}
               h="40px"
-              fontSize="10px"
+              fontSize="12px"
               fontWeight="600"
               boxShadow="0 4px 12px rgba(74,14,23,.15)"
               onClick={
@@ -1696,7 +1609,7 @@ export default function CatalogoLivros() {
               <Icon
                 as={FiPlus}
                 mr={2}
-                boxSize={4}
+                boxSize={5}
               />
 
               Adicionar livro
@@ -1757,7 +1670,7 @@ export default function CatalogoLivros() {
             borderRadius="7px"
           >
 
-            <Card.Body p={3}>
+            <Card.Body p={5}>
 
               <Grid
                 templateColumns={{
@@ -1775,7 +1688,7 @@ export default function CatalogoLivros() {
                 <Stack gap={1}>
 
                   <Text
-                    fontSize="8px"
+                    fontSize="11px"
                     color={TEXT_LIGHT}
                   >
                     Buscar
@@ -1786,18 +1699,18 @@ export default function CatalogoLivros() {
                     <Icon
                       as={FiSearch}
                       position="absolute"
-                      left="10px"
+                      left="12px"
                       top="50%"
                       transform="translateY(-50%)"
                       color="#999"
-                      boxSize={3}
+                      boxSize={4}
                       zIndex={1}
                     />
 
                     <Input
-                      pl="30px"
-                      h="32px"
-                      fontSize="9px"
+                      pl="38px"
+                      h="42px"
+                      fontSize="12px"
                       placeholder="Buscar por título, autor ou ISBN..."
                       value={busca}
                       onChange={(e) =>
@@ -1885,12 +1798,12 @@ export default function CatalogoLivros() {
 
 
                 <Button
-                  h="32px"
+                  h="42px"
                   size="sm"
                   variant="outline"
                   borderColor="#E5DED6"
                   color={PRIMARY}
-                  fontSize="9px"
+                  fontSize="12px"
                   borderRadius="5px"
                   onClick={
                     limparFiltros
@@ -1928,7 +1841,7 @@ export default function CatalogoLivros() {
             borderRadius="7px"
           >
 
-            <Card.Body p={3}>
+            <Card.Body p={5}>
 
               <Grid
                 templateColumns={{
@@ -2023,7 +1936,7 @@ export default function CatalogoLivros() {
               >
 
                 <Text
-                  fontSize="8px"
+                  fontSize="11px"
                   color={TEXT_LIGHT}
                 >
                   Mostrando{" "}
@@ -2071,7 +1984,7 @@ export default function CatalogoLivros() {
 
                   <Text
                     px={1}
-                    fontSize="9px"
+                    fontSize="12px"
                     color={TEXT_LIGHT}
                   >
                     ...

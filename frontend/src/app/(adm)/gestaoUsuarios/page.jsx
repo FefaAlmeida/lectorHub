@@ -1,5 +1,6 @@
 "use client";
 
+import SideBarAdm from "@/components/sideBarADM/sideBarADM";
 import {
   Box,
   Button,
@@ -282,92 +283,7 @@ export default function GestaoUsuarios() {
           LATERAL
       ================================================= */}
 
-      <Box
-        w="205px"
-        bg={PRIMARY}
-        color={WHITE}
-        px={3}
-        py={5}
-        flexShrink={0}
-        position="relative"
-        display={{
-          base: "none",
-          md: "block",
-        }}
-      >
-        {/* LOGO */}
-
-        <Stack
-          align="center"
-          gap={1}
-          mb={8}
-          pt={1}
-        >
-          <Box
-            w="58px"
-            h="58px"
-            borderRadius="full"
-            border="1px solid"
-            borderColor="rgba(255,255,255,.4)"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Icon
-              as={FiBook}
-              boxSize={7}
-            />
-          </Box>
-
-          <Text
-            fontFamily="Georgia, serif"
-            fontSize="13px"
-            fontWeight="bold"
-            letterSpacing="1px"
-          >
-            LECTOR HUB
-          </Text>
-
-          <Text
-            fontSize="7px"
-            letterSpacing="1px"
-            color="rgba(255,255,255,.65)"
-          >
-            MINHA BIBLIOTECA
-          </Text>
-        </Stack>
-
-        {/* MENU */}
-
-        <Stack gap={1.5}>
-          {MENU.map((item, index) => (
-            <MenuItem
-              key={index}
-              item={item}
-            />
-          ))}
-        </Stack>
-
-        {/* SAIR */}
-
-        <HStack
-          position="absolute"
-          bottom="24px"
-          left="18px"
-          gap={3}
-          cursor="pointer"
-          color="rgba(255,255,255,.85)"
-        >
-          <Icon
-            as={FiLogOut}
-            boxSize={4}
-          />
-
-          <Text fontSize="12px">
-            Sair
-          </Text>
-        </HStack>
-      </Box>
+      <SideBarAdm />
 
       {/* =================================================
           CONTEÚDO PRINCIPAL
