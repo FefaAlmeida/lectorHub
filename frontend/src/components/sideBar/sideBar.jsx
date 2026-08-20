@@ -1,5 +1,5 @@
 "use client";
-
+import sideBar from "@/components/sideBar/sideBar";
 import {
   Box,
   VStack,
@@ -18,7 +18,13 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+  usePathname,
+  useSearchParams,
+} from "next/navigation";
+
+import { logoutUsuario } from "../../api";
 
 const PRIMARY_COLOR = "#4A0E17";
 const BORDER_COLOR = "#EFEBE3";
@@ -29,7 +35,6 @@ const NAV_ITEMS = [
     label: "Início",
     icon: FiHome,
     href: "/inicio",
-    active: true,
   },
   {
     label: "Buscar Livros",
@@ -41,11 +46,7 @@ const NAV_ITEMS = [
     icon: FiBookOpen,
     href: "/emprestimo_livro",
   },
-  {
-    label: "Histórico",
-    icon: FiClock,
-    href: "/emprestimo_livro?aba=historico",
-  },
+  
   {
     label: "Meu Cadastro",
     icon: FiUser,
@@ -53,7 +54,7 @@ const NAV_ITEMS = [
   },
 ];
 
-function NavItem({ item }) {
+function NavItem({ item, ativo }) {
   return (
     <HStack
       as="a"
@@ -62,14 +63,18 @@ function NavItem({ item }) {
       p={3}
       pl={4}
       borderRadius="6px"
-      color={item.active ? "white" : PRIMARY_COLOR}
-      bg={item.active ? PRIMARY_COLOR : "transparent"}
-      _hover={!item.active ? { bg: "#F5F1E9" } : {}}
+      color={ativo ? "white" : PRIMARY_COLOR}
+      bg={ativo ? PRIMARY_COLOR : "transparent"}
+      _hover={!ativo ? { bg: "#F5F1E9" } : {}}
       transition={`all 0.2s ${EASE}`}
       cursor="pointer"
-      fontWeight={item.active ? "semibold" : "normal"}
+      fontWeight={ativo ? "semibold" : "normal"}
     >
-      <Icon as={item.icon} w={5} h={5} />
+      <Icon
+        as={item.icon}
+        w={5}
+        h={5}
+      />
 
       <Text fontSize="md">
         {item.label}
@@ -80,6 +85,8 @@ function NavItem({ item }) {
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   async function handleLogout() {
     try {
@@ -87,6 +94,27 @@ export default function Sidebar() {
     } finally {
       router.push("/login");
     }
+  }
+
+  function verificarAtivo(item) {
+    // HISTÓRICO
+    if (item.label === "Histórico") {
+      return (
+        pathname === "/emprestimo_livro" &&
+        searchParams.get("aba") === "historico"
+      );
+    }
+
+    // MEUS EMPRÉSTIMOS
+    if (item.label === "Meus Empréstimos") {
+      return (
+        pathname === "/emprestimo_livro" &&
+        searchParams.get("aba") !== "historico"
+      );
+    }
+
+    // OUTRAS PÁGINAS
+    return pathname === item.href;
   }
 
   return (
@@ -100,12 +128,16 @@ export default function Sidebar() {
       flexShrink={0}
       display={{ base: "none", md: "block" }}
     >
-      <VStack spacing={3} align="stretch">
+      <VStack
+        spacing={3}
+        align="stretch"
+      >
 
         {NAV_ITEMS.map((item, index) => (
           <NavItem
             key={index}
             item={item}
+            ativo={verificarAtivo(item)}
           />
         ))}
 

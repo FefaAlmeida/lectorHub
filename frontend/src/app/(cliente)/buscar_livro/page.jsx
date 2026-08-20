@@ -1,5 +1,5 @@
 "use client";
-
+import Sidebar from "../../../components/sideBar/sideBar";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -329,40 +329,7 @@ export default function BuscarLivros() {
   return (
     <Flex minH="100vh" bg={BG_COLOR}>
       {/* BARRA LATERAL */}
-      <Box
-        as="nav"
-        w="260px"
-        bg="#FFFFFF"
-        borderRight="1px solid"
-        borderColor={BORDER_COLOR}
-        p={5}
-        flexShrink={0}
-        display={{ base: "none", md: "block" }}
-      >
-        <Stack align="stretch" gap={2}>
-          {NAV_ITEMS.map((item, index) => (
-            <NavItem key={index} item={item} />
-          ))}
-
-          <Separator borderColor={BORDER_COLOR} my={4} />
-
-          <HStack
-            as="button"
-            gap={3}
-            p={3}
-            pl={4}
-            borderRadius="6px"
-            color={TEXT_DARK}
-            _hover={{ bg: "#F5F1E9", color: PRIMARY_COLOR }}
-            transition={`all 0.2s ${EASE}`}
-            cursor="pointer"
-            onClick={sair}
-          >
-            <Icon as={FiLogOut} w={5} h={5} mr={3} />
-            <Text fontSize="md">Sair</Text>
-          </HStack>
-        </Stack>
-      </Box>
+      <Sidebar/>
 
       {/* CONTEÚDO PRINCIPAL */}
       <Box flex={1} p={{ base: 6, md: 8 }} pb={16} overflow="hidden">

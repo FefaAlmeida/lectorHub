@@ -1,5 +1,5 @@
 'use client';
-
+import Sidebar from "../../../components/sideBar/sideBar";
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -358,28 +358,7 @@ function MeusEmprestimosConteudo() {
   return (
     <Flex minH="100vh" bg="#FAF7F2" color="#2D2D2D" w="100%">
       {/* Sidebar Lateral */}
-      <Box
-        w={{ base: 'full', md: '260px' }}
-        bg="#FAF7F2"
-        p={6}
-        borderRight="1px solid"
-        borderColor={BORDA}
-        display={{ base: 'none', md: 'flex' }}
-        flexDir="column"
-        justifyContent="space-between"
-        flexShrink={0}
-      >
-        <Flex direction="column" gap={3}>
-          {NAV_ITEMS.map((item) => (
-            <NavItem key={item.label} item={item} />
-          ))}
-        </Flex>
-
-        <NavItem
-          item={{ label: 'Sair', icon: FiLogOut }}
-          onClick={sair}
-        />
-      </Box>
+      <Sidebar/>
 
       {/* Conteúdo Principal */}
       <Box flex="1" p={{ base: 6, md: 10 }} w="100%">
