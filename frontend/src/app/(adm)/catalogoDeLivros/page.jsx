@@ -557,8 +557,8 @@ function LivroCard({
           {/* EDITAR */}
 
           <Button
-            minW="36px"
-            h="36px"
+            minW="25px"
+            h="25px"
             p={0}
             bg="#F4E8E8"
             color={PRIMARY}
@@ -597,7 +597,7 @@ function LivroCard({
           >
             <Icon
               as={FiTrash2}
-              boxSize={3}
+              boxSize={5}
             />
           </Button>
 
