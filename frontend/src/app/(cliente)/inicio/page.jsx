@@ -39,7 +39,7 @@ import { getPerfil, getUltimoEmprestimo, logoutUsuario } from "../../../api";
 
 // --- CONFIGURAÇÕES VISUAIS ---
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
-const PRIMARY_COLOR = "#7A3131";
+const PRIMARY_COLOR = "#4A0E17";
 const BG_COLOR = "#FFFFFF";
 const CARD_BG = "#FFFFFF";
 const BORDER_COLOR = "#EFEBE3";

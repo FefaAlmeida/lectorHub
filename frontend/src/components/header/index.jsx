@@ -12,7 +12,7 @@ import { getPerfil, logoutUsuario } from "../../api";
 import { toaster } from "@/components/ui/toaster";
 
 const EASE = [0.16, 1, 0.3, 1];
-const ACCENT = "#7A3131";
+const ACCENT = "#4A0E17";
 const ACCENT_SOFT = "rgba(122, 49, 49, 0.20)";
 const BORDER = "#EFEBE3";
 

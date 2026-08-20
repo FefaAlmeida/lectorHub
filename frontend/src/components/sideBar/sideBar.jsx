@@ -20,7 +20,7 @@ import {
 
 import { useRouter } from "next/navigation";
 
-const PRIMARY_COLOR = "#7A3131";
+const PRIMARY_COLOR = "#4A0E17";
 const BORDER_COLOR = "#EFEBE3";
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 

@@ -15,7 +15,7 @@ export default function Footer() {
   <Box
    as="footer"
    w="100%"
-   bg="#5c1421"
+   bg="#4A0E17"
    color="#e2e0c9"
    px={8}
    py={4}
