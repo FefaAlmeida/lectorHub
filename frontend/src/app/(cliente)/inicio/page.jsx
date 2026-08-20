@@ -1,5 +1,7 @@
 "use client";
+
 import Sidebar from "../../../components/sideBar/sideBar";
+
 import {
   Box,
   Flex,
@@ -8,53 +10,93 @@ import {
   Heading,
   Text,
   Input,
-  InputGroup,
   Button,
   Icon,
   SimpleGrid,
   Image,
-  Separator,
   AspectRatio,
   Link,
   Spinner,
 } from "@chakra-ui/react";
+
 import {
   FiHome,
   FiSearch,
   FiBookOpen,
   FiClock,
   FiUser,
-  FiLogOut,
   FiArrowRight,
-  FiPlus,
   FiChevronRight,
   FiAlertTriangle,
   FiGift,
 } from "react-icons/fi";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-// Adicionada a função getUltimoEmprestimo da sua camada de API
-import { getPerfil, getUltimoEmprestimo, logoutUsuario } from "../../../api";
+// --- API ---
+import {
+  getPerfil,
+  getUltimoEmprestimo,
+  logoutUsuario,
+} from "../../../api";
 
-// --- CONFIGURAÇÕES VISUAIS ---
+// =====================================================
+// CONFIGURAÇÕES VISUAIS
+// =====================================================
+
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+
 const PRIMARY_COLOR = "#4A0E17";
 const BG_COLOR = "#FFFFFF";
 const CARD_BG = "#FFFFFF";
 const BORDER_COLOR = "#EFEBE3";
+
 const TEXT_DARK = "#333333";
 const TEXT_LIGHT = "#777777";
 
-// --- DADOS DA INTERFACE ---
+// Sombra clara utilizada nos hovers
+const HOVER_SHADOW = "0 8px 24px rgba(74, 14, 23, 0.08)";
+
+// Cor única para todos os avisos
+const ANNOUNCEMENT_BG = "#F7EAEA";
+
+// =====================================================
+// ITENS DE NAVEGAÇÃO
+// =====================================================
 
 const NAV_ITEMS = [
-  { label: "Início", icon: FiHome, href: "/inicio", active: true },
-  { label: "Buscar Livros", icon: FiSearch, href: "/buscar_livro" },
-  { label: "Meus Empréstimos", icon: FiBookOpen, href: "/emprestimo_livro" },
-  { label: "Histórico", icon: FiClock, href: "/emprestimo_livro?aba=historico" },
-  { label: "Meu Cadastro", icon: FiUser, href: "/alterar_cadastro" },
+  {
+    label: "Início",
+    icon: FiHome,
+    href: "/inicio",
+    active: true,
+  },
+  {
+    label: "Buscar Livros",
+    icon: FiSearch,
+    href: "/buscar_livro",
+  },
+  {
+    label: "Meus Empréstimos",
+    icon: FiBookOpen,
+    href: "/emprestimo_livro",
+  },
+  {
+    label: "Histórico",
+    icon: FiClock,
+    href: "/emprestimo_livro?aba=historico",
+  },
+  {
+    label: "Meu Cadastro",
+    icon: FiUser,
+    href: "/alterar_cadastro",
+  },
 ];
+
+// =====================================================
+// AÇÕES RÁPIDAS
+// =====================================================
 
 const QUICK_ACTIONS = [
   {
@@ -83,6 +125,10 @@ const QUICK_ACTIONS = [
   },
 ];
 
+// =====================================================
+// LIVROS EM DESTAQUE
+// =====================================================
+
 const FEATURED_BOOKS = [
   {
     title: "O Pequeno Príncipe",
@@ -110,60 +156,48 @@ const FEATURED_BOOKS = [
   },
 ];
 
+// =====================================================
+// AVISOS
+// =====================================================
+
 const ANNOUNCEMENTS = [
   {
     title: "Horário de Funcionamento",
     description:
       "Segunda a Sexta: 08h às 18h\nSábado: 08h às 12h",
     icon: FiClock,
-    color: "#F7EAEA",
   },
   {
     title: "Devoluções",
     description:
       "Fique atento ao prazo de devolução para evitar multas.",
     icon: FiAlertTriangle,
-    color: "#FBF3EB",
   },
   {
     title: "Novidades",
     description:
       "Novos livros adicionados ao acervo!\nConfira na busca.",
     icon: FiGift,
-    color: "#FBF3EB",
   },
 ];
 
-// --- FUNÇÃO AUXILIAR DE FORMATAÇÃO DE DATA ---
+// =====================================================
+// FORMATAÇÃO DE DATA
+// =====================================================
+
 function formatarData(dataIso) {
   if (!dataIso) return "--/--/----";
+
   const data = new Date(dataIso);
-  return data.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+
+  return data.toLocaleDateString("pt-BR", {
+    timeZone: "UTC",
+  });
 }
 
-// --- COMPONENTES AUXILIARES ---
-
-function NavItem({ item }) {
-  return (
-    <HStack
-      as="a"
-      href={item.href}
-      spacing={3}
-      p={3}
-      pl={4}
-      borderRadius="6px"
-      color={item.active ? "white" : PRIMARY_COLOR}
-      bg={item.active ? PRIMARY_COLOR : "transparent"}
-      _hover={!item.active ? { bg: "#F5F1E9" } : {}}
-      transition={`all 0.2s ${EASE}`}
-      cursor="pointer"
-      fontWeight={item.active ? "semibold" : "normal"}
-    >
-      <Icon as={item.icon} w={5} h={5} />
-      <Text fontSize="md">{item.label}</Text>
-    </HStack>
-  );
-}
+// =====================================================
+// CARD DE AÇÃO RÁPIDA
+// =====================================================
 
 function QuickActionCard({ action }) {
   return (
@@ -177,9 +211,11 @@ function QuickActionCard({ action }) {
       border="1px solid"
       borderColor={BORDER_COLOR}
       cursor="pointer"
+      boxShadow="none"
       _hover={{
         borderColor: PRIMARY_COLOR,
-        boxShadow: "sm",
+        boxShadow: HOVER_SHADOW,
+        transform: "translateY(-2px)",
       }}
       transition={`all 0.2s ${EASE}`}
     >
@@ -194,7 +230,11 @@ function QuickActionCard({ action }) {
         mr={3}
         flexShrink={0}
       >
-        <Icon as={action.icon} w={5} h={5} />
+        <Icon
+          as={action.icon}
+          w={5}
+          h={5}
+        />
       </Flex>
 
       <VStack
@@ -229,6 +269,10 @@ function QuickActionCard({ action }) {
     </Flex>
   );
 }
+
+// =====================================================
+// CARD DE LIVRO
+// =====================================================
 
 function BookCard({ book }) {
   return (
@@ -283,16 +327,28 @@ function BookCard({ book }) {
   );
 }
 
+// =====================================================
+// CARD DE AVISO
+// =====================================================
+
 function AnnouncementCard({ announcement }) {
   return (
     <Flex
-      bg={announcement.color}
+      bg={ANNOUNCEMENT_BG}
       p={5}
       borderRadius="12px"
       align="center"
       border="1px solid"
-      borderColor="rgba(0,0,0,0.04)"
+      borderColor={BORDER_COLOR}
       h="full"
+      cursor="pointer"
+      boxShadow="none"
+      _hover={{
+        borderColor: PRIMARY_COLOR,
+        boxShadow: HOVER_SHADOW,
+        transform: "translateY(-2px)",
+      }}
+      transition={`all 0.2s ${EASE}`}
     >
       <Flex
         w={12}
@@ -338,18 +394,24 @@ function AnnouncementCard({ announcement }) {
   );
 }
 
-// --- DASHBOARD PRINCIPAL ---
+// =====================================================
+// DASHBOARD PRINCIPAL
+// =====================================================
 
 export default function DashboardPage() {
   const router = useRouter();
+
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
-  
-  // Estado para armazenar o último empréstimo retornado pela API
-  const [ultimoEmprestimo, setUltimoEmprestimo] = useState(null);
-  const [carregandoEmprestimo, setCarregandoEmprestimo] = useState(true);
 
-  // Busca os dados do perfil e em seguida o empréstimo
+  const [ultimoEmprestimo, setUltimoEmprestimo] = useState(null);
+  const [carregandoEmprestimo, setCarregandoEmprestimo] =
+    useState(true);
+
+  // ===================================================
+  // CARREGAMENTO DOS DADOS
+  // ===================================================
+
   useEffect(() => {
     let ativo = true;
 
@@ -359,26 +421,46 @@ export default function DashboardPage() {
 
         if (ativo && responseUsuario?.sucesso) {
           const dadosUsuario = responseUsuario.dados;
+
           setUsuario(dadosUsuario);
 
-          // Pega o ID do usuário (suporta id_usuario ou id)
-          const userId = dadosUsuario?.id_usuario || dadosUsuario?.id;
+          const userId =
+            dadosUsuario?.id_usuario ||
+            dadosUsuario?.id;
 
           if (userId) {
             try {
-              const responseEmprestimo = await getUltimoEmprestimo(userId);
-              if (ativo && responseEmprestimo?.sucesso) {
-                setUltimoEmprestimo(responseEmprestimo.dados);
+              const responseEmprestimo =
+                await getUltimoEmprestimo(userId);
+
+              if (
+                ativo &&
+                responseEmprestimo?.sucesso
+              ) {
+                setUltimoEmprestimo(
+                  responseEmprestimo.dados
+                );
               }
             } catch (errEmprestimo) {
-              console.log("Nenhum empréstimo ativo retornado para o usuário.");
-              if (ativo) setUltimoEmprestimo(null);
+              console.log(
+                "Nenhum empréstimo ativo retornado para o usuário."
+              );
+
+              if (ativo) {
+                setUltimoEmprestimo(null);
+              }
             }
           }
         }
       } catch (error) {
-        console.error("Erro ao carregar dados do usuário:", error);
-        if (ativo) setUsuario(null);
+        console.error(
+          "Erro ao carregar dados do usuário:",
+          error
+        );
+
+        if (ativo) {
+          setUsuario(null);
+        }
       } finally {
         if (ativo) {
           setCarregando(false);
@@ -394,81 +476,89 @@ export default function DashboardPage() {
     };
   }, []);
 
+  // ===================================================
+  // NOME DO USUÁRIO
+  // ===================================================
+
   const nome = usuario?.nome || "";
-  const primeiroNome = nome.trim().split(" ")[0] || "";
+
+  const primeiroNome =
+    nome.trim().split(" ")[0] || "";
+
+  // ===================================================
+  // INTERFACE
+  // ===================================================
 
   return (
-    <Flex minH="100vh" bg={BG_COLOR}>
-      {/* BARRA LATERAL */}
+    <Flex
+      minH="100vh"
+      bg={BG_COLOR}
+    >
+      {/* ================================================
+          BARRA LATERAL
+      ================================================= */}
       <Sidebar />
 
-      {/* CONTEÚDO PRINCIPAL */}
+      {/* ================================================
+          CONTEÚDO PRINCIPAL
+      ================================================= */}
       <Box
         flex={1}
         p={{ base: 6, md: 8 }}
         pb={16}
       >
-        <VStack spacing={12} align="stretch">
+        {/* AUMENTADO DE 12 PARA 16:
+            mais espaço entre as principais seções */}
+        <VStack
+          spacing={16}
+          align="stretch"
+        >
 
-          {/* Boas-vindas + Busca */}
+          {/* =================================================
+              PRIMEIRA PARTE — BOAS-VINDAS + BUSCA
+          ================================================== */}
+
           <SimpleGrid
             columns={{ base: 1, md: 2 }}
             spacing={8}
             align="center"
           >
-            <VStack align="flex-start" spacing={4}>
+            <VStack
+              align="flex-start"
+              spacing={4}
+            >
               <Heading
                 as="h1"
-                fontSize={{ base: "3xl", md: "4xl" }}
+                fontSize={{
+                  base: "3xl",
+                  md: "4xl",
+                }}
                 fontWeight="bold"
                 color={PRIMARY_COLOR}
                 fontFamily="Georgia, serif"
               >
                 {carregando
                   ? "Bem-vinda!"
-                  : `Bem-vinda, ${primeiroNome}!`}
+                  : `Bem-vinda${primeiroNome}!`}
               </Heading>
 
-              <Text fontSize="md" color={TEXT_LIGHT}>
-                Explore, reserve e gerencie seus livros de forma fácil e rápida.
-              </Text>
-
-              <InputGroup
-                w="full"
-                maxW="lg"
-                startElement={
-                  <Icon as={FiSearch} color={TEXT_LIGHT} ml={2} />
-                }
-                endElement={
-                  <Button
-                    height="32px"
-                    borderRadius="full"
-                    bg={PRIMARY_COLOR}
-                    color="white"
-                    px={5}
-                    fontSize="xs"
-                    _hover={{ bg: "#632727" }}
-                    mr={1}
-                  >
-                    Buscar
-                  </Button>
-                }
+              <Text
+                fontSize="md"
+                color={TEXT_LIGHT}
               >
-                <Input
-                  placeholder="Pesquise por título, autor ou assunto..."
-                  bg={CARD_BG}
-                  border="1px solid"
-                  borderColor={BORDER_COLOR}
-                  borderRadius="full"
-                  _placeholder={{ color: "#AAA" }}
-                  _focus={{ borderColor: PRIMARY_COLOR }}
-                  pl={10}
-                />
-              </InputGroup>
+                Explore, reserve e gerencie seus livros de
+                forma fácil e rápida.
+              </Text>
             </VStack>
 
-            {/* Ilustração da Biblioteca */}
-            <Flex justify="center" align="center">
+            {/* ============================================
+                ILUSTRAÇÃO DA BIBLIOTECA
+            ============================================= */}
+
+            <Flex
+              justify="center"
+              align="center"
+            >
               <Image
                 src="livrosInicialCliente"
                 alt="Ilustração da Biblioteca"
@@ -480,21 +570,44 @@ export default function DashboardPage() {
             </Flex>
           </SimpleGrid>
 
-          {/* Cards de Ação Rápida */}
+          {/* =================================================
+              CARDS DE AÇÃO RÁPIDA
+          ================================================== */}
+
           <SimpleGrid
-            columns={{ base: 1, sm: 2, xl: 4 }}
+            columns={{
+              base: 1,
+              sm: 2,
+              xl: 4,
+            }}
             gap={4}
-            my={2}
           >
-            {QUICK_ACTIONS.map((action, index) => (
-              <QuickActionCard key={index} action={action} />
-            ))}
+            {QUICK_ACTIONS.map(
+              (action, index) => (
+                <QuickActionCard
+                  key={index}
+                  action={action}
+                />
+              )
+            )}
           </SimpleGrid>
 
-          {/* Empréstimos + Destaques */}
-          <SimpleGrid columns={{ base: 1, lg: 2 }} gap={8}>
+          {/* =================================================
+              SEGUNDA PARTE — EMPRÉSTIMOS + DESTAQUES
+          ================================================== */}
 
-            {/* MEUS EMPRÉSTIMOS DILIGENTEMENTE INTEGRADOS */}
+          <SimpleGrid
+            columns={{
+              base: 1,
+              lg: 2,
+            }}
+            gap={8}
+          >
+
+            {/* =============================================
+                EMPRESTADO NO MOMENTO
+            ============================================== */}
+
             <VStack
               align="stretch"
               spacing={5}
@@ -516,11 +629,17 @@ export default function DashboardPage() {
               </Heading>
 
               {carregandoEmprestimo ? (
-                <Flex justify="center" align="center" py={8}>
-                  <Spinner color={PRIMARY_COLOR} size="md" />
+                <Flex
+                  justify="center"
+                  align="center"
+                  py={8}
+                >
+                  <Spinner
+                    color={PRIMARY_COLOR}
+                    size="md"
+                  />
                 </Flex>
               ) : ultimoEmprestimo ? (
-                /* Card com os dados dinâmicos da API */
                 <Flex
                   border="1px solid"
                   borderColor={BORDER_COLOR}
@@ -545,7 +664,11 @@ export default function DashboardPage() {
                     />
                   </AspectRatio>
 
-                  <VStack align="flex-start" spacing={1} flex={1}>
+                  <VStack
+                    align="flex-start"
+                    spacing={1}
+                    flex={1}
+                  >
                     <Heading
                       fontSize="md"
                       fontWeight="semibold"
@@ -554,16 +677,33 @@ export default function DashboardPage() {
                       {ultimoEmprestimo.titulo}
                     </Heading>
 
-                    <Text fontSize="xs" color={TEXT_LIGHT} mb={1}>
+                    <Text
+                      fontSize="xs"
+                      color={TEXT_LIGHT}
+                      mb={1}
+                    >
                       {ultimoEmprestimo.autor}
                     </Text>
 
-                    <Text fontSize="xs" color={TEXT_DARK}>
-                      🗓️ Empréstimo: {formatarData(ultimoEmprestimo.data_emprestimo || ultimoEmprestimo.data_solicitacao)}
+                    <Text
+                      fontSize="xs"
+                      color={TEXT_DARK}
+                    >
+                      🗓️ Empréstimo:{" "}
+                      {formatarData(
+                        ultimoEmprestimo.data_emprestimo ||
+                        ultimoEmprestimo.data_solicitacao
+                      )}
                     </Text>
 
-                    <Text fontSize="xs" color={TEXT_DARK}>
-                      🗓️ Devolução: {formatarData(ultimoEmprestimo.data_devolucao_prevista)}
+                    <Text
+                      fontSize="xs"
+                      color={TEXT_DARK}
+                    >
+                      🗓️ Devolução:{" "}
+                      {formatarData(
+                        ultimoEmprestimo.data_devolucao_prevista
+                      )}
                     </Text>
                   </VStack>
 
@@ -578,26 +718,28 @@ export default function DashboardPage() {
                 </Flex>
               ) : null}
 
-              {/* Box pontilhado exibido se NÃO houver empréstimo ativo ou se for o segundo slot */}
-              {!ultimoEmprestimo && !carregandoEmprestimo && (
-                <Flex
-                  border="2px dashed"
-                  borderColor="#DED6C9"
-                  borderRadius="8px"
-                  p={4}
-                  h="90px"
-                  align="center"
-                  justify="center"
-                  color={TEXT_LIGHT}
-                >
-                  <VStack spacing={1}>
-                    <Icon as={FiPlus} w={5} h={5} />
+              {/* ==========================================
+                  SEM EMPRÉSTIMO
+                  O "+" FOI REMOVIDO
+              =========================================== */}
+
+              {!ultimoEmprestimo &&
+                !carregandoEmprestimo && (
+                  <Flex
+                    border="2px dashed"
+                    borderColor="#DED6C9"
+                    borderRadius="8px"
+                    p={4}
+                    h="90px"
+                    align="center"
+                    justify="center"
+                    color={TEXT_LIGHT}
+                  >
                     <Text fontSize="xs">
                       Nenhum outro empréstimo no momento.
                     </Text>
-                  </VStack>
-                </Flex>
-              )}
+                  </Flex>
+                )}
 
               <Link
                 href="/emprestimo_livro"
@@ -608,11 +750,18 @@ export default function DashboardPage() {
                 pt={1}
               >
                 Ver todos os empréstimos{" "}
-                <Icon as={FiArrowRight} ml={1} display="inline" />
+                <Icon
+                  as={FiArrowRight}
+                  ml={1}
+                  display="inline"
+                />
               </Link>
             </VStack>
 
-            {/* Livros em Destaque */}
+            {/* =============================================
+                LIVROS EM DESTAQUE
+            ============================================== */}
+
             <VStack
               align="stretch"
               spacing={5}
@@ -623,7 +772,9 @@ export default function DashboardPage() {
               borderColor={BORDER_COLOR}
               justify="space-between"
             >
-              <HStack justify="space-between">
+              <HStack
+                justify="space-between"
+              >
                 <Heading
                   as="h2"
                   fontSize="2xl"
@@ -641,24 +792,43 @@ export default function DashboardPage() {
                   fontWeight="medium"
                 >
                   Ver todos{" "}
-                  <Icon as={FiArrowRight} ml={1} display="inline" />
+                  <Icon
+                    as={FiArrowRight}
+                    ml={1}
+                    display="inline"
+                  />
                 </Link>
               </HStack>
 
               <SimpleGrid
-                columns={{ base: 2, sm: 4 }}
+                columns={{
+                  base: 2,
+                  sm: 4,
+                }}
                 gap={5}
                 w="full"
               >
-                {FEATURED_BOOKS.map((book, index) => (
-                  <BookCard key={index} book={book} />
-                ))}
+                {FEATURED_BOOKS.map(
+                  (book, index) => (
+                    <BookCard
+                      key={index}
+                      book={book}
+                    />
+                  )
+                )}
               </SimpleGrid>
             </VStack>
           </SimpleGrid>
 
-          {/* Avisos Importantes */}
-          <VStack align="stretch" spacing={4} pt={2}>
+          {/* =================================================
+              TERCEIRA PARTE — AVISOS IMPORTANTES
+          ================================================== */}
+
+          <VStack
+            align="stretch"
+            spacing={5}
+            pt={0}
+          >
             <Heading
               as="h2"
               fontSize="2xl"
@@ -669,10 +839,21 @@ export default function DashboardPage() {
               Avisos Importantes
             </Heading>
 
-            <SimpleGrid columns={{ base: 1, md: 3 }} gap={5}>
-              {ANNOUNCEMENTS.map((ann, index) => (
-                <AnnouncementCard key={index} announcement={ann} />
-              ))}
+            <SimpleGrid
+              columns={{
+                base: 1,
+                md: 3,
+              }}
+              gap={5}
+            >
+              {ANNOUNCEMENTS.map(
+                (ann, index) => (
+                  <AnnouncementCard
+                    key={index}
+                    announcement={ann}
+                  />
+                )
+              )}
             </SimpleGrid>
           </VStack>
 
