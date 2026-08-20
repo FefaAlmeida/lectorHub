@@ -124,8 +124,8 @@ class AuthController {
             try {
                 const resultado = await enviarEmail({
                     para: usuario.email,
-                    assunto: 'Redefinição de senha - Luminar',
-                    texto: `Olá ${usuario.nome},\n\nRecebemos uma solicitação para redefinir sua senha.\n\nAcesse o link abaixo para criar uma nova senha:\n${linkRedefinicao}\n\nEste link expira em 15 minutos.\n\nSe você não solicitou isso, ignore este e-mail.\n\nAtenciosamente,\nEquipe Luminar`,
+                    assunto: 'Redefinição de senha - LectorHUb',
+                    texto: `Olá ${usuario.nome},\n\nRecebemos uma solicitação para redefinir sua senha.\n\nAcesse o link abaixo para criar uma nova senha:\n${linkRedefinicao}\n\nEste link expira em 15 minutos.\n\nSe você não solicitou isso, ignore este e-mail.\n\nAtenciosamente,\nEquipe LectorHub`,
                     html: `
                         <div style="font-family: Arial, sans-serif; color: #221f20;">
                             <h2 style="color: #febd17;">Olá ${usuario.nome},</h2>
@@ -139,7 +139,7 @@ class AuthController {
                             <p>Este link expira em 15 minutos.</p>
                             <p>Se você não solicitou isso, ignore este e-mail.</p>
                             <br>
-                            <p>Atenciosamente,<br><strong>Equipe Luminar</strong></p>
+                            <p>Atenciosamente,<br><strong>Equipe LectorHub</strong></p>
                         </div>
                     `,
                 });

@@ -1,10 +1,8 @@
-
 "use client";
-import Sidebar from "../../../components/sideBar/sideBar";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
-import { logoutUsuario } from "../../../api";
+import { useEffect, useState } from "react";
+import Sidebar from "../../../components/sideBar/sideBar";
+import { getPerfil, atualizarPerfil } from "../../../api";
 
 import {
   Box,
@@ -17,607 +15,268 @@ import {
   Input,
   Stack,
   Text,
-  Separator,
   Switch,
+  Spinner,
 } from "@chakra-ui/react";
 
 import {
-  FiHome,
-  FiSearch,
-  FiBookOpen,
-  FiClock,
   FiUser,
-  FiLogOut,
   FiLock,
   FiEdit3,
   FiBell,
-  FiCalendar,
   FiCreditCard,
   FiCheckCircle,
   FiSave,
 } from "react-icons/fi";
 
-
-// =====================================================
-// MESMA IDENTIDADE VISUAL DA PÁGINA "BUSCAR LIVROS"
-// =====================================================
+const toast = {
+  success: (msg) => alert(msg),
+  error: (msg) => alert(msg),
+};
 
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
-
 const PRIMARY_COLOR = "#4A0E17";
 const PRIMARY_DARK = "#360A11";
-
 const BG_COLOR = "#F5F2EE";
 const CARD_BG = "#FFFFFF";
 const BORDER_COLOR = "#EFEBE3";
-
 const TEXT_DARK = "#333333";
 const TEXT_LIGHT = "#777777";
 
-
-// =====================================================
-// NAVEGAÇÃO
-// =====================================================
-
-const NAV_ITEMS = [
-  { label: "Início", icon: FiHome, href: "/inicio" },
-  { label: "Buscar Livros", icon: FiSearch, href: "/buscar_livro" },
-  { label: "Meus Empréstimos", icon: FiBookOpen, href: "/emprestimo_livro" },
-  { label: "Histórico", icon: FiClock, href: "/emprestimo_livro?aba=historico" },
-  {
-    label: "Meu Cadastro",
-    icon: FiUser,
-    href: "/alterar_cadastro",
-    active: true,
-  },
-];
-
-
-// =====================================================
-// SIDEBAR
-// =====================================================
-
-function NavItem({ item }) {
-  return (
-    <HStack
-      as="a"
-      href={item.href}
-      spacing={3}
-      p={3}
-      pl={4}
-      borderRadius="6px"
-      color={item.active ? "white" : TEXT_DARK}
-      bg={item.active ? PRIMARY_COLOR : "transparent"}
-      _hover={
-        !item.active
-          ? {
-              bg: "#FFFFFF",
-              color: TEXT_DARK,
-            }
-          : {}
-      }
-      transition={`all 0.2s ${EASE}`}
-      cursor="pointer"
-      fontWeight={item.active ? "semibold" : "normal"}
-    >
-      <Icon
-        as={item.icon}
-        w={5}
-        h={5}
-        mr={3}
-      />
-
-      <Text fontSize="md">
-        {item.label}
-      </Text>
-    </HStack>
-  );
-}
-
-
-// =====================================================
-// CAMPO
-// =====================================================
-
+// Componente ajustado para alternar a estrutura do DOM entre leitura e edição
 function Campo({
   label,
   value,
   onChange,
   type = "text",
-  disabled = false,
+  editando = false,
   placeholder,
 }) {
   return (
-    <Stack
-      gap={1.5}
-      flex="1"
-    >
-      <Text
-        fontSize="xs"
-        color={TEXT_DARK}
-        fontWeight="semibold"
-      >
+    <Stack gap={1.5} flex="1">
+      <Text fontSize="xs" color={TEXT_DARK} fontWeight="semibold">
         {label}
       </Text>
 
-      <Input
-        value={value || ""}
-        onChange={onChange}
-        type={type}
-        disabled={disabled}
-        placeholder={placeholder}
-        bg={CARD_BG}
-        border="1px solid"
-        borderColor="#E7DED8"
-        borderRadius="6px"
-        h="38px"
-        fontSize="sm"
-        color={TEXT_DARK}
-        _placeholder={{
-          color: "#AAA",
-        }}
-        _hover={{
-          borderColor: "#D5C8C0",
-        }}
-        _focus={{
-          borderColor: PRIMARY_COLOR,
-          boxShadow: `0 0 0 1px ${PRIMARY_COLOR}`,
-        }}
-      />
+      {editando ? (
+        <Input
+          value={value ?? ""}
+          onChange={onChange}
+          type={type}
+          placeholder={placeholder}
+          bg={CARD_BG}
+          border="1px solid"
+          borderColor={PRIMARY_COLOR}
+          borderRadius="6px"
+          h="38px"
+          fontSize="sm"
+          color={TEXT_DARK}
+          _focus={{
+            borderColor: PRIMARY_COLOR,
+            boxShadow: `0 0 0 1px ${PRIMARY_COLOR}`,
+          }}
+        />
+      ) : (
+        <Flex
+          align="center"
+          px={3}
+          h="38px"
+          bg="#FAFAFA"
+          border="1px solid #E7DED8"
+          borderRadius="6px"
+          userSelect="text"
+        >
+          <Text fontSize="sm" color={TEXT_DARK}>
+            {type === "password"
+              ? value
+                ? "••••••••"
+                : "••••••••"
+              : value || "—"}
+          </Text>
+        </Flex>
+      )}
     </Stack>
   );
 }
 
-
-// =====================================================
-// PÁGINA
-// =====================================================
-
-export default function MeuCadastro({ cliente = null }) {
-
-  const router = useRouter();
-
-  async function sair() {
-    try {
-      await logoutUsuario();
-    } finally {
-      router.push("/login");
-    }
-  }
-
-  const [editando, setEditando] = useState(false);
-
+export default function MeuCadastro() {
   const [dados, setDados] = useState({
+    id_usuario: "",
     nome: "",
     email: "",
     telefone: "",
-    nascimento: "",
-    endereco: "",
-    cidade: "",
-    estado: "",
-    cep: "",
-
+    tipo: "",
     senha: "",
-
     emailNotificacao: true,
-    smsNotificacao: false,
     novidades: true,
-
-    dataCadastro: "",
-    codigoUsuario: "",
-    status: "",
   });
 
+  const [editando, setEditando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
 
-  // ===================================================
-  // DADOS VINDOS DO BACKEND
-  // ===================================================
+  async function carregarDados() {
+    setCarregando(true);
+    try {
+      const perfilResponse = await getPerfil();
+      const usuarioAtual =
+        perfilResponse?.dados || perfilResponse?.usuario || perfilResponse || {};
+
+      if (!usuarioAtual || perfilResponse.sucesso === false) {
+        toast.error(perfilResponse?.erro || "Erro ao carregar dados do perfil.");
+        return;
+      }
+
+      setDados((prev) => ({
+        ...prev,
+        id_usuario: usuarioAtual.id_usuario || usuarioAtual.id || "",
+        nome: usuarioAtual.nome || "",
+        email: usuarioAtual.email || "",
+        telefone: usuarioAtual.telefone || "",
+        tipo: usuarioAtual.tipo || "cliente",
+        senha: "",
+      }));
+    } catch (error) {
+      console.error("Erro ao carregar perfil:", error);
+      toast.error("Erro de conexão ao carregar o perfil.");
+    } finally {
+      setCarregando(false);
+    }
+  }
 
   useEffect(() => {
-
-    if (!cliente) return;
-
-    setDados({
-      nome: cliente.nome || "",
-      email: cliente.email || "",
-      telefone: cliente.telefone || "",
-      nascimento: cliente.nascimento || "",
-      endereco: cliente.endereco || "",
-      cidade: cliente.cidade || "",
-      estado: cliente.estado || "",
-      cep: cliente.cep || "",
-
-      senha: "",
-
-      emailNotificacao:
-        cliente.emailNotificacao ?? true,
-
-      smsNotificacao:
-        cliente.smsNotificacao ?? false,
-
-      novidades:
-        cliente.novidades ?? true,
-
-      dataCadastro:
-        cliente.dataCadastro || "",
-
-      codigoUsuario:
-        cliente.codigoUsuario || "",
-
-      status:
-        cliente.status || "",
-    });
-
-  }, [cliente]);
-
+    carregarDados();
+  }, []);
 
   function alterarCampo(campo, valor) {
-
-    setDados((atual) => ({
-      ...atual,
+    setDados((prev) => ({
+      ...prev,
       [campo]: valor,
     }));
-
   }
 
+  async function salvarAlteracoes() {
+    setSalvando(true);
+    try {
+      const payload = {
+        nome: dados.nome,
+        email: dados.email,
+        telefone: dados.telefone,
+      };
 
-  function salvarAlteracoes() {
+      if (dados.senha && dados.senha.trim() !== "") {
+        payload.senha = dados.senha;
+      }
 
-    /*
-      Aqui entrará seu PUT/PATCH:
+      const response = await atualizarPerfil(
+        dados.id_usuario ? { id_usuario: dados.id_usuario, ...payload } : payload
+      );
 
-      fetch(`/api/clientes/${dados.codigoUsuario}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dados),
-      });
-    */
+      if (response?.sucesso === false) {
+        toast.error(response?.erro || "Erro ao atualizar perfil.");
+        return;
+      }
 
-    console.log("Dados enviados:", dados);
-
-    setEditando(false);
+      toast.success("Perfil atualizado com sucesso!");
+      setEditando(false);
+      await carregarDados();
+    } catch (error) {
+      console.error("Erro ao salvar perfil:", error);
+      toast.error(
+        error.response?.data?.message || "Erro de conexão ao salvar alterações."
+      );
+    } finally {
+      setSalvando(false);
+    }
   }
 
+  if (carregando) {
+    return (
+      <Flex minH="100vh" bg={BG_COLOR} align="center" justify="center">
+        <Stack align="center" gap={3}>
+          <Spinner size="xl" color={PRIMARY_COLOR} />
+          <Text color={TEXT_LIGHT}>Carregando dados do perfil...</Text>
+        </Stack>
+      </Flex>
+    );
+  }
 
   return (
+    <Flex minH="100vh" bg={BG_COLOR}>
+      <Sidebar />
 
-    <Flex
-      minH="100vh"
-      bg={BG_COLOR}
-    >
-      <Sidebar/>
-
-
-      {/* =================================================
-          CONTEÚDO
-      ================================================= */}
-
-      <Box
-        flex={1}
-        p={{ base: 6, md: 8 }}
-        pb={16}
-        overflow="hidden"
-      >
-
-        <Stack
-          gap={7}
-          align="stretch"
-          maxW="8xl"
-          mx="auto"
-        >
-
-
-          {/* =================================================
-              CABEÇALHO
-          ================================================= */}
-
-          <Flex
-            justify="space-between"
-            align="center"
-          >
-
+      <Box flex={1} p={{ base: 6, md: 8 }} pb={16} overflow="hidden">
+        <Stack gap={7} align="stretch" maxW="8xl" mx="auto">
+          {/* CABEÇALHO */}
+          <Flex justify="space-between" align="center">
             <Stack gap={2}>
-
               <Heading
                 as="h1"
-                fontSize={{
-                  base: "3xl",
-                  md: "4xl",
-                }}
+                fontSize={{ base: "3xl", md: "4xl" }}
                 fontWeight="bold"
                 color={PRIMARY_COLOR}
                 fontFamily="Georgia, serif"
               >
                 Meu Cadastro
               </Heading>
-
-              <Text
-                fontSize="md"
-                color={TEXT_LIGHT}
-              >
+              <Text fontSize="md" color={TEXT_LIGHT}>
                 Atualize seus dados cadastrais e mantenha suas informações sempre em dia.
               </Text>
-
             </Stack>
-
-
-            {/* ILUSTRAÇÃO SIMPLES */}
-
-            <Box
-              display={{
-                base: "none",
-                lg: "block",
-              }}
-              w="180px"
-              h="90px"
-              position="relative"
-            >
-
-              <Box
-                position="absolute"
-                right="0"
-                top="15px"
-                w="145px"
-                h="65px"
-                bg="#F0E5D6"
-                borderRadius="50px 50px 20px 20px"
-              />
-
-              <Box
-                position="absolute"
-                right="25px"
-                top="27px"
-                w="105px"
-                h="52px"
-                bg="white"
-                border="1px solid #E7DED8"
-                borderRadius="7px"
-              >
-
-                <Box
-                  position="absolute"
-                  left="12px"
-                  top="11px"
-                  w="22px"
-                  h="22px"
-                  borderRadius="full"
-                  bg={PRIMARY_COLOR}
-                />
-
-                <Box
-                  position="absolute"
-                  left="47px"
-                  top="13px"
-                  w="40px"
-                  h="4px"
-                  bg="#D8C9B8"
-                  borderRadius="full"
-                />
-
-                <Box
-                  position="absolute"
-                  left="47px"
-                  top="22px"
-                  w="30px"
-                  h="4px"
-                  bg="#E5DCD2"
-                  borderRadius="full"
-                />
-
-              </Box>
-
-            </Box>
-
           </Flex>
 
-
-          {/* =================================================
-              CONTEÚDO EM DUAS COLUNAS
-          ================================================= */}
-
+          {/* DUAS COLUNAS */}
           <Flex
             gap={6}
             align="flex-start"
-            direction={{
-              base: "column",
-              lg: "row",
-            }}
+            direction={{ base: "column", lg: "row" }}
           >
-
-
-            {/* =================================================
-                ESQUERDA
-            ================================================= */}
-
-            <Stack
-              flex="1"
-              w="full"
-              gap={5}
-            >
-
-
-              {/* DADOS PESSOAIS */}
-
+            {/* COLUNA ESQUERDA */}
+            <Stack flex="1" w="full" gap={5}>
               <Card.Root
                 bg={CARD_BG}
                 borderRadius="8px"
                 border="1px solid"
                 borderColor={BORDER_COLOR}
               >
-
-                <Card.Header
-                  px={5}
-                  pt={5}
-                  pb={3}
-                >
-
+                <Card.Header px={5} pt={5} pb={3}>
                   <HStack gap={2}>
-
-                    <Icon
-                      as={FiUser}
-                      color={PRIMARY_COLOR}
-                      boxSize={4}
-                    />
-
-                    <Heading
-                      fontSize="sm"
-                      fontWeight="bold"
-                      color={PRIMARY_COLOR}
-                    >
+                    <Icon as={FiUser} color={PRIMARY_COLOR} boxSize={4} />
+                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
                       Dados Pessoais
                     </Heading>
-
                   </HStack>
-
                 </Card.Header>
 
-
-                <Card.Body
-                  px={5}
-                  pb={5}
-                >
-
+                <Card.Body px={5} pb={5}>
                   <Stack gap={4}>
-
                     <Campo
                       label="Nome Completo"
                       value={dados.nome}
-                      disabled={!editando}
-                      placeholder="Nome completo"
-                      onChange={(e) =>
-                        alterarCampo(
-                          "nome",
-                          e.target.value
-                        )
-                      }
+                      editando={editando}
+                      placeholder="Seu nome completo"
+                      onChange={(e) => alterarCampo("nome", e.target.value)}
                     />
-
 
                     <Campo
                       label="E-mail"
                       value={dados.email}
-                      disabled={!editando}
+                      editando={editando}
                       type="email"
-                      placeholder="E-mail"
-                      onChange={(e) =>
-                        alterarCampo(
-                          "email",
-                          e.target.value
-                        )
-                      }
+                      placeholder="seu.email@exemplo.com"
+                      onChange={(e) => alterarCampo("email", e.target.value)}
                     />
-
-
-                    <Flex
-                      gap={4}
-                      direction={{
-                        base: "column",
-                        md: "row",
-                      }}
-                    >
-
-                      <Campo
-                        label="Telefone"
-                        value={dados.telefone}
-                        disabled={!editando}
-                        placeholder="Telefone"
-                        onChange={(e) =>
-                          alterarCampo(
-                            "telefone",
-                            e.target.value
-                          )
-                        }
-                      />
-
-                      <Campo
-                        label="Data de Nascimento"
-                        value={dados.nascimento}
-                        disabled={!editando}
-                        type="date"
-                        onChange={(e) =>
-                          alterarCampo(
-                            "nascimento",
-                            e.target.value
-                          )
-                        }
-                      />
-
-                    </Flex>
-
 
                     <Campo
-                      label="Endereço"
-                      value={dados.endereco}
-                      disabled={!editando}
-                      placeholder="Endereço"
-                      onChange={(e) =>
-                        alterarCampo(
-                          "endereco",
-                          e.target.value
-                        )
-                      }
+                      label="Telefone"
+                      value={dados.telefone}
+                      editando={editando}
+                      placeholder="(00) 00000-0000"
+                      onChange={(e) => alterarCampo("telefone", e.target.value)}
                     />
-
-
-                    <Flex
-                      gap={4}
-                      direction={{
-                        base: "column",
-                        md: "row",
-                      }}
-                    >
-
-                      <Campo
-                        label="Cidade"
-                        value={dados.cidade}
-                        disabled={!editando}
-                        placeholder="Cidade"
-                        onChange={(e) =>
-                          alterarCampo(
-                            "cidade",
-                            e.target.value
-                          )
-                        }
-                      />
-
-                      <Campo
-                        label="Estado"
-                        value={dados.estado}
-                        disabled={!editando}
-                        placeholder="Estado"
-                        onChange={(e) =>
-                          alterarCampo(
-                            "estado",
-                            e.target.value
-                          )
-                        }
-                      />
-
-                      <Campo
-                        label="CEP"
-                        value={dados.cep}
-                        disabled={!editando}
-                        placeholder="CEP"
-                        onChange={(e) =>
-                          alterarCampo(
-                            "cep",
-                            e.target.value
-                          )
-                        }
-                      />
-
-                    </Flex>
-
                   </Stack>
-
                 </Card.Body>
-
               </Card.Root>
-
-
-              {/* INFORMAÇÕES DA CONTA */}
 
               <Card.Root
                 bg={CARD_BG}
@@ -625,46 +284,18 @@ export default function MeuCadastro({ cliente = null }) {
                 border="1px solid"
                 borderColor={BORDER_COLOR}
               >
-
-                <Card.Header
-                  px={5}
-                  pt={5}
-                  pb={3}
-                >
-
+                <Card.Header px={5} pt={5} pb={3}>
                   <HStack gap={2}>
-
-                    <Icon
-                      as={FiCheckCircle}
-                      color={PRIMARY_COLOR}
-                      boxSize={4}
-                    />
-
-                    <Heading
-                      fontSize="sm"
-                      fontWeight="bold"
-                      color={PRIMARY_COLOR}
-                    >
+                    <Icon as={FiCheckCircle} color={PRIMARY_COLOR} boxSize={4} />
+                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
                       Informações da Conta
                     </Heading>
-
                   </HStack>
-
                 </Card.Header>
 
-
                 <Card.Body px={5} pb={5}>
-
-                  <Flex
-                    gap={8}
-                    direction={{
-                      base: "column",
-                      md: "row",
-                    }}
-                  >
-
+                  <Flex gap={8} direction={{ base: "column", md: "row" }}>
                     <HStack flex="1">
-
                       <Box
                         w="36px"
                         h="36px"
@@ -674,81 +305,19 @@ export default function MeuCadastro({ cliente = null }) {
                         alignItems="center"
                         justifyContent="center"
                       >
-
-                        <Icon
-                          as={FiCalendar}
-                          color={PRIMARY_COLOR}
-                          boxSize={4}
-                        />
-
+                        <Icon as={FiCreditCard} color={PRIMARY_COLOR} boxSize={4} />
                       </Box>
-
                       <Stack gap={0}>
-
-                        <Text
-                          fontSize="xs"
-                          color={TEXT_LIGHT}
-                        >
-                          Data de Cadastro
+                        <Text fontSize="xs" color={TEXT_LIGHT}>
+                          Código do Usuário (ID)
                         </Text>
-
-                        <Text
-                          fontSize="sm"
-                          fontWeight="bold"
-                          color={TEXT_DARK}
-                        >
-                          {dados.dataCadastro || "—"}
+                        <Text fontSize="sm" fontWeight="bold" color={TEXT_DARK}>
+                          #{dados.id_usuario || "—"}
                         </Text>
-
                       </Stack>
-
                     </HStack>
 
-
                     <HStack flex="1">
-
-                      <Box
-                        w="36px"
-                        h="36px"
-                        bg="#F8EEE9"
-                        borderRadius="full"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                      >
-
-                        <Icon
-                          as={FiCreditCard}
-                          color={PRIMARY_COLOR}
-                          boxSize={4}
-                        />
-
-                      </Box>
-
-                      <Stack gap={0}>
-
-                        <Text
-                          fontSize="xs"
-                          color={TEXT_LIGHT}
-                        >
-                          Código do Usuário
-                        </Text>
-
-                        <Text
-                          fontSize="sm"
-                          fontWeight="bold"
-                          color={TEXT_DARK}
-                        >
-                          {dados.codigoUsuario || "—"}
-                        </Text>
-
-                      </Stack>
-
-                    </HStack>
-
-
-                    <HStack flex="1">
-
                       <Box
                         w="36px"
                         h="36px"
@@ -758,137 +327,55 @@ export default function MeuCadastro({ cliente = null }) {
                         alignItems="center"
                         justifyContent="center"
                       >
-
-                        <Icon
-                          as={FiCheckCircle}
-                          color="#48BB78"
-                          boxSize={4}
-                        />
-
+                        <Icon as={FiCheckCircle} color="#48BB78" boxSize={4} />
                       </Box>
-
                       <Stack gap={0}>
-
-                        <Text
-                          fontSize="xs"
-                          color={TEXT_LIGHT}
-                        >
-                          Status da Conta
+                        <Text fontSize="xs" color={TEXT_LIGHT}>
+                          Tipo de Perfil
                         </Text>
-
                         <Text
                           fontSize="sm"
                           color="#48BB78"
                           fontWeight="bold"
+                          textTransform="capitalize"
                         >
-                          {dados.status || "—"}
+                          {dados.tipo || "cliente"}
                         </Text>
-
                       </Stack>
-
                     </HStack>
-
                   </Flex>
-
                 </Card.Body>
-
               </Card.Root>
-
             </Stack>
 
-
-            {/* =================================================
-                DIREITA
-            ================================================= */}
-
-            <Stack
-              w={{
-                base: "full",
-                lg: "390px",
-              }}
-              gap={5}
-            >
-
-
-              {/* SEGURANÇA */}
-
+            {/* COLUNA DIREITA */}
+            <Stack w={{ base: "full", lg: "390px" }} gap={5}>
               <Card.Root
                 bg={CARD_BG}
                 borderRadius="8px"
                 border="1px solid"
                 borderColor={BORDER_COLOR}
               >
-
-                <Card.Header
-                  px={5}
-                  pt={5}
-                  pb={3}
-                >
-
+                <Card.Header px={5} pt={5} pb={3}>
                   <HStack gap={2}>
-
-                    <Icon
-                      as={FiLock}
-                      color={PRIMARY_COLOR}
-                      boxSize={4}
-                    />
-
-                    <Heading
-                      fontSize="sm"
-                      fontWeight="bold"
-                      color={PRIMARY_COLOR}
-                    >
+                    <Icon as={FiLock} color={PRIMARY_COLOR} boxSize={4} />
+                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
                       Segurança da Conta
                     </Heading>
-
                   </HStack>
-
                 </Card.Header>
 
-
                 <Card.Body px={5} pb={5}>
-
-                  <Flex
-                    gap={3}
-                    align="end"
-                  >
-
-                    <Campo
-                      label="Senha"
-                      value={dados.senha}
-                      disabled={!editando}
-                      type="password"
-                      placeholder="••••••••"
-                      onChange={(e) =>
-                        alterarCampo(
-                          "senha",
-                          e.target.value
-                        )
-                      }
-                    />
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      color={PRIMARY_COLOR}
-                      borderColor={PRIMARY_COLOR}
-                      borderRadius="6px"
-                      disabled={!editando}
-                      _hover={{
-                        bg: "#F2E6E8",
-                      }}
-                    >
-                      Alterar Senha
-                    </Button>
-
-                  </Flex>
-
+                  <Campo
+                    label="Nova Senha"
+                    value={dados.senha}
+                    editando={editando}
+                    type="password"
+                    placeholder="Digite para alterar a senha"
+                    onChange={(e) => alterarCampo("senha", e.target.value)}
+                  />
                 </Card.Body>
-
               </Card.Root>
-
-
-              {/* PREFERÊNCIAS */}
 
               <Card.Root
                 bg={CARD_BG}
@@ -896,203 +383,82 @@ export default function MeuCadastro({ cliente = null }) {
                 border="1px solid"
                 borderColor={BORDER_COLOR}
               >
-
-                <Card.Header
-                  px={5}
-                  pt={5}
-                  pb={3}
-                >
-
+                <Card.Header px={5} pt={5} pb={3}>
                   <HStack gap={2}>
-
-                    <Icon
-                      as={FiBell}
-                      color={PRIMARY_COLOR}
-                      boxSize={4}
-                    />
-
-                    <Heading
-                      fontSize="sm"
-                      fontWeight="bold"
-                      color={PRIMARY_COLOR}
-                    >
+                    <Icon as={FiBell} color={PRIMARY_COLOR} boxSize={4} />
+                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
                       Preferências de Notificação
                     </Heading>
-
                   </HStack>
-
                 </Card.Header>
 
-
                 <Card.Body px={5} pb={5}>
-
-
-                  {/* EMAIL */}
-
-                  <Flex
-                    justify="space-between"
-                    align="center"
-                    mb={5}
-                  >
-
+                  <Flex justify="space-between" align="center" mb={5}>
                     <Stack gap={0} pr={4}>
-
-                      <Text
-                        fontSize="xs"
-                        fontWeight="semibold"
-                        color={TEXT_DARK}
-                      >
+                      <Text fontSize="xs" fontWeight="semibold" color={TEXT_DARK}>
                         E-mail
                       </Text>
-
-                      <Text
-                        fontSize="10px"
-                        color={TEXT_LIGHT}
-                      >
-                        Receber notificações sobre empréstimos, devoluções e novidades.
+                      <Text fontSize="10px" color={TEXT_LIGHT}>
+                        Avisos sobre devoluções e empréstimos.
                       </Text>
-
                     </Stack>
-
                     <Switch.Root
                       checked={dados.emailNotificacao}
+                      disabled={!editando}
                       onCheckedChange={(e) =>
-                        alterarCampo(
-                          "emailNotificacao",
-                          e.checked
-                        )
+                        alterarCampo("emailNotificacao", e.checked)
                       }
                     >
                       <Switch.HiddenInput />
                       <Switch.Control />
                     </Switch.Root>
-
                   </Flex>
 
-
-                  {/* SMS */}
-
-                  <Flex
-                    justify="space-between"
-                    align="center"
-                    mb={5}
-                  >
-
+                  <Flex justify="space-between" align="center">
                     <Stack gap={0} pr={4}>
-
-                      <Text
-                        fontSize="xs"
-                        fontWeight="semibold"
-                        color={TEXT_DARK}
-                      >
-                        SMS
+                      <Text fontSize="xs" fontWeight="semibold" color={TEXT_DARK}>
+                        Novidades
                       </Text>
-
-                      <Text
-                        fontSize="10px"
-                        color={TEXT_LIGHT}
-                      >
-                        Receber lembretes sobre devoluções por mensagem.
+                      <Text fontSize="10px" color={TEXT_LIGHT}>
+                        Novidades do acervo.
                       </Text>
-
                     </Stack>
-
-                    <Switch.Root
-                      checked={dados.smsNotificacao}
-                      onCheckedChange={(e) =>
-                        alterarCampo(
-                          "smsNotificacao",
-                          e.checked
-                        )
-                      }
-                    >
-                      <Switch.HiddenInput />
-                      <Switch.Control />
-                    </Switch.Root>
-
-                  </Flex>
-
-
-                  {/* NOVIDADES */}
-
-                  <Flex
-                    justify="space-between"
-                    align="center"
-                  >
-
-                    <Stack gap={0} pr={4}>
-
-                      <Text
-                        fontSize="xs"
-                        fontWeight="semibold"
-                        color={TEXT_DARK}
-                      >
-                        Novidades da Biblioteca
-                      </Text>
-
-                      <Text
-                        fontSize="10px"
-                        color={TEXT_LIGHT}
-                      >
-                        Receber novidades sobre novos livros e eventos.
-                      </Text>
-
-                    </Stack>
-
                     <Switch.Root
                       checked={dados.novidades}
+                      disabled={!editando}
                       onCheckedChange={(e) =>
-                        alterarCampo(
-                          "novidades",
-                          e.checked
-                        )
+                        alterarCampo("novidades", e.checked)
                       }
                     >
                       <Switch.HiddenInput />
                       <Switch.Control />
                     </Switch.Root>
-
                   </Flex>
-
                 </Card.Body>
-
               </Card.Root>
-
             </Stack>
-
           </Flex>
 
-
-          {/* =================================================
-              BOTÕES
-          ================================================= */}
-
-          <Flex
-            justify="flex-end"
-            gap={3}
-            mt={1}
-          >
-
+          {/* AÇÕES */}
+          <Flex justify="flex-end" gap={3} mt={1}>
             {editando && (
-
               <Button
                 variant="outline"
                 color={PRIMARY_COLOR}
                 borderColor={PRIMARY_COLOR}
                 borderRadius="14px"
                 size="md"
-                onClick={() =>
-                  setEditando(false)
-                }
+                disabled={salvando}
+                onClick={() => {
+                  setEditando(false);
+                  carregarDados();
+                }}
               >
                 Cancelar
               </Button>
-
             )}
 
-
             {!editando ? (
-
               <Button
                 bg={PRIMARY_COLOR}
                 color="white"
@@ -1100,27 +466,17 @@ export default function MeuCadastro({ cliente = null }) {
                 size="md"
                 px={6}
                 boxShadow="0 4px 12px rgba(74,14,23,.15)"
-                onClick={() =>
-                  setEditando(true)
-                }
+                onClick={() => setEditando(true)}
                 _hover={{
                   bg: PRIMARY_DARK,
                   transform: "translateY(-2px)",
                 }}
                 transition={`all .3s ${EASE}`}
               >
-
-                <Icon
-                  as={FiEdit3}
-                  mr={2}
-                />
-
+                <Icon as={FiEdit3} mr={2} />
                 Editar Dados
-
               </Button>
-
             ) : (
-
               <Button
                 bg={PRIMARY_COLOR}
                 color="white"
@@ -1128,6 +484,7 @@ export default function MeuCadastro({ cliente = null }) {
                 size="md"
                 px={6}
                 boxShadow="0 4px 12px rgba(74,14,23,.15)"
+                disabled={salvando}
                 onClick={salvarAlteracoes}
                 _hover={{
                   bg: PRIMARY_DARK,
@@ -1135,25 +492,13 @@ export default function MeuCadastro({ cliente = null }) {
                 }}
                 transition={`all .3s ${EASE}`}
               >
-
-                <Icon
-                  as={FiSave}
-                  mr={2}
-                />
-
-                Salvar Alterações
-
+                <Icon as={FiSave} mr={2} />
+                {salvando ? "Salvando..." : "Salvar Alterações"}
               </Button>
-
             )}
-
           </Flex>
-
         </Stack>
-
       </Box>
-
     </Flex>
   );
 }
-
