@@ -416,29 +416,6 @@ export default function GestaoUsuarios() {
           ================================================= */}
 
           <Stack gap={2}>
-            <HStack
-              display="inline-flex"
-              w="fit-content"
-              bg={PRIMARY}
-              color={WHITE}
-              px={4}
-              py="8px"
-              borderRadius="20px"
-              gap={2}
-            >
-              <Icon
-                as={FiUsers}
-                boxSize={4}
-              />
-
-              <Text
-                fontSize="12px"
-                fontWeight="600"
-              >
-                Gestão de Usuários
-              </Text>
-            </HStack>
-
             <Text
               fontFamily="Georgia, serif"
               fontSize={{

@@ -1081,6 +1081,7 @@ function EmprestimoRow({
 
 function DevolucaoRow({
   devolucao,
+  onEstenderPrazo,
 }) {
   return (
     <Grid
@@ -1222,6 +1223,7 @@ function DevolucaoRow({
           color={WHITE}
           borderRadius="4px"
           whiteSpace="nowrap"
+          onClick={() => onEstenderPrazo(devolucao)}
           _hover={{
             bg: PRIMARY_DARK,
           }}
@@ -1260,6 +1262,602 @@ function DevolucaoRow({
     </Grid>
   );
 }
+
+
+// ============================================================
+// MODAL ESTENDER PRAZO
+// Visual baseado exatamente no modelo enviado
+// ============================================================
+
+function dataBrParaIso(data) {
+  if (!data) return "";
+
+  const partes = data.split("/");
+
+  if (partes.length !== 3) {
+    return "";
+  }
+
+  const [dia, mes, ano] = partes;
+
+  return `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
+}
+
+function dataIsoParaBr(data) {
+  if (!data) return "";
+
+  const partes = data.split("-");
+
+  if (partes.length !== 3) {
+    return data;
+  }
+
+  const [ano, mes, dia] = partes;
+
+  return `${dia}/${mes}/${ano}`;
+}
+
+function ModalEstenderPrazo({
+  aberto,
+  devolucao,
+  onFechar,
+  onSalvar,
+}) {
+  const [novoPrazo, setNovoPrazo] = useState(
+    devolucao ? dataBrParaIso(devolucao.prazo) : ""
+  );
+
+  const [observacao, setObservacao] = useState("");
+
+  if (!aberto || !devolucao) {
+    return null;
+  }
+
+  const prazoAtualIso = dataBrParaIso(devolucao.prazo);
+
+  let diasAdicionados = 0;
+
+  if (prazoAtualIso && novoPrazo) {
+    const atual = new Date(`${prazoAtualIso}T00:00:00`);
+    const novo = new Date(`${novoPrazo}T00:00:00`);
+
+    diasAdicionados = Math.round(
+      (novo.getTime() - atual.getTime()) / 86400000
+    );
+  }
+
+  function salvar() {
+    if (!novoPrazo) {
+      alert("Selecione o novo prazo de devolução.");
+      return;
+    }
+
+    if (prazoAtualIso && novoPrazo <= prazoAtualIso) {
+      alert("O novo prazo precisa ser posterior ao prazo atual.");
+      return;
+    }
+
+    onSalvar({
+      novoPrazo: dataIsoParaBr(novoPrazo),
+      observacao: observacao.trim(),
+      diasAdicionados,
+    });
+  }
+
+  return (
+    <Flex
+      position="fixed"
+      inset={0}
+      w="100vw"
+      h="100vh"
+      align="center"
+      justify="center"
+      bg="rgba(0,0,0,0.50)"
+      px="14px"
+      py="18px"
+      overflowY="auto"
+      fontFamily="Arial, sans-serif"
+      zIndex={9999}
+      onClick={onFechar}
+    >
+      <Box
+        w="720px"
+        maxW="95vw"
+        bg="#FFF9F0"
+        borderRadius="13px"
+        overflow="hidden"
+        border="1px solid rgba(74,14,23,.14)"
+        boxShadow="0 22px 60px rgba(0,0,0,.28), 0 4px 15px rgba(0,0,0,.12)"
+        flexShrink={0}
+        transform="translateY(20px)"
+        onClick={(evento) => evento.stopPropagation()}
+      >
+        {/* CABEÇALHO */}
+        <Box
+          position="relative"
+          textAlign="center"
+          bg="#FFFAF4"
+          pt="15px"
+          pb="11px"
+          px="42px"
+        >
+          <Button
+            position="absolute"
+            top="8px"
+            right="11px"
+            minW="30px"
+            w="30px"
+            h="30px"
+            p={0}
+            bg="transparent"
+            color={PRIMARY}
+            borderRadius="full"
+            _hover={{ bg: "#F4E8E1" }}
+            onClick={onFechar}
+            aria-label="Fechar"
+          >
+            <Icon as={FiX} boxSize="20px" />
+          </Button>
+
+          <Heading
+            fontFamily="Georgia, serif"
+            fontSize="26px"
+            fontWeight="normal"
+            color={PRIMARY}
+            lineHeight="1.1"
+          >
+            Estender Prazo
+          </Heading>
+
+          <Text mt="4px" fontSize="10px" color="#7C6D66">
+            Atualize o prazo de devolução do empréstimo selecionado.
+          </Text>
+        </Box>
+
+        {/* FAIXA VINHO */}
+        <Flex
+          mx="15px"
+          h="72px"
+          position="relative"
+          overflow="hidden"
+          align="center"
+          justify="center"
+          borderRadius="8px 8px 0 0"
+          bg="linear-gradient(110deg,#570810 0%,#771018 35%,#8A161E 52%,#741018 70%,#570810 100%)"
+        >
+          {/* DECORAÇÃO ESQUERDA */}
+          <Box
+            position="absolute"
+            left="15px"
+            bottom="-18px"
+            w="130px"
+            h="100px"
+            opacity=".22"
+          >
+            <Box
+              position="absolute"
+              left="45px"
+              bottom="0"
+              w="1px"
+              h="92px"
+              bg="#DDAE68"
+              transform="rotate(26deg)"
+            />
+            <Box
+              position="absolute"
+              left="20px"
+              top="29px"
+              w="42px"
+              h="1px"
+              bg="#DDAE68"
+              transform="rotate(41deg)"
+            />
+            <Box
+              position="absolute"
+              left="46px"
+              top="45px"
+              w="43px"
+              h="1px"
+              bg="#DDAE68"
+              transform="rotate(-35deg)"
+            />
+            <Box
+              position="absolute"
+              left="15px"
+              top="55px"
+              w="34px"
+              h="1px"
+              bg="#DDAE68"
+              transform="rotate(50deg)"
+            />
+          </Box>
+
+          <Icon
+            as={FiCalendar}
+            boxSize="45px"
+            color="#DDBB75"
+            strokeWidth="1.2"
+          />
+
+          {/* DECORAÇÃO DIREITA */}
+          <Box
+            position="absolute"
+            right="15px"
+            bottom="-18px"
+            w="130px"
+            h="100px"
+            opacity=".22"
+            transform="scaleX(-1)"
+          >
+            <Box
+              position="absolute"
+              left="45px"
+              bottom="0"
+              w="1px"
+              h="92px"
+              bg="#DDAE68"
+              transform="rotate(26deg)"
+            />
+            <Box
+              position="absolute"
+              left="20px"
+              top="29px"
+              w="42px"
+              h="1px"
+              bg="#DDAE68"
+              transform="rotate(41deg)"
+            />
+            <Box
+              position="absolute"
+              left="46px"
+              top="45px"
+              w="43px"
+              h="1px"
+              bg="#DDAE68"
+              transform="rotate(-35deg)"
+            />
+            <Box
+              position="absolute"
+              left="15px"
+              top="55px"
+              w="34px"
+              h="1px"
+              bg="#DDAE68"
+              transform="rotate(50deg)"
+            />
+          </Box>
+        </Flex>
+
+        {/* CONTEÚDO */}
+        <Box
+          mx="15px"
+          mb="14px"
+          px="23px"
+          pt="13px"
+          pb="14px"
+          bg="#FFFAF3"
+          border="1px solid"
+          borderTop="none"
+          borderColor="#E8D7C5"
+          borderRadius="0 0 8px 8px"
+        >
+          {/* LIVRO + USUÁRIO */}
+          <Grid
+            templateColumns={{
+              base: "1fr",
+              md: "1fr 1fr",
+            }}
+            gap="18px"
+          >
+            <Stack gap="4px">
+              <Text
+                fontSize="10px"
+                fontWeight="600"
+                color={PRIMARY}
+              >
+                Livro
+              </Text>
+
+              <Input
+                value={devolucao.livro}
+                readOnly
+                h="34px"
+                px="11px"
+                bg="#FFFCF7"
+                border="1px solid"
+                borderColor="#E4D2BE"
+                borderRadius="6px"
+                color="#3D2928"
+                fontSize="10px"
+                cursor="default"
+                _focus={{ boxShadow: "none" }}
+              />
+            </Stack>
+
+            <Stack gap="4px">
+              <Text
+                fontSize="10px"
+                fontWeight="600"
+                color={PRIMARY}
+              >
+                Usuário
+              </Text>
+
+              <Input
+                value={devolucao.usuario}
+                readOnly
+                h="34px"
+                px="11px"
+                bg="#FFFCF7"
+                border="1px solid"
+                borderColor="#E4D2BE"
+                borderRadius="6px"
+                color="#3D2928"
+                fontSize="10px"
+                cursor="default"
+                _focus={{ boxShadow: "none" }}
+              />
+            </Stack>
+          </Grid>
+
+          {/* DATA DO EMPRÉSTIMO + PRAZO ATUAL */}
+          <Grid
+            templateColumns={{
+              base: "1fr",
+              md: "1fr 1fr",
+            }}
+            gap="18px"
+            mt="10px"
+          >
+            <Stack gap="4px">
+              <Text
+                fontSize="10px"
+                fontWeight="600"
+                color={PRIMARY}
+              >
+                Data de empréstimo
+              </Text>
+
+              <Input
+                value={devolucao.dataEmprestimo}
+                readOnly
+                h="34px"
+                px="11px"
+                bg="#FFFCF7"
+                border="1px solid"
+                borderColor="#E4D2BE"
+                borderRadius="6px"
+                color="#3D2928"
+                fontSize="10px"
+                cursor="default"
+                _focus={{ boxShadow: "none" }}
+              />
+            </Stack>
+
+            <Stack gap="4px">
+              <Text
+                fontSize="10px"
+                fontWeight="600"
+                color={PRIMARY}
+              >
+                Prazo atual
+              </Text>
+
+              <Input
+                value={devolucao.prazo}
+                readOnly
+                h="34px"
+                px="11px"
+                bg="#FFFCF7"
+                border="1px solid"
+                borderColor="#E4D2BE"
+                borderRadius="6px"
+                color="#3D2928"
+                fontSize="10px"
+                cursor="default"
+                _focus={{ boxShadow: "none" }}
+              />
+            </Stack>
+          </Grid>
+
+          {/* NOVO PRAZO + DIAS ADICIONADOS */}
+          <Grid
+            templateColumns={{
+              base: "1fr",
+              md: "1fr 1fr",
+            }}
+            gap="18px"
+            mt="10px"
+          >
+            <Stack gap="4px">
+              <Text
+                fontSize="10px"
+                fontWeight="600"
+                color={PRIMARY}
+              >
+                Novo prazo de devolução
+              </Text>
+
+              <Input
+                type="date"
+                value={novoPrazo}
+                min={prazoAtualIso || undefined}
+                onChange={(evento) =>
+                  setNovoPrazo(evento.target.value)
+                }
+                h="34px"
+                px="11px"
+                bg="#FFFCF7"
+                border="1px solid"
+                borderColor="#E4D2BE"
+                borderRadius="6px"
+                color="#3D2928"
+                fontSize="10px"
+                _hover={{
+                  borderColor: "#CDB69B",
+                }}
+                _focus={{
+                  borderColor: PRIMARY,
+                  boxShadow: `0 0 0 1px ${PRIMARY}`,
+                }}
+              />
+            </Stack>
+
+            <Stack gap="4px">
+              <Text
+                fontSize="10px"
+                fontWeight="600"
+                color={PRIMARY}
+              >
+                Dias adicionados
+              </Text>
+
+              <Input
+                value={
+                  diasAdicionados > 0
+                    ? `${diasAdicionados} ${
+                        diasAdicionados === 1
+                          ? "dia"
+                          : "dias"
+                      }`
+                    : "—"
+                }
+                readOnly
+                h="34px"
+                px="11px"
+                bg="#FFFCF7"
+                border="1px solid"
+                borderColor="#E4D2BE"
+                borderRadius="6px"
+                color="#3D2928"
+                fontSize="10px"
+                cursor="default"
+                _focus={{ boxShadow: "none" }}
+              />
+            </Stack>
+          </Grid>
+
+          {/* OBSERVAÇÃO */}
+          <Stack gap="4px" mt="10px">
+            <Text
+              fontSize="10px"
+              fontWeight="600"
+              color={PRIMARY}
+            >
+              Observação
+            </Text>
+
+            <Box position="relative">
+              <Input
+                value={observacao}
+                onChange={(evento) =>
+                  setObservacao(evento.target.value)
+                }
+                maxLength={250}
+                placeholder="Digite uma observação sobre a extensão do prazo..."
+                h="40px"
+                px="11px"
+                pr="52px"
+                bg="#FFFCF7"
+                border="1px solid"
+                borderColor="#E4D2BE"
+                borderRadius="6px"
+                color="#3D2928"
+                fontSize="9px"
+                _placeholder={{
+                  color: "#9B908A",
+                }}
+                _hover={{
+                  borderColor: "#CDB69B",
+                }}
+                _focus={{
+                  borderColor: PRIMARY,
+                  boxShadow: `0 0 0 1px ${PRIMARY}`,
+                }}
+              />
+
+              <Text
+                position="absolute"
+                right="8px"
+                bottom="5px"
+                fontSize="7px"
+                color="#7C6D66"
+              >
+                {observacao.length}/250
+              </Text>
+            </Box>
+          </Stack>
+
+          {/* AVISO */}
+          <Box
+            mt="11px"
+            px="12px"
+            py="9px"
+            bg="#FDF4EA"
+            border="1px solid"
+            borderColor="#EAD8C5"
+            borderRadius="6px"
+          >
+            <Text
+              fontSize="8px"
+              lineHeight="1.45"
+              color="#7C6D66"
+            >
+              O novo prazo substituirá a data atual de devolução
+              deste empréstimo.
+            </Text>
+          </Box>
+
+          {/* BOTÕES */}
+          <Grid
+            templateColumns={{
+              base: "1fr",
+              md: "1fr 1.03fr",
+            }}
+            gap="10px"
+            mt="11px"
+          >
+            <Button
+              h="38px"
+              bg="transparent"
+              color={PRIMARY}
+              border="1px solid"
+              borderColor={PRIMARY}
+              borderRadius="6px"
+              fontFamily="Georgia, serif"
+              fontWeight="normal"
+              fontSize="12px"
+              _hover={{
+                bg: "#F8EEE6",
+              }}
+              onClick={onFechar}
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              h="38px"
+              bg={PRIMARY}
+              color="white"
+              borderRadius="6px"
+              fontFamily="Georgia, serif"
+              fontWeight="normal"
+              fontSize="12px"
+              boxShadow="0 3px 8px rgba(74,14,23,.15)"
+              _hover={{
+                bg: PRIMARY_DARK,
+              }}
+              onClick={salvar}
+            >
+              Salvar Alterações
+            </Button>
+          </Grid>
+        </Box>
+      </Box>
+    </Flex>
+  );
+}
+
 
 // ============================================================
 // FILTRO PERSONALIZADO
@@ -1376,6 +1974,12 @@ export default function GestaoEmprestimosReservas() {
   const [statusDevolucao, setStatusDevolucao] =
     useState("Todos");
 
+  const [devolucoes, setDevolucoes] =
+    useState(DEVOLUCOES_INICIAIS);
+
+  const [devolucaoPrazo, setDevolucaoPrazo] =
+    useState(null);
+
   // ==========================================================
   // APROVAR
   // ==========================================================
@@ -1408,6 +2012,39 @@ export default function GestaoEmprestimosReservas() {
           : reserva
       )
     );
+  }
+
+  // ==========================================================
+  // ESTENDER PRAZO
+  // ==========================================================
+
+  function abrirEstenderPrazo(devolucao) {
+    setDevolucaoPrazo(devolucao);
+  }
+
+  function salvarExtensaoPrazo({
+    novoPrazo,
+    observacao,
+    diasAdicionados,
+  }) {
+    if (!devolucaoPrazo) {
+      return;
+    }
+
+    setDevolucoes((lista) =>
+      lista.map((item) =>
+        item.id === devolucaoPrazo.id
+          ? {
+              ...item,
+              prazo: novoPrazo,
+              observacaoPrazo: observacao,
+              diasAdicionadosPrazo: diasAdicionados,
+            }
+          : item
+      )
+    );
+
+    setDevolucaoPrazo(null);
   }
 
   // ==========================================================
@@ -1477,16 +2114,20 @@ export default function GestaoEmprestimosReservas() {
       <Box
         flex="1"
         minW={0}
-        p={{
+        px={{
           base: 5,
           md: 7,
-          lg: 8,
+          lg: 9,
+          xl: 10,
+        }}
+        py={{
+          base: 6,
+          md: 8,
         }}
       >
         <Stack
-          maxW="1500px"
-          mx="auto"
           gap={6}
+          w="100%"
         >
 
           {/* =================================================
@@ -1517,21 +2158,22 @@ export default function GestaoEmprestimosReservas() {
                 />
               </Box>
 
-              <Stack gap={1}>
-                <Heading
+              <Stack gap={2}>
+                <Text
                   fontFamily="Georgia, serif"
                   fontSize={{
-                    base: "24px",
-                    md: "29px",
+                    base: "34px",
+                    md: "42px",
+                    lg: "46px",
                   }}
                   color={PRIMARY}
-                  lineHeight="1.15"
+                  lineHeight="1.05"
                 >
                   Gestão de Empréstimos e Reservas
-                </Heading>
+                </Text>
 
                 <Text
-                  fontSize="10px"
+                  fontSize="14px"
                   color={TEXT_LIGHT}
                 >
                   Gerencie reservas, empréstimos e devoluções da biblioteca.
@@ -2260,12 +2902,13 @@ export default function GestaoEmprestimosReservas() {
                           tipo="devolucoes"
                         />
 
-                        {DEVOLUCOES_INICIAIS.map(
+                        {devolucoes.map(
                           (devolucao) => (
                             <DevolucaoRow
                               key={devolucao.id}
-                              devolucao={
-                                devolucao
+                              devolucao={devolucao}
+                              onEstenderPrazo={
+                                abrirEstenderPrazo
                               }
                             />
                           )
@@ -2291,7 +2934,7 @@ export default function GestaoEmprestimosReservas() {
                       fontSize="9px"
                       color={TEXT_LIGHT}
                     >
-                      Mostrando 1 a 5 de 5 empréstimos
+                      Mostrando 1 a 5 de {devolucoes.length} empréstimos
                     </Text>
 
                     <HStack gap={2}>
@@ -2386,6 +3029,14 @@ export default function GestaoEmprestimosReservas() {
 
         </Stack>
       </Box>
+
+      <ModalEstenderPrazo
+        key={devolucaoPrazo?.id || "modal-prazo"}
+        aberto={Boolean(devolucaoPrazo)}
+        devolucao={devolucaoPrazo}
+        onFechar={() => setDevolucaoPrazo(null)}
+        onSalvar={salvarExtensaoPrazo}
+      />
     </Flex>
   );
 }

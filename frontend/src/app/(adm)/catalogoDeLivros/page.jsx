@@ -16,6 +16,7 @@ import {
   Menu,
   Stack,
   Text,
+  Textarea,
 } from "@chakra-ui/react";
 
 import {
@@ -37,6 +38,7 @@ import {
   FiSearch,
   FiSettings,
   FiTrash2,
+  FiUploadCloud,
   FiUser,
   FiUsers,
   FiX,
@@ -601,6 +603,188 @@ function LivroCard({
 // MODAL DE LIVRO
 // =====================================================
 
+function CampoModal({
+  label,
+  placeholder,
+  value,
+  onChange,
+  type = "text",
+}) {
+  return (
+    <Stack gap="4px">
+      <Text
+        fontSize="10px"
+        fontWeight="600"
+        color={PRIMARY}
+      >
+        {label}
+      </Text>
+
+      <Input
+        type={type}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        h="34px"
+        px="11px"
+        bg="#FFFCF7"
+        border="1px solid"
+        borderColor="#E4D2BE"
+        borderRadius="6px"
+        color="#3D2928"
+        fontSize="10px"
+        _placeholder={{
+          color: "#9B908A",
+        }}
+        _hover={{
+          borderColor: "#CDB69B",
+        }}
+        _focus={{
+          borderColor: PRIMARY,
+          boxShadow: `0 0 0 1px ${PRIMARY}`,
+        }}
+      />
+    </Stack>
+  );
+}
+
+
+// =====================================================
+// SELECT DO MODAL
+// =====================================================
+
+function SelectVisualModal({
+  label,
+  placeholder,
+  options = [],
+  value,
+  onChange,
+}) {
+  const selecionada =
+    options.find((option) => option.value === value) || null;
+
+  return (
+    <Stack gap="4px">
+      <Text
+        fontSize="10px"
+        fontWeight="600"
+        color={PRIMARY}
+      >
+        {label}
+      </Text>
+
+      <Menu.Root
+        positioning={{
+          sameWidth: true,
+        }}
+        onSelect={(detalhe) =>
+          onChange(detalhe.value)
+        }
+      >
+        <Menu.Trigger asChild>
+          <Button
+            variant="outline"
+            h="34px"
+            w="100%"
+            px="11px"
+            justifyContent="space-between"
+            bg="#FFFCF7"
+            border="1px solid"
+            borderColor="#E7DED8"
+            borderRadius="14px"
+            color={
+              selecionada
+                ? "#3D2928"
+                : "#9B908A"
+            }
+            fontSize="10px"
+            fontWeight="400"
+            cursor="pointer"
+            transition="all .25s cubic-bezier(0.16, 1, 0.3, 1)"
+            _hover={{
+              borderColor: PRIMARY,
+              bg: "#FAF5F6",
+              boxShadow:
+                "0 3px 10px rgba(74,14,23,.07)",
+            }}
+            _focus={{
+              borderColor: PRIMARY,
+              bg: "#FFFFFF",
+              boxShadow:
+                "0 0 0 3px rgba(74,14,23,.15)",
+              outline: "none",
+            }}
+          >
+            <Text
+              overflow="hidden"
+              whiteSpace="nowrap"
+              textOverflow="ellipsis"
+              textAlign="left"
+            >
+              {selecionada
+                ? selecionada.label
+                : placeholder}
+            </Text>
+
+            <Icon
+              as={FiChevronDown}
+              color={PRIMARY}
+              boxSize={3.5}
+              flexShrink={0}
+              ml={2}
+            />
+          </Button>
+        </Menu.Trigger>
+
+        <Menu.Positioner>
+          <Menu.Content
+            bg="#FFFFFF"
+            border="1px solid"
+            borderColor="#E7DED8"
+            borderRadius="16px"
+            boxShadow="0 8px 24px rgba(74,14,23,.12)"
+            p={2}
+            zIndex={1500}
+            overflow="hidden"
+          >
+            {options.map((option) => (
+              <Menu.Item
+                key={option.value}
+                value={option.value}
+                px={3}
+                py={2.5}
+                borderRadius="8px"
+                cursor="pointer"
+                fontSize="10px"
+                color="#3D2928"
+                fontWeight="500"
+                bg="transparent"
+                transition="all .2s ease"
+                _hover={{
+                  bg: "#F2E6E8",
+                  color: PRIMARY,
+                }}
+                _focus={{
+                  bg: "#F2E6E8",
+                  color: PRIMARY,
+                }}
+              >
+                {option.label}
+              </Menu.Item>
+            ))}
+          </Menu.Content>
+        </Menu.Positioner>
+      </Menu.Root>
+    </Stack>
+  );
+}
+
+
+// =====================================================
+// MODAL ADICIONAR / EDITAR LIVRO
+// VISUAL SUBSTITUÍDO PELO MODELO ENVIADO
+// =====================================================
+
 function ModalLivro({
   aberto,
   livro,
@@ -611,9 +795,15 @@ function ModalLivro({
     livro || {
       titulo: "",
       autor: "",
-      categoria: "Ficção",
+      categoria: "",
       ano: "",
       isbn: "",
+      editora: "",
+      quantidade: "",
+      localizacao: "",
+      idioma: "",
+      paginas: "",
+      sinopse: "",
       imagem: "",
       disponivel: true,
     }
@@ -630,296 +820,678 @@ function ModalLivro({
     }));
   }
 
+  function salvar() {
+    onSalvar({
+      ...form,
+      ano: Number(form.ano) || "",
+    });
+  }
+
   return (
     <Box
       position="fixed"
       inset={0}
-      bg="rgba(0,0,0,.45)"
-      zIndex={1000}
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      p={4}
+      zIndex={9999}
+      w="100vw"
+      h="100vh"
+      overflow="hidden"
+      fontFamily="Arial, sans-serif"
     >
-      <Card.Root
-        w="100%"
-        maxW="550px"
-        bg={WHITE}
-        borderRadius="12px"
-        boxShadow="0 15px 40px rgba(0,0,0,.2)"
+      {/* FUNDO ESCURECIDO DO CATÁLOGO */}
+      <Box
+        position="absolute"
+        inset={0}
+        bg="rgba(27, 23, 22, 0.61)"
+        backdropFilter="blur(0.5px)"
+      />
+
+      {/* ÁREA DO MODAL */}
+      <Flex
+        position="absolute"
+        inset={0}
+        align="center"
+        justify="center"
+        px="12px"
+        py="18px"
+        overflowY="auto"
       >
-        <Card.Header
-          px={6}
-          pt={6}
-          pb={3}
+        {/* CAIXA PRINCIPAL */}
+        <Box
+          w="650px"
+          maxW="94vw"
+          bg="#FFF9F0"
+          borderRadius="13px"
+          overflow="hidden"
+          border="1px solid rgba(74,14,23,.14)"
+          boxShadow="
+            0 22px 60px rgba(0,0,0,.34),
+            0 4px 15px rgba(0,0,0,.12)
+          "
+          flexShrink={0}
         >
-          <Flex
-            justify="space-between"
-            align="center"
+          {/* CABEÇALHO */}
+          <Box
+            position="relative"
+            textAlign="center"
+            bg="#FFFAF4"
+            pt="13px"
+            pb="9px"
+            px="40px"
           >
-            <Stack gap={0}>
-              <Heading
-                fontFamily="Georgia, serif"
-                fontSize="22px"
-                color={PRIMARY}
-              >
-                {livro
-                  ? "Editar livro"
-                  : "Adicionar livro"}
-              </Heading>
-
-              <Text
-                fontSize="10px"
-                color={TEXT_LIGHT}
-              >
-                Preencha os dados do livro.
-              </Text>
-            </Stack>
-
             <Button
-              variant="ghost"
+              position="absolute"
+              top="7px"
+              right="10px"
+              minW="28px"
+              w="28px"
+              h="28px"
               p={0}
-              minW="30px"
-              h="30px"
+              bg="transparent"
+              color={PRIMARY}
+              borderRadius="full"
+              _hover={{
+                bg: "#F4E8E1",
+              }}
               onClick={onFechar}
             >
               <Icon
                 as={FiX}
-                boxSize={5}
+                boxSize="19px"
               />
             </Button>
+
+            <Heading
+              fontFamily="Georgia, serif"
+              fontSize="24px"
+              fontWeight="normal"
+              color={PRIMARY}
+              lineHeight="1.1"
+            >
+              {livro ? "Editar Livro" : "Adicionar Livro"}
+            </Heading>
+
+            <Text
+              mt="3px"
+              fontSize="9px"
+              color="#7C6D66"
+            >
+              {livro
+                ? "Atualize as informações do livro selecionado."
+                : "Preencha as informações do novo livro."}
+            </Text>
+          </Box>
+
+          {/* FAIXA VINHO */}
+          <Flex
+            mx="15px"
+            h="64px"
+            position="relative"
+            overflow="hidden"
+            align="center"
+            justify="center"
+            borderRadius="8px 8px 0 0"
+            bg="
+              linear-gradient(
+                110deg,
+                #570810 0%,
+                #771018 35%,
+                #8A161E 52%,
+                #741018 70%,
+                #570810 100%
+              )
+            "
+          >
+            {/* DECORAÇÃO ESQUERDA */}
+            <Box
+              position="absolute"
+              left="15px"
+              bottom="-21px"
+              w="120px"
+              h="90px"
+              opacity=".22"
+            >
+              <Box
+                position="absolute"
+                left="42px"
+                bottom="0"
+                w="1px"
+                h="83px"
+                bg="#DDAE68"
+                transform="rotate(26deg)"
+              />
+
+              <Box
+                position="absolute"
+                left="18px"
+                top="27px"
+                w="38px"
+                h="1px"
+                bg="#DDAE68"
+                transform="rotate(41deg)"
+              />
+
+              <Box
+                position="absolute"
+                left="43px"
+                top="42px"
+                w="39px"
+                h="1px"
+                bg="#DDAE68"
+                transform="rotate(-35deg)"
+              />
+
+              <Box
+                position="absolute"
+                left="13px"
+                top="51px"
+                w="31px"
+                h="1px"
+                bg="#DDAE68"
+                transform="rotate(50deg)"
+              />
+            </Box>
+
+            <Icon
+              as={FiBookOpen}
+              boxSize="47px"
+              color="#DDBB75"
+              strokeWidth="1"
+            />
+
+            {/* DECORAÇÃO DIREITA */}
+            <Box
+              position="absolute"
+              right="15px"
+              bottom="-21px"
+              w="120px"
+              h="90px"
+              opacity=".22"
+              transform="scaleX(-1)"
+            >
+              <Box
+                position="absolute"
+                left="42px"
+                bottom="0"
+                w="1px"
+                h="83px"
+                bg="#DDAE68"
+                transform="rotate(26deg)"
+              />
+
+              <Box
+                position="absolute"
+                left="18px"
+                top="27px"
+                w="38px"
+                h="1px"
+                bg="#DDAE68"
+                transform="rotate(41deg)"
+              />
+
+              <Box
+                position="absolute"
+                left="43px"
+                top="42px"
+                w="39px"
+                h="1px"
+                bg="#DDAE68"
+                transform="rotate(-35deg)"
+              />
+
+              <Box
+                position="absolute"
+                left="13px"
+                top="51px"
+                w="31px"
+                h="1px"
+                bg="#DDAE68"
+                transform="rotate(50deg)"
+              />
+            </Box>
           </Flex>
-        </Card.Header>
 
-        <Card.Body
-          px={6}
-          pb={6}
-        >
-          <Stack gap={4}>
-            <Stack gap={1}>
-              <Text
-                fontSize="12px"
-                fontWeight="600"
-                color={TEXT}
-              >
-                Título
-              </Text>
-
-              <Input
+          {/* FORMULÁRIO */}
+          <Box
+            mx="15px"
+            mb="14px"
+            px="20px"
+            pt="13px"
+            pb="12px"
+            bg="#FFFAF3"
+            border="1px solid"
+            borderTop="none"
+            borderColor="#E8D7C5"
+            borderRadius="0 0 8px 8px"
+          >
+            {/* LINHA 1 */}
+            <Grid
+              templateColumns={{
+                base: "1fr",
+                md: "1fr 1fr",
+              }}
+              gap="16px"
+            >
+              <CampoModal
+                label="Título do livro"
+                placeholder="Digite o título do livro"
                 value={form.titulo}
-                onChange={(e) =>
-                  alterar(
-                    "titulo",
-                    e.target.value
-                  )
+                onChange={(valor) =>
+                  alterar("titulo", valor)
                 }
-                placeholder="Digite o título"
-                h="38px"
-                fontSize="11px"
               />
-            </Stack>
 
-            <Stack gap={1}>
+              <CampoModal
+                label="Autor"
+                placeholder="Digite o nome do autor"
+                value={form.autor}
+                onChange={(valor) =>
+                  alterar("autor", valor)
+                }
+              />
+            </Grid>
+
+            {/* LINHA 2 */}
+            <Grid
+              templateColumns={{
+                base: "1fr",
+                md: "1fr 1fr",
+              }}
+              gap="16px"
+              mt="9px"
+            >
+              <SelectVisualModal
+                label="Categoria"
+                placeholder="Selecione a categoria"
+                value={form.categoria || ""}
+                onChange={(valor) =>
+                  alterar("categoria", valor)
+                }
+                options={[
+                  { value: "Romance", label: "Romance" },
+                  { value: "Fantasia", label: "Fantasia" },
+                  { value: "Ficção", label: "Ficção" },
+                  { value: "Mistério", label: "Mistério" },
+                  { value: "Terror", label: "Terror" },
+                  { value: "Aventura", label: "Aventura" },
+                  { value: "Drama", label: "Drama" },
+                  { value: "Clássico", label: "Clássico" },
+                  { value: "Biografia", label: "Biografia" },
+                  { value: "História", label: "História" },
+                  { value: "Distopia", label: "Distopia" },
+                  { value: "Infantil", label: "Infantil" },
+                ]}
+              />
+
+              <CampoModal
+                label="ISBN"
+                placeholder="Ex.: 978-65-123456-7-8"
+                value={form.isbn}
+                onChange={(valor) =>
+                  alterar("isbn", valor)
+                }
+              />
+            </Grid>
+
+            {/* LINHA 3 */}
+            <Grid
+              templateColumns={{
+                base: "1fr",
+                md: "1fr 1fr",
+              }}
+              gap="16px"
+              mt="9px"
+            >
+              <CampoModal
+                label="Editora"
+                placeholder="Digite o nome da editora"
+                value={form.editora}
+                onChange={(valor) =>
+                  alterar("editora", valor)
+                }
+              />
+
+              <CampoModal
+                label="Ano de publicação"
+                placeholder="Ex.: 2024"
+                type="number"
+                value={form.ano}
+                onChange={(valor) =>
+                  alterar("ano", valor)
+                }
+              />
+            </Grid>
+
+            {/* LINHA 4 */}
+            <Grid
+              templateColumns={{
+                base: "1fr",
+                md: "1fr 1fr",
+              }}
+              gap="16px"
+              mt="9px"
+            >
+              <CampoModal
+                label="Quantidade de exemplares"
+                placeholder="Ex.: 3"
+                type="number"
+                value={form.quantidade}
+                onChange={(valor) =>
+                  alterar("quantidade", valor)
+                }
+              />
+
+              <CampoModal
+                label="Localização / prateleira"
+                placeholder="Ex.: Estante A - Prateleira 2"
+                value={form.localizacao}
+                onChange={(valor) =>
+                  alterar("localizacao", valor)
+                }
+              />
+            </Grid>
+
+            {/* LINHA 5 */}
+            <Grid
+              templateColumns={{
+                base: "1fr",
+                md: "1fr 1fr",
+              }}
+              gap="16px"
+              mt="9px"
+            >
+              <SelectVisualModal
+                label="Idioma"
+                placeholder="Selecione o idioma"
+                value={form.idioma || ""}
+                onChange={(valor) =>
+                  alterar("idioma", valor)
+                }
+                options={[
+                  { value: "Português", label: "Português" },
+                  { value: "Inglês", label: "Inglês" },
+                  { value: "Espanhol", label: "Espanhol" },
+                  { value: "Francês", label: "Francês" },
+                  { value: "Italiano", label: "Italiano" },
+                  { value: "Alemão", label: "Alemão" },
+                ]}
+              />
+
+              <CampoModal
+                label="Número de páginas"
+                placeholder="Ex.: 256"
+                type="number"
+                value={form.paginas}
+                onChange={(valor) =>
+                  alterar("paginas", valor)
+                }
+              />
+            </Grid>
+
+            {/* SINOPSE */}
+            <Stack
+              gap="4px"
+              mt="9px"
+            >
               <Text
-                fontSize="12px"
+                fontSize="10px"
                 fontWeight="600"
-                color={TEXT}
+                color={PRIMARY}
               >
-                Autor
+                Sinopse / descrição
               </Text>
 
-              <Input
-                value={form.autor}
-                onChange={(e) =>
-                  alterar(
-                    "autor",
-                    e.target.value
-                  )
-                }
-                placeholder="Digite o autor"
-                h="38px"
-                fontSize="11px"
-              />
-            </Stack>
-
-            <Flex gap={3}>
-              <Box flex="1">
-                <FiltroSelect
-                  label="Categoria"
-                  value={form.categoria}
-                  onChange={(valor) =>
-                    alterar(
-                      "categoria",
-                      valor
-                    )
-                  }
-                  options={[
-                    "Ficção",
-                    "Romance",
-                    "Fantasia",
-                    "Drama",
-                    "Infantil",
-                  ]}
-                />
-              </Box>
-
-              <Stack
-                gap={1}
-                flex="1"
-              >
-                <Text
-                  fontSize="11px"
-                  color={TEXT_LIGHT}
-                >
-                  Ano
-                </Text>
-
-                <Input
-                  type="number"
-                  value={form.ano}
+              <Box position="relative">
+                <Textarea
+                  value={form.sinopse || ""}
                   onChange={(e) =>
                     alterar(
-                      "ano",
-                      e.target.value
+                      "sinopse",
+                      e.target.value.slice(0, 1000)
                     )
                   }
-                  h="42px"
-                  fontSize="12px"
-                  placeholder="Ex: 2026"
+                  h="55px"
+                  minH="55px"
+                  resize="none"
+                  bg="#FFFCF7"
+                  border="1px solid"
+                  borderColor="#E4D2BE"
+                  borderRadius="6px"
+                  px="11px"
+                  pt="8px"
+                  pb="16px"
+                  fontSize="9px"
+                  color="#3D2928"
+                  placeholder="Digite uma breve sinopse ou descrição do livro..."
+                  _placeholder={{
+                    color: "#9B908A",
+                  }}
+                  _hover={{
+                    borderColor: "#CDB69B",
+                  }}
+                  _focus={{
+                    borderColor: PRIMARY,
+                    boxShadow: `0 0 0 1px ${PRIMARY}`,
+                  }}
                 />
-              </Stack>
-            </Flex>
 
-            <Stack gap={1}>
-              <Text
-                fontSize="12px"
-                fontWeight="600"
-                color={TEXT}
-              >
-                ISBN
-              </Text>
-
-              <Input
-                value={form.isbn}
-                onChange={(e) =>
-                  alterar(
-                    "isbn",
-                    e.target.value
-                  )
-                }
-                placeholder="Digite o ISBN"
-                h="38px"
-                fontSize="11px"
-              />
+                <Text
+                  position="absolute"
+                  right="7px"
+                  bottom="4px"
+                  fontSize="6px"
+                  color="#7C6D66"
+                >
+                  {(form.sinopse || "").length}/1000
+                </Text>
+              </Box>
             </Stack>
 
-            <Stack gap={1}>
-              <Text
-                fontSize="12px"
-                fontWeight="600"
-                color={TEXT}
-              >
-                URL da capa
-              </Text>
-
-              <Input
-                value={form.imagem}
-                onChange={(e) =>
-                  alterar(
-                    "imagem",
-                    e.target.value
-                  )
-                }
-                placeholder="https://..."
-                h="38px"
-                fontSize="11px"
-              />
-            </Stack>
-
-            <Flex
-              justify="space-between"
-              align="center"
-              p={3}
-              bg="#F8F5F1"
-              borderRadius="7px"
+            {/* UPLOAD + DISPONIBILIDADE */}
+            <Grid
+              templateColumns={{
+                base: "1fr",
+                md: "1.1fr 1fr",
+              }}
+              gap="19px"
+              mt="9px"
             >
-              <Stack gap={0}>
+              <Stack gap="4px">
                 <Text
                   fontSize="10px"
                   fontWeight="600"
-                  color={TEXT}
+                  color={PRIMARY}
                 >
-                  Livro disponível
+                  Upload da capa do livro
                 </Text>
 
-                <Text
-                  fontSize="11px"
-                  color={TEXT_LIGHT}
+                <Flex
+                  as="label"
+                  h="72px"
+                  border="1px dashed #C5A381"
+                  borderRadius="6px"
+                  bg="#FDF8F0"
+                  align="center"
+                  justify="center"
+                  direction="column"
+                  textAlign="center"
+                  cursor="pointer"
+                  position="relative"
+                  overflow="hidden"
+                  _hover={{
+                    borderColor: PRIMARY,
+                    bg: "#FAF1E7",
+                  }}
                 >
-                  Indica se o livro está
-                  disponível para empréstimo.
-                </Text>
+                  <Input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg"
+                    display="none"
+                    onChange={(e) => {
+                      const arquivo = e.target.files?.[0];
+
+                      if (!arquivo) {
+                        return;
+                      }
+
+                      const leitor = new FileReader();
+
+                      leitor.onload = () => {
+                        alterar(
+                          "imagem",
+                          String(leitor.result || "")
+                        );
+                      };
+
+                      leitor.readAsDataURL(arquivo);
+                    }}
+                  />
+
+                  <Icon
+                    as={FiUploadCloud}
+                    boxSize="27px"
+                    color={PRIMARY}
+                    mb="1px"
+                  />
+
+                  <Text
+                    fontSize="8px"
+                    lineHeight="1.25"
+                    color="#3D2928"
+                  >
+                    Arraste e solte a imagem aqui
+                    <br />
+                    ou clique para selecionar
+                  </Text>
+
+                  <Text
+                    mt="2px"
+                    fontSize="6px"
+                    color="#7C6D66"
+                  >
+                    JPG, PNG - Tamanho máx. 5MB
+                  </Text>
+                </Flex>
               </Stack>
 
-              <input
-                type="checkbox"
-                checked={form.disponivel}
-                onChange={(e) =>
-                  alterar(
-                    "disponivel",
-                    e.target.checked
-                  )
-                }
-                style={{
-                  width: "18px",
-                  height: "18px",
-                  accentColor: PRIMARY,
-                }}
-              />
-            </Flex>
+              {/* DISPONIBILIDADE */}
+              <Stack gap="4px">
+                <Text
+                  fontSize="10px"
+                  fontWeight="600"
+                  color={PRIMARY}
+                >
+                  Disponibilidade inicial / status
+                </Text>
 
-            <Flex
-              justify="flex-end"
-              gap={2}
-              pt={2}
+                <HStack
+                  mt="5px"
+                  gap="9px"
+                >
+                  <Flex
+                    w="40px"
+                    h="21px"
+                    bg={
+                      form.disponivel
+                        ? PRIMARY
+                        : "#CFC4BB"
+                    }
+                    borderRadius="full"
+                    align="center"
+                    justify={
+                      form.disponivel
+                        ? "flex-end"
+                        : "flex-start"
+                    }
+                    p="2px"
+                    cursor="pointer"
+                    transition="all .2s ease"
+                    onClick={() =>
+                      alterar(
+                        "disponivel",
+                        !form.disponivel
+                      )
+                    }
+                  >
+                    <Box
+                      w="17px"
+                      h="17px"
+                      bg="white"
+                      borderRadius="full"
+                      boxShadow="0 1px 3px rgba(0,0,0,.25)"
+                    />
+                  </Flex>
+
+                  <Text
+                    fontSize="9px"
+                    color="#3D2928"
+                  >
+                    {form.disponivel
+                      ? "Disponível"
+                      : "Indisponível"}
+                  </Text>
+                </HStack>
+
+                <Text
+                  fontSize="7px"
+                  lineHeight="1.4"
+                  color="#7C6D66"
+                >
+                  Quando ativado, o livro ficará disponível
+                  <br />
+                  para empréstimo após salvo.
+                </Text>
+              </Stack>
+            </Grid>
+
+            {/* BOTÕES */}
+            <Grid
+              templateColumns={{
+                base: "1fr",
+                md: "1fr 1.03fr",
+              }}
+              gap="10px"
+              mt="10px"
             >
               <Button
-                variant="outline"
-                borderColor={BORDER}
-                color={TEXT}
-                h="36px"
-                fontSize="10px"
+                h="34px"
+                bg="transparent"
+                color={PRIMARY}
+                border="1px solid"
+                borderColor={PRIMARY}
+                borderRadius="6px"
+                fontFamily="Georgia, serif"
+                fontWeight="normal"
+                fontSize="11px"
+                _hover={{
+                  bg: "#F8EEE6",
+                }}
                 onClick={onFechar}
               >
                 Cancelar
               </Button>
 
               <Button
+                h="34px"
                 bg={PRIMARY}
-                color={WHITE}
-                h="36px"
-                fontSize="10px"
-                onClick={() =>
-                  onSalvar(form)
-                }
+                color="white"
+                borderRadius="6px"
+                fontFamily="Georgia, serif"
+                fontWeight="normal"
+                fontSize="11px"
+                boxShadow="0 3px 8px rgba(74,14,23,.15)"
                 _hover={{
-                  bg: PRIMARY_DARK,
+                  bg: "#350A10",
                 }}
+                onClick={salvar}
               >
-                <Icon
-                  as={FiSave}
-                  mr={2}
-                  boxSize={3}
-                />
-
                 {livro
-                  ? "Salvar alterações"
-                  : "Adicionar livro"}
+                  ? "Salvar Alterações"
+                  : "Adicionar Livro"}
               </Button>
-            </Flex>
-          </Stack>
-        </Card.Body>
-      </Card.Root>
+            </Grid>
+          </Box>
+        </Box>
+      </Flex>
     </Box>
   );
 }
@@ -1320,15 +1892,20 @@ export default function CatalogoLivros() {
       <Box
         flex="1"
         minW={0}
-        p={{
+        px={{
           base: 5,
           md: 7,
+          lg: 9,
+          xl: 10,
+        }}
+        py={{
+          base: 6,
+          md: 8,
         }}
       >
         <Stack
-          maxW="1200px"
-          mx="auto"
-          gap={5}
+          gap={6}
+          w="100%"
         >
           {/* CABEÇALHO */}
 
@@ -1338,18 +1915,19 @@ export default function CatalogoLivros() {
             gap={4}
             flexWrap="wrap"
           >
-            <Stack gap={1}>
-              <Heading
+            <Stack gap={2}>
+              <Text
                 fontFamily="Georgia, serif"
                 fontSize={{
-                  base: "36px",
+                  base: "34px",
                   md: "42px",
+                  lg: "46px",
                 }}
                 color={PRIMARY}
-                lineHeight="1"
+                lineHeight="1.05"
               >
                 Catálogo de Livros
-              </Heading>
+              </Text>
 
               <Text
                 fontSize="13px"
@@ -1744,6 +2322,7 @@ export default function CatalogoLivros() {
       {/* MODAL ADICIONAR / EDITAR */}
 
       <ModalLivro
+        key={livroEditando?.id ?? (modalLivro ? "novo" : "fechado")}
         aberto={modalLivro}
         livro={livroEditando}
         onFechar={() => {
