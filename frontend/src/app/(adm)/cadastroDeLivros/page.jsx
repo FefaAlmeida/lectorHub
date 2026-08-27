@@ -1,6 +1,6 @@
 'use client';
 import SideBarADM from "../../../components/sideBarADM/sideBarADM";
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Flex,
@@ -10,6 +10,7 @@ import {
   Button,
   Input,
   Textarea,
+  Menu,
 } from '@chakra-ui/react';
 import {
   FiGrid,
@@ -31,86 +32,86 @@ import {
 } from 'react-icons/fi';
 
 function CustomSelect({ placeholder, options, value, onChange }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const selectedOption = options.find((opt) => opt.value === value);
 
   return (
-    <Box position="relative" w="100%" ref={dropdownRef}>
-      <Flex
-        align="center"
-        justify="space-between"
-        w="100%"
-        h="46px"
-        px={4}
-        borderRadius="xl"
-        border="1px solid"
-        borderColor="#E8DCC4"
-        bg="#FCFAF7"
-        color={selectedOption ? '#2D2D2D' : '#8C8C8C'}
-        fontSize="sm"
-        cursor="pointer"
-        onClick={() => setIsOpen(!isOpen)}
-        _hover={{ borderColor: '#4A0E17', bg: '#FFFFFF' }}
-        transition="all 0.2s"
+    <Box w="100%">
+      <Menu.Root
+        positioning={{ sameWidth: true }}
+        onSelect={(details) => onChange(details.value)}
       >
-        <Text fontSize="sm" fontWeight={selectedOption ? 'medium' : 'normal'}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </Text>
-        <Box
-          color="#4A0E17"
-          transform={isOpen ? 'rotate(180deg)' : 'rotate(0deg)'}
-          transition="transform 0.2s"
-        >
-          <FiChevronDown size={18} />
-        </Box>
-      </Flex>
+        <Menu.Trigger asChild>
+          <Button
+            variant="outline"
+            bg="#FFFFFF"
+            border="1px solid"
+            borderColor="#E7DED8"
+            borderRadius="14px"
+            h="48px"
+            px={4}
+            w="100%"
+            justifyContent="space-between"
+            color={selectedOption ? '#2D2D2D' : '#8C8C8C'}
+            fontSize="sm"
+            fontWeight={selectedOption ? '500' : '400'}
+            transition="all .25s cubic-bezier(0.16, 1, 0.3, 1)"
+            _hover={{
+              borderColor: '#4A0E17',
+              bg: '#FAF5F6',
+              boxShadow: '0 4px 12px rgba(74,14,23,.08)',
+            }}
+            _focus={{
+              borderColor: '#4A0E17',
+              boxShadow: '0 0 0 3px rgba(74,14,23,.15)',
+            }}
+          >
+            <Text fontSize="sm" fontWeight={selectedOption ? '500' : '400'}>
+              {selectedOption ? selectedOption.label : placeholder}
+            </Text>
 
-      {isOpen && (
-        <Box
-          position="absolute"
-          top="calc(100% + 6px)"
-          left="0"
-          w="100%"
-          bg="#FFFFFF"
-          border="1px solid #E8DCC4"
-          borderRadius="xl"
-          boxShadow="0 10px 25px -5px rgba(74, 14, 23, 0.1)"
-          py={2}
-          zIndex={100}
-          overflow="hidden"
-        >
-          {options.map((option) => (
-            <Box
-              key={option.value}
-              px={4}
-              py={2.5}
-              cursor="pointer"
-              fontSize="sm"
-              color="#2D2D2D"
-              _hover={{ bg: '#FAF0F2', color: '#4A0E17', fontWeight: 'bold' }}
-              onClick={() => {
-                onChange(option.value);
-                setIsOpen(false);
-              }}
-              transition="background-color 0.15s"
-            >
-              {option.label}
+            <Box color="#4A0E17" display="flex" alignItems="center">
+              <FiChevronDown size={18} />
             </Box>
-          ))}
-        </Box>
-      )}
+          </Button>
+        </Menu.Trigger>
+
+        <Menu.Positioner>
+          <Menu.Content
+            bg="#FFFFFF"
+            borderRadius="16px"
+            border="1px solid"
+            borderColor="#E7DED8"
+            boxShadow="0 8px 24px rgba(74,14,23,.12)"
+            p={2}
+            zIndex="popover"
+          >
+            {options.map((option) => (
+              <Menu.Item
+                key={option.value}
+                value={option.value}
+                px={3}
+                py={2.5}
+                borderRadius="10px"
+                cursor="pointer"
+                color="#2D2D2D"
+                fontSize="sm"
+                fontWeight="500"
+                transition="all 0.2s ease"
+                _hover={{
+                  bg: '#F2E6E8',
+                  color: '#4A0E17',
+                }}
+                _focus={{
+                  bg: '#F2E6E8',
+                  color: '#4A0E17',
+                }}
+              >
+                {option.label}
+              </Menu.Item>
+            ))}
+          </Menu.Content>
+        </Menu.Positioner>
+      </Menu.Root>
     </Box>
   );
 }
@@ -135,14 +136,24 @@ export default function CadastrarLivroPage() {
   ];
 
   const inputStyles = {
-    bg: '#FCFAF7',
-    borderColor: '#E8DCC4',
-    borderRadius: 'xl',
+    bg: '#FFFFFF',
+    border: '1px solid',
+    borderColor: '#E7DED8',
+    borderRadius: '14px',
     fontSize: 'sm',
-    h: '46px',
-    _hover: { borderColor: '#4A0E17', bg: '#FFFFFF' },
-    _focus: { borderColor: '#4A0E17', bg: '#FFFFFF', boxShadow: '0 0 0 1px #4A0E17' },
-    transition: 'all 0.2s',
+    h: '48px',
+    _placeholder: { color: '#AAA' },
+    _hover: {
+      borderColor: '#4A0E17',
+      bg: '#FAF5F6',
+    },
+    _focus: {
+      borderColor: '#4A0E17',
+      bg: '#FFFFFF',
+      boxShadow: '0 0 0 3px rgba(74,14,23,.15)',
+      outline: 'none',
+    },
+    transition: 'all .25s cubic-bezier(0.16, 1, 0.3, 1)',
   };
 
   return (
@@ -210,11 +221,13 @@ export default function CadastrarLivroPage() {
                 </Text>
                 <Textarea
                   placeholder="Digite uma breve sinopse ou descrição do livro..."
-                  bg="#FCFAF7"
-                  borderColor="#E8DCC4"
-                  _hover={{ borderColor: '#4A0E17', bg: '#FFFFFF' }}
-                  _focus={{ borderColor: '#4A0E17', bg: '#FFFFFF', boxShadow: '0 0 0 1px #4A0E17' }}
-                  borderRadius="xl"
+                  bg="#FFFFFF"
+                  border="1px solid"
+                  borderColor="#E7DED8"
+                  _placeholder={{ color: '#AAA' }}
+                  _hover={{ borderColor: '#4A0E17', bg: '#FAF5F6' }}
+                  _focus={{ borderColor: '#4A0E17', bg: '#FFFFFF', boxShadow: '0 0 0 3px rgba(74,14,23,.15)', outline: 'none' }}
+                  borderRadius="14px"
                   fontSize="sm"
                   rows={4}
                   resize="vertical"

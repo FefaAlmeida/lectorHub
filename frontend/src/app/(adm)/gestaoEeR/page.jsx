@@ -515,9 +515,9 @@ function TabelaHeader({ tipo }) {
   ) {
     return (
       <Grid
-        templateColumns="minmax(0, 0.75fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 0.95fr) minmax(0, 1fr) minmax(0, 0.72fr) minmax(0, 1.18fr)"
-        gap={3}
-        px={4}
+        templateColumns="0.9fr 1.6fr 1.7fr 1.15fr 1.25fr 0.85fr 1.35fr"
+        gap={4}
+        px={5}
         py={4}
         bg="#FAF8F5"
         borderBottom="1px solid"
@@ -588,9 +588,9 @@ function TabelaHeader({ tipo }) {
   ) {
     return (
       <Grid
-        templateColumns="minmax(0, 1.35fr) minmax(0, 1.55fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.5fr) minmax(0, 0.75fr) minmax(0, 1.45fr)"
-        gap={3}
-        px={4}
+        templateColumns="1.6fr 1.8fr 1.25fr 1.25fr 0.75fr 0.9fr 1.7fr"
+        gap={4}
+        px={5}
         py={4}
         bg="#FAF8F5"
         borderBottom="1px solid"
@@ -664,9 +664,9 @@ function TabelaHeader({ tipo }) {
 
   return (
     <Grid
-      templateColumns="minmax(0, 2fr) minmax(0, 1.65fr) minmax(0, 1.25fr) minmax(0, 0.85fr) minmax(0, 1.35fr)"
-      gap={4}
-      px={4}
+      templateColumns="2.2fr 1.8fr 1.5fr 1fr 1.6fr"
+      gap={5}
+      px={5}
       py={4}
       bg="#FAF8F5"
       borderBottom="1px solid"
@@ -727,9 +727,9 @@ function ReservaRow({
 }) {
   return (
     <Grid
-      templateColumns="minmax(0, 2fr) minmax(0, 1.65fr) minmax(0, 1.25fr) minmax(0, 0.85fr) minmax(0, 1.35fr)"
-      gap={4}
-      px={4}
+      templateColumns="2.2fr 1.8fr 1.5fr 1fr 1.6fr"
+      gap={5}
+      px={5}
       py={5}
       minH="105px"
       alignItems="center"
@@ -739,7 +739,7 @@ function ReservaRow({
         bg: "#FCFAF8",
       }}
     >
-      <HStack gap={3} minW={0}>
+      <HStack gap={3}>
         <Box
           w="48px"
           h="62px"
@@ -758,7 +758,7 @@ function ReservaRow({
           />
         </Box>
 
-        <Stack gap={1} minW={0}>
+        <Stack gap={1}>
           <Text
             fontSize="14px"
             fontWeight="600"
@@ -776,7 +776,7 @@ function ReservaRow({
         </Stack>
       </HStack>
 
-      <HStack gap={3} minW={0}>
+      <HStack gap={3}>
         <Box
           w="34px"
           h="34px"
@@ -793,7 +793,7 @@ function ReservaRow({
           {reserva.iniciais}
         </Box>
 
-        <Stack gap={0.5} minW={0}>
+        <Stack gap={0.5}>
           <Text
             fontSize="11px"
             fontWeight="600"
@@ -874,9 +874,9 @@ function EmprestimoRow({
 }) {
   return (
     <Grid
-      templateColumns="minmax(0, 0.75fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 0.95fr) minmax(0, 1fr) minmax(0, 0.72fr) minmax(0, 1.18fr)"
-      gap={3}
-      px={4}
+      templateColumns="0.9fr 1.6fr 1.7fr 1.15fr 1.25fr 0.85fr 1.35fr"
+      gap={4}
+      px={5}
       py={4}
       minH="92px"
       alignItems="center"
@@ -898,7 +898,7 @@ function EmprestimoRow({
 
       {/* USUÁRIO */}
 
-      <HStack gap={2.5} minW={0}>
+      <HStack gap={2.5}>
         <Box
           w="32px"
           h="32px"
@@ -923,7 +923,7 @@ function EmprestimoRow({
             fontSize="10px"
             fontWeight="600"
             color={TEXT}
-            lineHeight="1.2"
+            whiteSpace="nowrap"
           >
             {emprestimo.usuario}
           </Text>
@@ -931,8 +931,7 @@ function EmprestimoRow({
           <Text
             fontSize="8px"
             color={TEXT_LIGHT}
-            lineHeight="1.2"
-            overflowWrap="anywhere"
+            whiteSpace="nowrap"
           >
             {emprestimo.email}
           </Text>
@@ -948,7 +947,7 @@ function EmprestimoRow({
 
       {/* LIVRO */}
 
-      <HStack gap={2.5} minW={0}>
+      <HStack gap={3}>
         <Box
           w="30px"
           h="42px"
@@ -966,7 +965,7 @@ function EmprestimoRow({
           />
         </Box>
 
-        <Stack gap={0.5} minW={0}>
+        <Stack gap={0.5}>
           <Text
             fontSize="10px"
             fontWeight="600"
@@ -1035,18 +1034,16 @@ function EmprestimoRow({
 
       {/* AÇÕES */}
 
-      <HStack gap={1.5} minW={0} w="full">
+      <HStack gap={2}>
         <Button
           h="30px"
-          px={2}
-          flex="1"
-          minW={0}
+          px={3}
           fontSize="8px"
           fontWeight="600"
           variant="outline"
           borderColor="#D8B5B5"
           color={PRIMARY}
-          borderRadius="6px"
+          borderRadius="4px"
           whiteSpace="nowrap"
         >
           <Icon
@@ -1087,9 +1084,9 @@ function DevolucaoRow({
 }) {
   return (
     <Grid
-      templateColumns="minmax(0, 1.35fr) minmax(0, 1.55fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.5fr) minmax(0, 0.75fr) minmax(0, 1.45fr)"
-      gap={3}
-      px={4}
+      templateColumns="1.6fr 1.8fr 1.25fr 1.25fr 0.75fr 0.9fr 1.7fr"
+      gap={4}
+      px={5}
       py={4}
       minH="82px"
       alignItems="center"
@@ -1101,7 +1098,7 @@ function DevolucaoRow({
     >
       {/* USUÁRIO */}
 
-      <HStack gap={2.5} minW={0}>
+      <HStack gap={2.5}>
         <Box
           w="32px"
           h="32px"
@@ -1118,7 +1115,7 @@ function DevolucaoRow({
           {devolucao.iniciais}
         </Box>
 
-        <Stack gap={0.5} minW={0}>
+        <Stack gap={0.5}>
           <Text
             fontSize="10px"
             fontWeight="600"
@@ -1130,8 +1127,6 @@ function DevolucaoRow({
           <Text
             fontSize="8px"
             color={TEXT_LIGHT}
-            lineHeight="1.2"
-            overflowWrap="anywhere"
           >
             {devolucao.email}
           </Text>
@@ -1140,7 +1135,7 @@ function DevolucaoRow({
 
       {/* LIVRO */}
 
-      <HStack gap={2.5} minW={0}>
+      <HStack gap={3}>
         <Box
           w="30px"
           h="42px"
@@ -1158,7 +1153,7 @@ function DevolucaoRow({
           />
         </Box>
 
-        <Stack gap={0.5} minW={0}>
+        <Stack gap={0.5}>
           <Text
             fontSize="10px"
             fontWeight="600"
@@ -1182,7 +1177,6 @@ function DevolucaoRow({
       <Text
         fontSize="9px"
         color={TEXT}
-        whiteSpace="nowrap"
       >
         {devolucao.dataEmprestimo}
       </Text>
@@ -1192,7 +1186,6 @@ function DevolucaoRow({
       <Text
         fontSize="9px"
         color={TEXT}
-        whiteSpace="nowrap"
       >
         {devolucao.prazo}
       </Text>
@@ -1219,17 +1212,15 @@ function DevolucaoRow({
 
       {/* AÇÕES */}
 
-      <Stack gap={1.5} w="full" minW={0}>
+      <HStack gap={2}>
         <Button
           h="31px"
-          px={2}
-          w="full"
-          minW={0}
+          px={3}
           fontSize="8px"
           fontWeight="600"
           bg={PRIMARY}
           color={WHITE}
-          borderRadius="6px"
+          borderRadius="4px"
           whiteSpace="nowrap"
           _hover={{
             bg: PRIMARY_DARK,
@@ -1246,9 +1237,7 @@ function DevolucaoRow({
 
         <Button
           h="31px"
-          px={2}
-          w="full"
-          minW={0}
+          px={3}
           fontSize="8px"
           fontWeight="600"
           bg={PRIMARY}
@@ -1267,7 +1256,7 @@ function DevolucaoRow({
 
           Confirmar devolução
         </Button>
-      </Stack>
+      </HStack>
     </Grid>
   );
 }
@@ -1496,8 +1485,6 @@ export default function GestaoEmprestimosReservas() {
       >
         <Stack
           maxW="1500px"
-          w="100%"
-          minW={0}
           mx="auto"
           gap={6}
         >
@@ -1852,14 +1839,13 @@ export default function GestaoEmprestimosReservas() {
                 </Flex>
 
                 <Box
-                  w="100%"
-                  minW={0}
                   border="1px solid"
                   borderColor={BORDER}
                   borderRadius="6px"
                   overflow="hidden"
                 >
-                  <Box w="100%" minW={0}>
+                  <Box overflowX="auto">
+                    <Box minW="1050px">
 
                       <TabelaHeader
                         tipo="reservas"
@@ -1880,6 +1866,7 @@ export default function GestaoEmprestimosReservas() {
                         )
                       )}
 
+                    </Box>
                   </Box>
                 </Box>
               </Card.Body>
@@ -2059,14 +2046,13 @@ export default function GestaoEmprestimosReservas() {
                 </Flex>
 
                 <Box
-                  w="100%"
-                  minW={0}
                   border="1px solid"
                   borderColor={BORDER}
                   borderRadius="6px"
                   overflow="hidden"
                 >
-                  <Box w="100%" minW={0}>
+                  <Box overflowX="auto">
+                    <Box minW="1180px">
 
                       <TabelaHeader
                         tipo="emprestimos"
@@ -2083,6 +2069,7 @@ export default function GestaoEmprestimosReservas() {
                         )
                       )}
 
+                    </Box>
                   </Box>
                 </Box>
 
@@ -2261,14 +2248,13 @@ export default function GestaoEmprestimosReservas() {
                   </Flex>
 
                   <Box
-                    w="100%"
-                    minW={0}
                     border="1px solid"
                     borderColor={BORDER}
                     borderRadius="6px"
                     overflow="hidden"
                   >
-                    <Box w="100%" minW={0}>
+                    <Box overflowX="auto">
+                      <Box minW="1200px">
 
                         <TabelaHeader
                           tipo="devolucoes"
@@ -2285,6 +2271,7 @@ export default function GestaoEmprestimosReservas() {
                           )
                         )}
 
+                      </Box>
                     </Box>
                   </Box>
 
