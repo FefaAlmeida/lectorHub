@@ -14,6 +14,7 @@ import {
   Input,
   Stack,
   Text,
+  Menu,
 } from "@chakra-ui/react";
 
 import {
@@ -33,6 +34,7 @@ import {
   FiCalendar,
   FiChevronLeft,
   FiChevronRight,
+  FiChevronDown,
   FiX,
   FiAlertCircle,
   FiEye,
@@ -53,6 +55,30 @@ const BORDER = "#EDE7E0";
 
 const TEXT = "#333333";
 const TEXT_LIGHT = "#777777";
+
+// ============================================================
+// OPÇÕES DOS FILTROS
+// ============================================================
+
+const OPCOES_RESERVAS = [
+  { label: "Todos", valor: "Todos" },
+  { label: "Pendentes", valor: "Pendente" },
+  { label: "Aguardando", valor: "Aguardando" },
+  { label: "Aprovados", valor: "Aprovado" },
+  { label: "Recusados", valor: "Recusado" },
+];
+
+const OPCOES_EMPRESTIMOS = [
+  { label: "Todos", valor: "Todos" },
+  { label: "No prazo", valor: "No prazo" },
+  { label: "Atrasado", valor: "Atrasado" },
+];
+
+const OPCOES_DEVOLUCOES = [
+  { label: "Todos", valor: "Todos" },
+  { label: "Em dia", valor: "Em dia" },
+  { label: "Atrasado", valor: "Atrasado" },
+];
 
 // ============================================================
 // RESERVAS
@@ -489,9 +515,9 @@ function TabelaHeader({ tipo }) {
   ) {
     return (
       <Grid
-        templateColumns="0.9fr 1.6fr 1.7fr 1.15fr 1.25fr 0.85fr 1.35fr"
-        gap={4}
-        px={5}
+        templateColumns="minmax(0, 0.75fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 0.95fr) minmax(0, 1fr) minmax(0, 0.72fr) minmax(0, 1.18fr)"
+        gap={3}
+        px={4}
         py={4}
         bg="#FAF8F5"
         borderBottom="1px solid"
@@ -562,9 +588,9 @@ function TabelaHeader({ tipo }) {
   ) {
     return (
       <Grid
-        templateColumns="1.6fr 1.8fr 1.25fr 1.25fr 0.75fr 0.9fr 1.7fr"
-        gap={4}
-        px={5}
+        templateColumns="minmax(0, 1.35fr) minmax(0, 1.55fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.5fr) minmax(0, 0.75fr) minmax(0, 1.45fr)"
+        gap={3}
+        px={4}
         py={4}
         bg="#FAF8F5"
         borderBottom="1px solid"
@@ -638,9 +664,9 @@ function TabelaHeader({ tipo }) {
 
   return (
     <Grid
-      templateColumns="2.2fr 1.8fr 1.5fr 1fr 1.6fr"
-      gap={5}
-      px={5}
+      templateColumns="minmax(0, 2fr) minmax(0, 1.65fr) minmax(0, 1.25fr) minmax(0, 0.85fr) minmax(0, 1.35fr)"
+      gap={4}
+      px={4}
       py={4}
       bg="#FAF8F5"
       borderBottom="1px solid"
@@ -701,9 +727,9 @@ function ReservaRow({
 }) {
   return (
     <Grid
-      templateColumns="2.2fr 1.8fr 1.5fr 1fr 1.6fr"
-      gap={5}
-      px={5}
+      templateColumns="minmax(0, 2fr) minmax(0, 1.65fr) minmax(0, 1.25fr) minmax(0, 0.85fr) minmax(0, 1.35fr)"
+      gap={4}
+      px={4}
       py={5}
       minH="105px"
       alignItems="center"
@@ -713,7 +739,7 @@ function ReservaRow({
         bg: "#FCFAF8",
       }}
     >
-      <HStack gap={3}>
+      <HStack gap={3} minW={0}>
         <Box
           w="48px"
           h="62px"
@@ -732,7 +758,7 @@ function ReservaRow({
           />
         </Box>
 
-        <Stack gap={1}>
+        <Stack gap={1} minW={0}>
           <Text
             fontSize="14px"
             fontWeight="600"
@@ -750,7 +776,7 @@ function ReservaRow({
         </Stack>
       </HStack>
 
-      <HStack gap={3}>
+      <HStack gap={3} minW={0}>
         <Box
           w="34px"
           h="34px"
@@ -767,7 +793,7 @@ function ReservaRow({
           {reserva.iniciais}
         </Box>
 
-        <Stack gap={0.5}>
+        <Stack gap={0.5} minW={0}>
           <Text
             fontSize="11px"
             fontWeight="600"
@@ -848,9 +874,9 @@ function EmprestimoRow({
 }) {
   return (
     <Grid
-      templateColumns="0.9fr 1.6fr 1.7fr 1.15fr 1.25fr 0.85fr 1.35fr"
-      gap={4}
-      px={5}
+      templateColumns="minmax(0, 0.75fr) minmax(0, 1.35fr) minmax(0, 1.45fr) minmax(0, 0.95fr) minmax(0, 1fr) minmax(0, 0.72fr) minmax(0, 1.18fr)"
+      gap={3}
+      px={4}
       py={4}
       minH="92px"
       alignItems="center"
@@ -872,7 +898,7 @@ function EmprestimoRow({
 
       {/* USUÁRIO */}
 
-      <HStack gap={2.5}>
+      <HStack gap={2.5} minW={0}>
         <Box
           w="32px"
           h="32px"
@@ -897,7 +923,7 @@ function EmprestimoRow({
             fontSize="10px"
             fontWeight="600"
             color={TEXT}
-            whiteSpace="nowrap"
+            lineHeight="1.2"
           >
             {emprestimo.usuario}
           </Text>
@@ -905,7 +931,8 @@ function EmprestimoRow({
           <Text
             fontSize="8px"
             color={TEXT_LIGHT}
-            whiteSpace="nowrap"
+            lineHeight="1.2"
+            overflowWrap="anywhere"
           >
             {emprestimo.email}
           </Text>
@@ -921,7 +948,7 @@ function EmprestimoRow({
 
       {/* LIVRO */}
 
-      <HStack gap={3}>
+      <HStack gap={2.5} minW={0}>
         <Box
           w="30px"
           h="42px"
@@ -939,7 +966,7 @@ function EmprestimoRow({
           />
         </Box>
 
-        <Stack gap={0.5}>
+        <Stack gap={0.5} minW={0}>
           <Text
             fontSize="10px"
             fontWeight="600"
@@ -1008,16 +1035,18 @@ function EmprestimoRow({
 
       {/* AÇÕES */}
 
-      <HStack gap={2}>
+      <HStack gap={1.5} minW={0} w="full">
         <Button
           h="30px"
-          px={3}
+          px={2}
+          flex="1"
+          minW={0}
           fontSize="8px"
           fontWeight="600"
           variant="outline"
           borderColor="#D8B5B5"
           color={PRIMARY}
-          borderRadius="4px"
+          borderRadius="6px"
           whiteSpace="nowrap"
         >
           <Icon
@@ -1058,9 +1087,9 @@ function DevolucaoRow({
 }) {
   return (
     <Grid
-      templateColumns="1.6fr 1.8fr 1.25fr 1.25fr 0.75fr 0.9fr 1.7fr"
-      gap={4}
-      px={5}
+      templateColumns="minmax(0, 1.35fr) minmax(0, 1.55fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.5fr) minmax(0, 0.75fr) minmax(0, 1.45fr)"
+      gap={3}
+      px={4}
       py={4}
       minH="82px"
       alignItems="center"
@@ -1072,7 +1101,7 @@ function DevolucaoRow({
     >
       {/* USUÁRIO */}
 
-      <HStack gap={2.5}>
+      <HStack gap={2.5} minW={0}>
         <Box
           w="32px"
           h="32px"
@@ -1089,7 +1118,7 @@ function DevolucaoRow({
           {devolucao.iniciais}
         </Box>
 
-        <Stack gap={0.5}>
+        <Stack gap={0.5} minW={0}>
           <Text
             fontSize="10px"
             fontWeight="600"
@@ -1101,6 +1130,8 @@ function DevolucaoRow({
           <Text
             fontSize="8px"
             color={TEXT_LIGHT}
+            lineHeight="1.2"
+            overflowWrap="anywhere"
           >
             {devolucao.email}
           </Text>
@@ -1109,7 +1140,7 @@ function DevolucaoRow({
 
       {/* LIVRO */}
 
-      <HStack gap={3}>
+      <HStack gap={2.5} minW={0}>
         <Box
           w="30px"
           h="42px"
@@ -1127,7 +1158,7 @@ function DevolucaoRow({
           />
         </Box>
 
-        <Stack gap={0.5}>
+        <Stack gap={0.5} minW={0}>
           <Text
             fontSize="10px"
             fontWeight="600"
@@ -1151,6 +1182,7 @@ function DevolucaoRow({
       <Text
         fontSize="9px"
         color={TEXT}
+        whiteSpace="nowrap"
       >
         {devolucao.dataEmprestimo}
       </Text>
@@ -1160,6 +1192,7 @@ function DevolucaoRow({
       <Text
         fontSize="9px"
         color={TEXT}
+        whiteSpace="nowrap"
       >
         {devolucao.prazo}
       </Text>
@@ -1186,15 +1219,17 @@ function DevolucaoRow({
 
       {/* AÇÕES */}
 
-      <HStack gap={2}>
+      <Stack gap={1.5} w="full" minW={0}>
         <Button
           h="31px"
-          px={3}
+          px={2}
+          w="full"
+          minW={0}
           fontSize="8px"
           fontWeight="600"
           bg={PRIMARY}
           color={WHITE}
-          borderRadius="4px"
+          borderRadius="6px"
           whiteSpace="nowrap"
           _hover={{
             bg: PRIMARY_DARK,
@@ -1211,7 +1246,9 @@ function DevolucaoRow({
 
         <Button
           h="31px"
-          px={3}
+          px={2}
+          w="full"
+          minW={0}
           fontSize="8px"
           fontWeight="600"
           bg={PRIMARY}
@@ -1230,8 +1267,100 @@ function DevolucaoRow({
 
           Confirmar devolução
         </Button>
-      </HStack>
+      </Stack>
     </Grid>
+  );
+}
+
+// ============================================================
+// FILTRO PERSONALIZADO
+// ============================================================
+
+function FiltroMenu({ valor, onChange, opcoes }) {
+  const selecionada =
+    opcoes.find((opcao) => opcao.valor === valor) || opcoes[0];
+
+  return (
+    <Box minW="135px">
+      <Menu.Root
+        positioning={{ sameWidth: true }}
+        onSelect={(detalhe) => onChange(detalhe.value)}
+      >
+        <Menu.Trigger asChild>
+          <Button
+            variant="outline"
+            bg={WHITE}
+            border="1px solid"
+            borderColor="#E7DED8"
+            borderRadius="14px"
+            h="42px"
+            px={4}
+            w="full"
+            justifyContent="space-between"
+            color={TEXT}
+            fontSize="10px"
+            fontWeight="500"
+            transition="all .25s cubic-bezier(0.16, 1, 0.3, 1)"
+            _hover={{
+              borderColor: PRIMARY,
+              bg: "#FAF5F6",
+              boxShadow: "0 4px 12px rgba(74,14,23,.08)",
+            }}
+            _focus={{
+              borderColor: PRIMARY,
+              boxShadow: "0 0 0 3px rgba(74,14,23,.12)",
+            }}
+          >
+            {selecionada.label}
+
+            <Icon
+              as={FiChevronDown}
+              color={PRIMARY}
+              boxSize={4}
+              ml={4}
+            />
+          </Button>
+        </Menu.Trigger>
+
+        <Menu.Positioner>
+          <Menu.Content
+            bg={WHITE}
+            border="1px solid"
+            borderColor="#E7DED8"
+            borderRadius="16px"
+            boxShadow="0 10px 28px rgba(74,14,23,.12)"
+            p={2}
+            overflow="hidden"
+            zIndex="popover"
+          >
+            {opcoes.map((opcao) => (
+              <Menu.Item
+                key={opcao.valor}
+                value={opcao.valor}
+                px={3}
+                py={2.5}
+                borderRadius="10px"
+                cursor="pointer"
+                color={TEXT}
+                fontSize="10px"
+                fontWeight="500"
+                transition="all .2s ease"
+                _hover={{
+                  bg: "#F2E6E8",
+                  color: PRIMARY,
+                }}
+                _focus={{
+                  bg: "#F2E6E8",
+                  color: PRIMARY,
+                }}
+              >
+                {opcao.label}
+              </Menu.Item>
+            ))}
+          </Menu.Content>
+        </Menu.Positioner>
+      </Menu.Root>
+    </Box>
   );
 }
 
@@ -1250,6 +1379,12 @@ export default function GestaoEmprestimosReservas() {
     useState("");
 
   const [statusFiltro, setStatusFiltro] =
+    useState("Todos");
+
+  const [statusEmprestimo, setStatusEmprestimo] =
+    useState("Todos");
+
+  const [statusDevolucao, setStatusDevolucao] =
     useState("Todos");
 
   // ==========================================================
@@ -1361,6 +1496,8 @@ export default function GestaoEmprestimosReservas() {
       >
         <Stack
           maxW="1500px"
+          w="100%"
+          minW={0}
           mx="auto"
           gap={6}
         >
@@ -1661,23 +1798,24 @@ export default function GestaoEmprestimosReservas() {
                   <HStack gap={3}>
                     <Box
                       position="relative"
-                      w="260px"
+                      w="280px"
                     >
                       <Icon
                         as={FiSearch}
                         position="absolute"
-                        left="11px"
+                        left="14px"
                         top="50%"
                         transform="translateY(-50%)"
                         color="#999"
-                        boxSize={3.5}
+                        boxSize={4}
                         zIndex={1}
+                        pointerEvents="none"
                       />
 
                       <Input
-                        pl="34px"
-                        h="38px"
-                        fontSize="9px"
+                        pl="40px"
+                        h="42px"
+                        fontSize="10px"
                         placeholder="Buscar por usuário, livro ou data..."
                         value={busca}
                         onChange={(e) =>
@@ -1685,59 +1823,43 @@ export default function GestaoEmprestimosReservas() {
                             e.target.value
                           )
                         }
-                        borderColor="#E5DED6"
-                        borderRadius="5px"
+                        bg={WHITE}
+                        border="1px solid"
+                        borderColor="#E7DED8"
+                        borderRadius="14px"
+                        transition="all .25s cubic-bezier(0.16, 1, 0.3, 1)"
+                        _placeholder={{
+                          color: "#AAA",
+                        }}
+                        _hover={{
+                          borderColor: "#D6C7C0",
+                          bg: "#FFFEFD",
+                        }}
+                        _focus={{
+                          borderColor: PRIMARY,
+                          boxShadow: "0 0 0 3px rgba(74,14,23,.12)",
+                          outline: "none",
+                        }}
                       />
                     </Box>
 
-                    <Box
-                      as="select"
-                      value={statusFiltro}
-                      onChange={(e) =>
-                        setStatusFiltro(
-                          e.target.value
-                        )
-                      }
-                      h="38px"
-                      minW="120px"
-                      px={3}
-                      fontSize="9px"
-                      bg={WHITE}
-                      border="1px solid"
-                      borderColor="#E5DED6"
-                      borderRadius="5px"
-                    >
-                      <option value="Todos">
-                        Todos
-                      </option>
-
-                      <option value="Pendente">
-                        Pendentes
-                      </option>
-
-                      <option value="Aguardando">
-                        Aguardando
-                      </option>
-
-                      <option value="Aprovado">
-                        Aprovados
-                      </option>
-
-                      <option value="Recusado">
-                        Recusados
-                      </option>
-                    </Box>
+                    <FiltroMenu
+                      valor={statusFiltro}
+                      onChange={setStatusFiltro}
+                      opcoes={OPCOES_RESERVAS}
+                    />
                   </HStack>
                 </Flex>
 
                 <Box
+                  w="100%"
+                  minW={0}
                   border="1px solid"
                   borderColor={BORDER}
                   borderRadius="6px"
                   overflow="hidden"
                 >
-                  <Box overflowX="auto">
-                    <Box minW="1050px">
+                  <Box w="100%" minW={0}>
 
                       <TabelaHeader
                         tipo="reservas"
@@ -1758,7 +1880,6 @@ export default function GestaoEmprestimosReservas() {
                         )
                       )}
 
-                    </Box>
                   </Box>
                 </Box>
               </Card.Body>
@@ -1890,63 +2011,62 @@ export default function GestaoEmprestimosReservas() {
                   <HStack gap={3}>
                     <Box
                       position="relative"
-                      w="260px"
+                      w="280px"
                     >
                       <Icon
                         as={FiSearch}
                         position="absolute"
-                        left="11px"
+                        left="14px"
                         top="50%"
                         transform="translateY(-50%)"
                         color="#999"
-                        boxSize={3.5}
+                        boxSize={4}
                         zIndex={1}
+                        pointerEvents="none"
                       />
 
                       <Input
-                        pl="34px"
-                        h="38px"
-                        fontSize="9px"
+                        pl="40px"
+                        h="42px"
+                        fontSize="10px"
                         placeholder="Buscar por usuário, livro ou código..."
-                        borderColor="#E5DED6"
-                        borderRadius="5px"
+                        bg={WHITE}
+                        border="1px solid"
+                        borderColor="#E7DED8"
+                        borderRadius="14px"
+                        transition="all .25s cubic-bezier(0.16, 1, 0.3, 1)"
+                        _placeholder={{
+                          color: "#AAA",
+                        }}
+                        _hover={{
+                          borderColor: "#D6C7C0",
+                          bg: "#FFFEFD",
+                        }}
+                        _focus={{
+                          borderColor: PRIMARY,
+                          boxShadow: "0 0 0 3px rgba(74,14,23,.12)",
+                          outline: "none",
+                        }}
                       />
                     </Box>
 
-                    <Box
-                      as="select"
-                      h="38px"
-                      minW="120px"
-                      px={3}
-                      fontSize="9px"
-                      bg={WHITE}
-                      border="1px solid"
-                      borderColor="#E5DED6"
-                      borderRadius="5px"
-                    >
-                      <option>
-                        Todos
-                      </option>
-
-                      <option>
-                        No prazo
-                      </option>
-
-                      <option>
-                        Atrasado
-                      </option>
-                    </Box>
+                    <FiltroMenu
+                      valor={statusEmprestimo}
+                      onChange={setStatusEmprestimo}
+                      opcoes={OPCOES_EMPRESTIMOS}
+                    />
                   </HStack>
                 </Flex>
 
                 <Box
+                  w="100%"
+                  minW={0}
                   border="1px solid"
                   borderColor={BORDER}
                   borderRadius="6px"
                   overflow="hidden"
                 >
-                  <Box overflowX="auto">
-                    <Box minW="1180px">
+                  <Box w="100%" minW={0}>
 
                       <TabelaHeader
                         tipo="emprestimos"
@@ -1963,7 +2083,6 @@ export default function GestaoEmprestimosReservas() {
                         )
                       )}
 
-                    </Box>
                   </Box>
                 </Box>
 
@@ -2094,63 +2213,62 @@ export default function GestaoEmprestimosReservas() {
                     <HStack gap={3}>
                       <Box
                         position="relative"
-                        w="260px"
+                        w="280px"
                       >
                         <Icon
                           as={FiSearch}
                           position="absolute"
-                          left="11px"
+                          left="14px"
                           top="50%"
                           transform="translateY(-50%)"
                           color="#999"
-                          boxSize={3.5}
+                          boxSize={4}
                           zIndex={1}
+                          pointerEvents="none"
                         />
 
                         <Input
-                          pl="34px"
-                          h="38px"
-                          fontSize="9px"
+                          pl="40px"
+                          h="42px"
+                          fontSize="10px"
                           placeholder="Buscar por usuário, livro ou código..."
-                          borderColor="#E5DED6"
-                          borderRadius="5px"
+                          bg={WHITE}
+                          border="1px solid"
+                          borderColor="#E7DED8"
+                          borderRadius="14px"
+                          transition="all .25s cubic-bezier(0.16, 1, 0.3, 1)"
+                          _placeholder={{
+                            color: "#AAA",
+                          }}
+                          _hover={{
+                            borderColor: "#D6C7C0",
+                            bg: "#FFFEFD",
+                          }}
+                          _focus={{
+                            borderColor: PRIMARY,
+                            boxShadow: "0 0 0 3px rgba(74,14,23,.12)",
+                            outline: "none",
+                          }}
                         />
                       </Box>
 
-                      <Box
-                        as="select"
-                        h="38px"
-                        minW="120px"
-                        px={3}
-                        fontSize="9px"
-                        bg={WHITE}
-                        border="1px solid"
-                        borderColor="#E5DED6"
-                        borderRadius="5px"
-                      >
-                        <option>
-                          Todos
-                        </option>
-
-                        <option>
-                          Em dia
-                        </option>
-
-                        <option>
-                          Atrasado
-                        </option>
-                      </Box>
+                      <FiltroMenu
+                        valor={statusDevolucao}
+                        onChange={setStatusDevolucao}
+                        opcoes={OPCOES_DEVOLUCOES}
+                      />
                     </HStack>
                   </Flex>
 
                   <Box
+                    w="100%"
+                    minW={0}
                     border="1px solid"
                     borderColor={BORDER}
                     borderRadius="6px"
                     overflow="hidden"
                   >
-                    <Box overflowX="auto">
-                      <Box minW="1200px">
+                    <Box w="100%" minW={0}>
 
                         <TabelaHeader
                           tipo="devolucoes"
@@ -2167,7 +2285,6 @@ export default function GestaoEmprestimosReservas() {
                           )
                         )}
 
-                      </Box>
                     </Box>
                   </Box>
 

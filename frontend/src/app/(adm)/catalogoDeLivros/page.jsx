@@ -1,4 +1,5 @@
 "use client";
+
 import SideBarADM from "@/components/sideBarADM/sideBarADM";
 import { useState } from "react";
 
@@ -12,35 +13,35 @@ import {
   HStack,
   Icon,
   Input,
+  Menu,
   Stack,
   Text,
 } from "@chakra-ui/react";
 
 import {
-  FiHome,
   FiBook,
-  FiGrid,
-  FiUsers,
-  FiClock,
-  FiRefreshCw,
-  FiRepeat,
-  FiFileText,
-  FiSettings,
-  FiLogOut,
-  FiSearch,
   FiBookOpen,
   FiCheckCircle,
-  FiUser,
-  FiLayers,
+  FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
-  FiTrash2,
-  FiPlus,
   FiEdit3,
-  FiX,
+  FiFileText,
+  FiGrid,
+  FiHome,
+  FiLayers,
+  FiPlus,
+  FiRefreshCw,
+  FiRepeat,
   FiSave,
+  FiSearch,
+  FiSettings,
+  FiTrash2,
+  FiUser,
+  FiUsers,
+  FiX,
+  FiClock,
 } from "react-icons/fi";
-
 
 // =====================================================
 // CORES
@@ -56,7 +57,6 @@ const BORDER = "#EFEBE3";
 
 const TEXT = "#333333";
 const TEXT_LIGHT = "#777777";
-
 
 // =====================================================
 // DADOS INICIAIS
@@ -74,7 +74,6 @@ const LIVROS_INICIAIS = [
     imagem:
       "https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg",
   },
-
   {
     id: 2,
     titulo: "Dom Casmurro",
@@ -86,7 +85,6 @@ const LIVROS_INICIAIS = [
     imagem:
       "https://covers.openlibrary.org/b/isbn/9788535902778-L.jpg",
   },
-
   {
     id: 3,
     titulo: "O Pequeno Príncipe",
@@ -98,7 +96,6 @@ const LIVROS_INICIAIS = [
     imagem:
       "https://covers.openlibrary.org/b/isbn/9780156012195-L.jpg",
   },
-
   {
     id: 4,
     titulo: "A Menina que Roubava Livros",
@@ -110,7 +107,6 @@ const LIVROS_INICIAIS = [
     imagem:
       "https://covers.openlibrary.org/b/isbn/9780375842207-L.jpg",
   },
-
   {
     id: 5,
     titulo: "O Hobbit",
@@ -122,7 +118,6 @@ const LIVROS_INICIAIS = [
     imagem:
       "https://covers.openlibrary.org/b/isbn/9780547928227-L.jpg",
   },
-
   {
     id: 6,
     titulo: "Orgulho e Preconceito",
@@ -134,7 +129,6 @@ const LIVROS_INICIAIS = [
     imagem:
       "https://covers.openlibrary.org/b/isbn/9780141439518-L.jpg",
   },
-
   {
     id: 7,
     titulo: "Harry Potter e a Pedra Filosofal",
@@ -146,7 +140,6 @@ const LIVROS_INICIAIS = [
     imagem:
       "https://covers.openlibrary.org/b/isbn/9780590353427-L.jpg",
   },
-
   {
     id: 8,
     titulo: "O Alquimista",
@@ -158,7 +151,6 @@ const LIVROS_INICIAIS = [
     imagem:
       "https://covers.openlibrary.org/b/isbn/9780062315007-L.jpg",
   },
-
   {
     id: 9,
     titulo: "Cem Anos de Solidão",
@@ -170,7 +162,6 @@ const LIVROS_INICIAIS = [
     imagem:
       "https://covers.openlibrary.org/b/isbn/9780060883287-L.jpg",
   },
-
   {
     id: 10,
     titulo: "O Caçador de Pipas",
@@ -184,70 +175,58 @@ const LIVROS_INICIAIS = [
   },
 ];
 
-
 // =====================================================
 // MENU
 // =====================================================
 
-// `emBreve` marca os itens que ainda não têm página — ficam visíveis, porém
-// inertes, em vez de virarem links quebrados.
 const MENU = [
   {
     label: "Dashboard",
     icon: FiHome,
     emBreve: true,
   },
-
   {
     label: "Livros",
     icon: FiBook,
     href: "/catalogoDeLivros",
     active: true,
   },
-
   {
     label: "Categorias",
     icon: FiGrid,
     emBreve: true,
   },
-
   {
     label: "Usuários",
     icon: FiUsers,
     emBreve: true,
   },
-
   {
     label: "Empréstimos",
     icon: FiClock,
     href: "/gestaoEeR",
   },
-
   {
     label: "Devoluções",
     icon: FiRefreshCw,
     href: "/gestaoEeR",
   },
-
   {
     label: "Prazos",
     icon: FiRepeat,
     href: "/editarPrazo",
   },
-
   {
     label: "Relatórios",
     icon: FiFileText,
     emBreve: true,
   },
-
   {
     label: "Configurações",
     icon: FiSettings,
     emBreve: true,
   },
 ];
-
 
 // =====================================================
 // ITEM DO MENU
@@ -296,16 +275,11 @@ function MenuItem({ item }) {
   );
 }
 
-
 // =====================================================
 // INDICADOR
 // =====================================================
 
-function Indicador({
-  icon,
-  titulo,
-  valor,
-}) {
+function Indicador({ icon, titulo, valor }) {
   return (
     <Card.Root
       bg={WHITE}
@@ -315,9 +289,7 @@ function Indicador({
       boxShadow="none"
     >
       <Card.Body p={5}>
-
         <HStack gap={3}>
-
           <Box
             w="48px"
             h="48px"
@@ -336,7 +308,6 @@ function Indicador({
           </Box>
 
           <Stack gap={0}>
-
             <Text
               fontSize="11px"
               color={TEXT_LIGHT}
@@ -351,19 +322,15 @@ function Indicador({
             >
               {valor}
             </Text>
-
           </Stack>
-
         </HStack>
-
       </Card.Body>
     </Card.Root>
   );
 }
 
-
 // =====================================================
-// FILTRO
+// DROPDOWN PADRONIZADO
 // =====================================================
 
 function FiltroSelect({
@@ -374,7 +341,6 @@ function FiltroSelect({
 }) {
   return (
     <Stack gap={1}>
-
       <Text
         fontSize="11px"
         color={TEXT_LIGHT}
@@ -382,44 +348,92 @@ function FiltroSelect({
         {label}
       </Text>
 
-      <Box
-        as="select"
-        value={value}
-        onChange={(e) =>
-          onChange(e.target.value)
-        }
-        h="42px"
-        px={2}
-        fontSize="12px"
-        bg={WHITE}
-        color={TEXT}
-        border="1px solid"
-        borderColor="#E5DED6"
-        borderRadius="5px"
-        outline="none"
-        cursor="pointer"
-        _focus={{
-          borderColor: PRIMARY,
-          boxShadow:
-            `0 0 0 1px ${PRIMARY}`,
+      <Menu.Root
+        positioning={{
+          sameWidth: true,
         }}
       >
-
-        {options.map((option) => (
-          <option
-            key={option}
-            value={option}
+        <Menu.Trigger asChild>
+          <Button
+            variant="outline"
+            h="42px"
+            w="100%"
+            px={3}
+            justifyContent="space-between"
+            bg={WHITE}
+            color={TEXT}
+            border="1px solid"
+            borderColor="#E5DED6"
+            borderRadius="8px"
+            fontSize="12px"
+            fontWeight="400"
+            cursor="pointer"
+            transition="all .2s ease"
+            _hover={{
+              bg: "#FCF9F6",
+              borderColor: PRIMARY,
+            }}
+            _focus={{
+              borderColor: PRIMARY,
+              boxShadow: `0 0 0 1px ${PRIMARY}`,
+              outline: "none",
+            }}
           >
-            {option}
-          </option>
-        ))}
+            <Text
+              overflow="hidden"
+              whiteSpace="nowrap"
+              textOverflow="ellipsis"
+            >
+              {value}
+            </Text>
 
-      </Box>
+            <Icon
+              as={FiChevronDown}
+              color={PRIMARY}
+              boxSize={4}
+              flexShrink={0}
+            />
+          </Button>
+        </Menu.Trigger>
 
+        <Menu.Positioner>
+          <Menu.Content
+            bg={WHITE}
+            border="1px solid"
+            borderColor="#E7DED8"
+            borderRadius="10px"
+            boxShadow="0 8px 24px rgba(74,14,23,.12)"
+            p={2}
+            zIndex={1500}
+          >
+            {options.map((option) => (
+              <Menu.Item
+                key={option}
+                value={option}
+                px={3}
+                py={2.5}
+                borderRadius="7px"
+                cursor="pointer"
+                fontSize="12px"
+                color={TEXT}
+                fontWeight="400"
+                bg="transparent"
+                transition="all .2s ease"
+                onClick={() => onChange(option)}
+                _hover={{
+                  bg: "#F2E6E8",
+                  color: PRIMARY,
+                }}
+              >
+                {option}
+              </Menu.Item>
+            ))}
+          </Menu.Content>
+        </Menu.Positioner>
+      </Menu.Root>
     </Stack>
   );
 }
-
 
 // =====================================================
 // CARD DO LIVRO
@@ -446,11 +460,7 @@ function LivroCard({
           "0 5px 15px rgba(74,14,23,.08)",
       }}
     >
-
       <Card.Body p={2}>
-
-        {/* CAPA */}
-
         <Box
           h="220px"
           bg="#F1EDE7"
@@ -460,7 +470,6 @@ function LivroCard({
           justifyContent="center"
           alignItems="center"
         >
-
           {livro.imagem ? (
             <Box
               as="img"
@@ -477,18 +486,13 @@ function LivroCard({
               color="#B7AAA0"
             />
           )}
-
         </Box>
-
-
-        {/* INFORMAÇÕES */}
 
         <Stack
           gap={0.5}
           px={1}
           pt={2}
         >
-
           <Text
             fontSize="12px"
             fontWeight="700"
@@ -523,19 +527,12 @@ function LivroCard({
               ? "Disponível"
               : "Emprestado"}
           </Text>
-
         </Stack>
-
-
-        {/* AÇÕES */}
 
         <Flex
           gap={1}
           mt={2}
         >
-
-          {/* INFORMAÇÕES */}
-
           <Button
             flex="1"
             h="25px"
@@ -552,9 +549,6 @@ function LivroCard({
           >
             Informações
           </Button>
-
-
-          {/* EDITAR */}
 
           <Button
             minW="25px"
@@ -577,9 +571,6 @@ function LivroCard({
             />
           </Button>
 
-
-          {/* EXCLUIR */}
-
           <Button
             minW="25px"
             h="25px"
@@ -600,15 +591,11 @@ function LivroCard({
               boxSize={5}
             />
           </Button>
-
         </Flex>
-
       </Card.Body>
-
     </Card.Root>
   );
 }
-
 
 // =====================================================
 // MODAL DE LIVRO
@@ -654,7 +641,6 @@ function ModalLivro({
       justifyContent="center"
       p={4}
     >
-
       <Card.Root
         w="100%"
         maxW="550px"
@@ -662,20 +648,16 @@ function ModalLivro({
         borderRadius="12px"
         boxShadow="0 15px 40px rgba(0,0,0,.2)"
       >
-
         <Card.Header
           px={6}
           pt={6}
           pb={3}
         >
-
           <Flex
             justify="space-between"
             align="center"
           >
-
             <Stack gap={0}>
-
               <Heading
                 fontFamily="Georgia, serif"
                 fontSize="22px"
@@ -692,7 +674,6 @@ function ModalLivro({
               >
                 Preencha os dados do livro.
               </Text>
-
             </Stack>
 
             <Button
@@ -707,20 +688,15 @@ function ModalLivro({
                 boxSize={5}
               />
             </Button>
-
           </Flex>
-
         </Card.Header>
 
-
-        <Card.Body px={6} pb={6}>
-
+        <Card.Body
+          px={6}
+          pb={6}
+        >
           <Stack gap={4}>
-
-            {/* TÍTULO */}
-
             <Stack gap={1}>
-
               <Text
                 fontSize="12px"
                 fontWeight="600"
@@ -741,14 +717,9 @@ function ModalLivro({
                 h="38px"
                 fontSize="11px"
               />
-
             </Stack>
 
-
-            {/* AUTOR */}
-
             <Stack gap={1}>
-
               <Text
                 fontSize="12px"
                 fontWeight="600"
@@ -769,16 +740,10 @@ function ModalLivro({
                 h="38px"
                 fontSize="11px"
               />
-
             </Stack>
 
-
-            {/* CATEGORIA + ANO */}
-
             <Flex gap={3}>
-
               <Box flex="1">
-
                 <FiltroSelect
                   label="Categoria"
                   value={form.categoria}
@@ -796,14 +761,12 @@ function ModalLivro({
                     "Infantil",
                   ]}
                 />
-
               </Box>
 
               <Stack
                 gap={1}
                 flex="1"
               >
-
                 <Text
                   fontSize="11px"
                   color={TEXT_LIGHT}
@@ -824,16 +787,10 @@ function ModalLivro({
                   fontSize="12px"
                   placeholder="Ex: 2026"
                 />
-
               </Stack>
-
             </Flex>
 
-
-            {/* ISBN */}
-
             <Stack gap={1}>
-
               <Text
                 fontSize="12px"
                 fontWeight="600"
@@ -854,14 +811,9 @@ function ModalLivro({
                 h="38px"
                 fontSize="11px"
               />
-
             </Stack>
 
-
-            {/* IMAGEM */}
-
             <Stack gap={1}>
-
               <Text
                 fontSize="12px"
                 fontWeight="600"
@@ -882,11 +834,7 @@ function ModalLivro({
                 h="38px"
                 fontSize="11px"
               />
-
             </Stack>
-
-
-            {/* DISPONIBILIDADE */}
 
             <Flex
               justify="space-between"
@@ -895,9 +843,7 @@ function ModalLivro({
               bg="#F8F5F1"
               borderRadius="7px"
             >
-
               <Stack gap={0}>
-
                 <Text
                   fontSize="10px"
                   fontWeight="600"
@@ -910,9 +856,9 @@ function ModalLivro({
                   fontSize="11px"
                   color={TEXT_LIGHT}
                 >
-                  Indica se o livro está disponível para empréstimo.
+                  Indica se o livro está
+                  disponível para empréstimo.
                 </Text>
-
               </Stack>
 
               <input
@@ -930,18 +876,13 @@ function ModalLivro({
                   accentColor: PRIMARY,
                 }}
               />
-
             </Flex>
-
-
-            {/* BOTÕES */}
 
             <Flex
               justify="flex-end"
               gap={2}
               pt={2}
             >
-
               <Button
                 variant="outline"
                 borderColor={BORDER}
@@ -965,7 +906,6 @@ function ModalLivro({
                   bg: PRIMARY_DARK,
                 }}
               >
-
                 <Icon
                   as={FiSave}
                   mr={2}
@@ -975,21 +915,14 @@ function ModalLivro({
                 {livro
                   ? "Salvar alterações"
                   : "Adicionar livro"}
-
               </Button>
-
             </Flex>
-
           </Stack>
-
         </Card.Body>
-
       </Card.Root>
-
     </Box>
   );
 }
-
 
 // =====================================================
 // MODAL DE INFORMAÇÕES
@@ -1014,7 +947,6 @@ function ModalInformacoes({
       justifyContent="center"
       p={4}
     >
-
       <Card.Root
         w="100%"
         maxW="500px"
@@ -1022,14 +954,14 @@ function ModalInformacoes({
         borderRadius="12px"
         boxShadow="0 15px 40px rgba(0,0,0,.2)"
       >
-
-        <Card.Header px={6} pt={6}>
-
+        <Card.Header
+          px={6}
+          pt={6}
+        >
           <Flex
             justify="space-between"
             align="center"
           >
-
             <Heading
               fontFamily="Georgia, serif"
               fontSize="22px"
@@ -1045,20 +977,16 @@ function ModalInformacoes({
               h="30px"
               onClick={onFechar}
             >
-              <Icon
-                as={FiX}
-              />
+              <Icon as={FiX} />
             </Button>
-
           </Flex>
-
         </Card.Header>
 
-
-        <Card.Body px={6} pb={6}>
-
+        <Card.Body
+          px={6}
+          pb={6}
+        >
           <Flex gap={5}>
-
             <Box
               w="130px"
               h="180px"
@@ -1067,7 +995,6 @@ function ModalInformacoes({
               overflow="hidden"
               flexShrink={0}
             >
-
               {livro.imagem ? (
                 <Box
                   as="img"
@@ -1091,12 +1018,9 @@ function ModalInformacoes({
                   />
                 </Flex>
               )}
-
             </Box>
 
-
             <Stack gap={2}>
-
               <Text
                 fontSize="18px"
                 fontWeight="700"
@@ -1155,49 +1079,32 @@ function ModalInformacoes({
                   ? "Disponível"
                   : "Emprestado"}
               </Text>
-
             </Stack>
-
           </Flex>
-
         </Card.Body>
-
       </Card.Root>
-
     </Box>
   );
 }
-
 
 // =====================================================
 // PÁGINA PRINCIPAL
 // =====================================================
 
 export default function CatalogoLivros() {
-
   const [livros, setLivros] = useState(
     LIVROS_INICIAIS
   );
 
-  const [busca, setBusca] =
-    useState("");
-
+  const [busca, setBusca] = useState("");
   const [categoria, setCategoria] =
     useState("Todas");
-
   const [disponibilidade, setDisponibilidade] =
     useState("Todas");
-
   const [ano, setAno] =
     useState("Todos");
-
   const [ordenacao, setOrdenacao] =
     useState("Mais recentes");
-
-
-  // ===================================================
-  // MODAIS
-  // ===================================================
 
   const [modalLivro, setModalLivro] =
     useState(false);
@@ -1208,78 +1115,57 @@ export default function CatalogoLivros() {
   const [livroInformacoes, setLivroInformacoes] =
     useState(null);
 
-
   // ===================================================
   // ADICIONAR
   // ===================================================
 
   function adicionarLivro() {
-
     setLivroEditando(null);
     setModalLivro(true);
-
   }
-
 
   // ===================================================
   // EDITAR
   // ===================================================
 
   function editarLivro(livro) {
-
     setLivroEditando(livro);
     setModalLivro(true);
-
   }
-
 
   // ===================================================
   // EXCLUIR
   // ===================================================
 
   function excluirLivro(id) {
-
-    const livro =
-      livros.find(
-        (item) => item.id === id
-      );
+    const livro = livros.find(
+      (item) => item.id === id
+    );
 
     if (!livro) {
       return;
     }
 
-    const confirmar =
-      window.confirm(
-        `Tem certeza que deseja excluir "${livro.titulo}"?`
-      );
+    const confirmar = window.confirm(
+      `Tem certeza que deseja excluir "${livro.titulo}"?`
+    );
 
     if (!confirmar) {
       return;
     }
 
-    setLivros(
-      (listaAtual) =>
-        listaAtual.filter(
-          (item) => item.id !== id
-        )
+    setLivros((listaAtual) =>
+      listaAtual.filter(
+        (item) => item.id !== id
+      )
     );
-
-    /*
-      FUTURO BACKEND:
-
-      await fetch(`/api/livros/${id}`, {
-        method: "DELETE"
-      });
-    */
   }
-
 
   // ===================================================
   // SALVAR LIVRO
   // ===================================================
 
   function salvarLivro(form) {
-
     if (
       !form.titulo.trim() ||
       !form.autor.trim()
@@ -1291,244 +1177,145 @@ export default function CatalogoLivros() {
       return;
     }
 
-
-    // EDITAR
-
     if (livroEditando) {
-
-      setLivros(
-        (listaAtual) =>
-          listaAtual.map(
-            (livro) =>
-              livro.id ===
-              livroEditando.id
-                ? {
-                    ...livro,
-                    ...form,
-                    id: livro.id,
-                  }
-                : livro
-          )
+      setLivros((listaAtual) =>
+        listaAtual.map((livro) =>
+          livro.id === livroEditando.id
+            ? {
+                ...livro,
+                ...form,
+                id: livro.id,
+              }
+            : livro
+        )
       );
-
-      /*
-        FUTURO BACKEND:
-
-        await fetch(
-          `/api/livros/${livroEditando.id}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-            body:
-              JSON.stringify(form),
-          }
-        );
-      */
-
     } else {
-
-      // ADICIONAR
-
       const novoLivro = {
         ...form,
-        id:
-          Date.now(),
-        ano:
-          Number(form.ano) || "",
+        id: Date.now(),
+        ano: Number(form.ano) || "",
       };
 
-      setLivros(
-        (listaAtual) => [
-          novoLivro,
-          ...listaAtual,
-        ]
-      );
-
-      /*
-        FUTURO BACKEND:
-
-        await fetch("/api/livros", {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body:
-            JSON.stringify(form),
-        });
-      */
+      setLivros((listaAtual) => [
+        novoLivro,
+        ...listaAtual,
+      ]);
     }
-
 
     setModalLivro(false);
     setLivroEditando(null);
   }
 
-
   // ===================================================
   // FILTROS
   // ===================================================
 
-  let livrosFiltrados =
-    livros.filter(
-      (livro) => {
+  let livrosFiltrados = livros.filter(
+    (livro) => {
+      const texto =
+        `${livro.titulo} ${livro.autor} ${
+          livro.isbn || ""
+        }`.toLowerCase();
 
-        const texto =
-          `${livro.titulo} ${livro.autor} ${
-            livro.isbn || ""
-          }`.toLowerCase();
-
-
-        const correspondeBusca =
-          texto.includes(
-            busca.toLowerCase()
-          );
-
-
-        const correspondeCategoria =
-          categoria === "Todas" ||
-          livro.categoria ===
-            categoria;
-
-
-        const correspondeDisponibilidade =
-          disponibilidade === "Todas" ||
-          (
-            disponibilidade ===
-              "Disponíveis" &&
-            livro.disponivel
-          ) ||
-          (
-            disponibilidade ===
-              "Indisponíveis" &&
-            !livro.disponivel
-          );
-
-
-        const correspondeAno =
-          ano === "Todos" ||
-          String(livro.ano) ===
-            ano;
-
-
-        return (
-          correspondeBusca &&
-          correspondeCategoria &&
-          correspondeDisponibilidade &&
-          correspondeAno
+      const correspondeBusca =
+        texto.includes(
+          busca.toLowerCase()
         );
-      }
-    );
 
+      const correspondeCategoria =
+        categoria === "Todas" ||
+        livro.categoria === categoria;
+
+      const correspondeDisponibilidade =
+        disponibilidade === "Todas" ||
+        (
+          disponibilidade === "Disponíveis" &&
+          livro.disponivel
+        ) ||
+        (
+          disponibilidade === "Indisponíveis" &&
+          !livro.disponivel
+        );
+
+      const correspondeAno =
+        ano === "Todos" ||
+        String(livro.ano) === ano;
+
+      return (
+        correspondeBusca &&
+        correspondeCategoria &&
+        correspondeDisponibilidade &&
+        correspondeAno
+      );
+    }
+  );
 
   // ===================================================
   // ORDENAÇÃO
   // ===================================================
 
-  if (
-    ordenacao === "A-Z"
-  ) {
-
-    livrosFiltrados.sort(
-      (a, b) =>
-        a.titulo.localeCompare(
-          b.titulo
-        )
+  if (ordenacao === "A-Z") {
+    livrosFiltrados.sort((a, b) =>
+      a.titulo.localeCompare(b.titulo)
     );
-
   }
 
-
-  if (
-    ordenacao === "Z-A"
-  ) {
-
-    livrosFiltrados.sort(
-      (a, b) =>
-        b.titulo.localeCompare(
-          a.titulo
-        )
+  if (ordenacao === "Z-A") {
+    livrosFiltrados.sort((a, b) =>
+      b.titulo.localeCompare(a.titulo)
     );
-
   }
 
-
-  if (
-    ordenacao === "Mais recentes"
-  ) {
-
+  if (ordenacao === "Mais recentes") {
     livrosFiltrados.sort(
       (a, b) =>
         Number(b.ano || 0) -
         Number(a.ano || 0)
     );
-
   }
-
 
   // ===================================================
   // LIMPAR FILTROS
   // ===================================================
 
   function limparFiltros() {
-
     setBusca("");
     setCategoria("Todas");
     setDisponibilidade("Todas");
     setAno("Todos");
-    setOrdenacao(
-      "Mais recentes"
-    );
-
+    setOrdenacao("Mais recentes");
   }
-
 
   // ===================================================
   // CONTADORES
   // ===================================================
 
-  const totalLivros =
-    livros.length;
+  const totalLivros = livros.length;
 
-  const disponiveis =
-    livros.filter(
-      (livro) =>
-        livro.disponivel
-    ).length;
+  const disponiveis = livros.filter(
+    (livro) => livro.disponivel
+  ).length;
 
-  const emprestados =
-    livros.filter(
-      (livro) =>
-        !livro.disponivel
-    ).length;
+  const emprestados = livros.filter(
+    (livro) => !livro.disponivel
+  ).length;
 
-  const categorias =
-    new Set(
-      livros.map(
-        (livro) =>
-          livro.categoria
-      )
-    ).size;
+  const categorias = new Set(
+    livros.map(
+      (livro) => livro.categoria
+    )
+  ).size;
 
+  // ===================================================
+  // INTERFACE
+  // ===================================================
 
   return (
-
     <Flex
       minH="100vh"
       bg={BACKGROUND}
     >
       <SideBarADM />
-
-
-     
-
-
-      {/* =================================================
-          CONTEÚDO
-      ================================================= */}
 
       <Box
         flex="1"
@@ -1538,17 +1325,12 @@ export default function CatalogoLivros() {
           md: 7,
         }}
       >
-
         <Stack
           maxW="1200px"
           mx="auto"
           gap={5}
         >
-
-
-          {/* =================================================
-              CABEÇALHO
-          ================================================= */}
+          {/* CABEÇALHO */}
 
           <Flex
             justify="space-between"
@@ -1556,11 +1338,7 @@ export default function CatalogoLivros() {
             gap={4}
             flexWrap="wrap"
           >
-
             <Stack gap={1}>
-
-              
-
               <Heading
                 fontFamily="Georgia, serif"
                 fontSize={{
@@ -1580,11 +1358,7 @@ export default function CatalogoLivros() {
                 Gerencie os livros cadastrados no
                 acervo da biblioteca.
               </Text>
-
             </Stack>
-
-
-            {/* BOTÃO ADICIONAR */}
 
             <Button
               bg={PRIMARY}
@@ -1595,9 +1369,7 @@ export default function CatalogoLivros() {
               fontSize="12px"
               fontWeight="600"
               boxShadow="0 4px 12px rgba(74,14,23,.15)"
-              onClick={
-                adicionarLivro
-              }
+              onClick={adicionarLivro}
               _hover={{
                 bg: PRIMARY_DARK,
                 transform:
@@ -1605,7 +1377,6 @@ export default function CatalogoLivros() {
               }}
               transition="all .2s ease"
             >
-
               <Icon
                 as={FiPlus}
                 mr={2}
@@ -1613,15 +1384,10 @@ export default function CatalogoLivros() {
               />
 
               Adicionar livro
-
             </Button>
-
           </Flex>
 
-
-          {/* =================================================
-              INDICADORES
-          ================================================= */}
+          {/* INDICADORES */}
 
           <Grid
             templateColumns={{
@@ -1631,7 +1397,6 @@ export default function CatalogoLivros() {
             }}
             gap={4}
           >
-
             <Indicador
               icon={FiBookOpen}
               titulo="Total de livros"
@@ -1655,13 +1420,9 @@ export default function CatalogoLivros() {
               titulo="Categorias"
               valor={categorias}
             />
-
           </Grid>
 
-
-          {/* =================================================
-              FILTROS
-          ================================================= */}
+          {/* FILTROS */}
 
           <Card.Root
             bg={WHITE}
@@ -1669,24 +1430,19 @@ export default function CatalogoLivros() {
             borderColor={BORDER}
             borderRadius="7px"
           >
-
             <Card.Body p={5}>
-
               <Grid
                 templateColumns={{
                   base: "1fr",
                   md:
                     "2fr 1fr 1fr 1fr 1fr auto",
                 }}
-                gap={2}
+                gap={3}
                 alignItems="end"
               >
-
-
                 {/* BUSCA */}
 
                 <Stack gap={1}>
-
                   <Text
                     fontSize="11px"
                     color={TEXT_LIGHT}
@@ -1695,7 +1451,6 @@ export default function CatalogoLivros() {
                   </Text>
 
                   <Box position="relative">
-
                     <Icon
                       as={FiSearch}
                       position="absolute"
@@ -1719,20 +1474,22 @@ export default function CatalogoLivros() {
                         )
                       }
                       borderColor="#E5DED6"
-                      borderRadius="5px"
+                      borderRadius="8px"
+                      _focus={{
+                        borderColor: PRIMARY,
+                        boxShadow:
+                          `0 0 0 1px ${PRIMARY}`,
+                      }}
                     />
-
                   </Box>
-
                 </Stack>
 
+                {/* CATEGORIA */}
 
                 <FiltroSelect
                   label="Categoria"
                   value={categoria}
-                  onChange={
-                    setCategoria
-                  }
+                  onChange={setCategoria}
                   options={[
                     "Todas",
                     "Ficção",
@@ -1743,12 +1500,11 @@ export default function CatalogoLivros() {
                   ]}
                 />
 
+                {/* DISPONIBILIDADE */}
 
                 <FiltroSelect
                   label="Disponibilidade"
-                  value={
-                    disponibilidade
-                  }
+                  value={disponibilidade}
                   onChange={
                     setDisponibilidade
                   }
@@ -1759,6 +1515,7 @@ export default function CatalogoLivros() {
                   ]}
                 />
 
+                {/* ANO */}
 
                 <FiltroSelect
                   label="Ano"
@@ -1782,13 +1539,12 @@ export default function CatalogoLivros() {
                   ]}
                 />
 
+                {/* ORDENAR */}
 
                 <FiltroSelect
                   label="Ordenar por"
                   value={ordenacao}
-                  onChange={
-                    setOrdenacao
-                  }
+                  onChange={setOrdenacao}
                   options={[
                     "Mais recentes",
                     "A-Z",
@@ -1796,23 +1552,22 @@ export default function CatalogoLivros() {
                   ]}
                 />
 
+                {/* LIMPAR */}
 
                 <Button
                   h="42px"
-                  size="sm"
+                  px={4}
                   variant="outline"
                   borderColor="#E5DED6"
                   color={PRIMARY}
                   fontSize="12px"
-                  borderRadius="5px"
-                  onClick={
-                    limparFiltros
-                  }
+                  borderRadius="8px"
+                  onClick={limparFiltros}
                   _hover={{
                     bg: "#F7EEEE",
+                    borderColor: PRIMARY,
                   }}
                 >
-
                   <Icon
                     as={FiTrash2}
                     mr={1}
@@ -1820,19 +1575,12 @@ export default function CatalogoLivros() {
                   />
 
                   Limpar
-
                 </Button>
-
               </Grid>
-
             </Card.Body>
-
           </Card.Root>
 
-
-          {/* =================================================
-              LIVROS
-          ================================================= */}
+          {/* LIVROS */}
 
           <Card.Root
             bg={WHITE}
@@ -1840,9 +1588,7 @@ export default function CatalogoLivros() {
             borderColor={BORDER}
             borderRadius="7px"
           >
-
             <Card.Body p={5}>
-
               <Grid
                 templateColumns={{
                   base:
@@ -1856,10 +1602,8 @@ export default function CatalogoLivros() {
                 }}
                 gap={3}
               >
-
                 {livrosFiltrados.map(
                   (livro) => (
-
                     <LivroCard
                       key={livro.id}
                       livro={livro}
@@ -1873,24 +1617,17 @@ export default function CatalogoLivros() {
                         setLivroInformacoes
                       }
                     />
-
                   )
                 )}
-
               </Grid>
-
-
-              {/* NENHUM RESULTADO */}
 
               {livrosFiltrados.length ===
                 0 && (
-
                 <Stack
                   align="center"
                   py={12}
                   gap={2}
                 >
-
                   <Icon
                     as={FiBook}
                     boxSize={8}
@@ -1911,17 +1648,11 @@ export default function CatalogoLivros() {
                   >
                     Tente alterar os filtros.
                   </Text>
-
                 </Stack>
-
               )}
-
             </Card.Body>
 
-
-            {/* =================================================
-                PAGINAÇÃO
-            ================================================= */}
+            {/* PAGINAÇÃO */}
 
             <Box
               borderTop="1px solid"
@@ -1929,12 +1660,10 @@ export default function CatalogoLivros() {
               px={4}
               py={3}
             >
-
               <Flex
                 justify="space-between"
                 align="center"
               >
-
                 <Text
                   fontSize="11px"
                   color={TEXT_LIGHT}
@@ -1944,9 +1673,7 @@ export default function CatalogoLivros() {
                   {livros.length} livros
                 </Text>
 
-
                 <HStack gap={1}>
-
                   <Button
                     size="xs"
                     variant="outline"
@@ -2007,23 +1734,14 @@ export default function CatalogoLivros() {
                       as={FiChevronRight}
                     />
                   </Button>
-
                 </HStack>
-
               </Flex>
-
             </Box>
-
           </Card.Root>
-
         </Stack>
-
       </Box>
 
-
-      {/* =================================================
-          MODAL ADICIONAR / EDITAR
-      ================================================= */}
+      {/* MODAL ADICIONAR / EDITAR */}
 
       <ModalLivro
         aberto={modalLivro}
@@ -2035,20 +1753,14 @@ export default function CatalogoLivros() {
         onSalvar={salvarLivro}
       />
 
-
-      {/* =================================================
-          MODAL INFORMAÇÕES
-      ================================================= */}
+      {/* MODAL INFORMAÇÕES */}
 
       <ModalInformacoes
         livro={livroInformacoes}
         onFechar={() =>
-          setLivroInformacoes(
-            null
-          )
+          setLivroInformacoes(null)
         }
       />
-
     </Flex>
   );
 }

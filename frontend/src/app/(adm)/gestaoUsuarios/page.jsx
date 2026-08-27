@@ -11,6 +11,7 @@ import {
   Stack,
   Text,
   Input,
+  Menu,
 } from "@chakra-ui/react";
 
 import {
@@ -30,6 +31,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiPlus,
+  FiChevronDown,
 } from "react-icons/fi";
 
 // =====================================================
@@ -270,6 +272,108 @@ function BotaoAcao({ icon, danger = false }) {
 }
 
 // =====================================================
+// DROPDOWN PADRONIZADO
+// =====================================================
+
+function FiltroSelect({ label, opcoes }) {
+  return (
+    <Stack
+      gap={1.5}
+      w="165px"
+    >
+      <Text
+        fontSize="11px"
+        color={TEXT_LIGHT}
+      >
+        {label}
+      </Text>
+
+      <Menu.Root
+        positioning={{
+          sameWidth: true,
+        }}
+      >
+        <Menu.Trigger asChild>
+          <Button
+            variant="outline"
+            h="50px"
+            px={3}
+            w="full"
+            justifyContent="space-between"
+            bg={WHITE}
+            color={TEXT}
+            border="1px solid"
+            borderColor="#E5DDD5"
+            borderRadius="8px"
+            fontSize="13px"
+            fontWeight="400"
+            cursor="pointer"
+            transition="all .2s ease"
+            _hover={{
+              borderColor: PRIMARY,
+              bg: "#FCF9F6",
+            }}
+            _focus={{
+              borderColor: PRIMARY,
+              boxShadow: `0 0 0 1px ${PRIMARY}`,
+              outline: "none",
+            }}
+          >
+            <Text
+              overflow="hidden"
+              whiteSpace="nowrap"
+              textOverflow="ellipsis"
+            >
+              {opcoes[0]}
+            </Text>
+
+            <Icon
+              as={FiChevronDown}
+              color={PRIMARY}
+              fontSize="16px"
+              flexShrink={0}
+            />
+          </Button>
+        </Menu.Trigger>
+
+        <Menu.Positioner>
+          <Menu.Content
+            bg={WHITE}
+            borderRadius="12px"
+            border="1px solid"
+            borderColor="#E7DED8"
+            boxShadow="0 8px 24px rgba(74,14,23,.12)"
+            p={2}
+            zIndex="popover"
+          >
+            {opcoes.map((opcao) => (
+              <Menu.Item
+                key={opcao}
+                value={opcao}
+                px={3}
+                py={2.5}
+                borderRadius="8px"
+                cursor="pointer"
+                color={TEXT}
+                fontSize="13px"
+                fontWeight="400"
+                transition="all .2s ease"
+                _hover={{
+                  bg: "#F2E6E8",
+                  color: PRIMARY,
+                }}
+              >
+                {opcao}
+              </Menu.Item>
+            ))}
+          </Menu.Content>
+        </Menu.Positioner>
+      </Menu.Root>
+    </Stack>
+  );
+}
+
+// =====================================================
 // PÁGINA
 // =====================================================
 
@@ -303,10 +407,10 @@ export default function GestaoUsuarios() {
           md: 8,
         }}
       >
-        {/* REMOVIDO O maxW PARA APROVEITAR TODA A TELA */}
-
-        <Stack gap={6} w="100%">
-
+        <Stack
+          gap={6}
+          w="100%"
+        >
           {/* =================================================
               TÍTULO
           ================================================= */}
@@ -374,7 +478,6 @@ export default function GestaoUsuarios() {
                 align="end"
                 w="100%"
               >
-
                 {/* BUSCA */}
 
                 <Box flex="1">
@@ -411,65 +514,25 @@ export default function GestaoUsuarios() {
 
                 {/* STATUS */}
 
-                <Stack
-                  gap={1.5}
-                  w="165px"
-                >
-                  <Text
-                    fontSize="11px"
-                    color={TEXT_LIGHT}
-                  >
-                    Status
-                  </Text>
-
-                  <Box
-                    as="select"
-                    h="50px"
-                    px={3}
-                    fontSize="13px"
-                    bg={WHITE}
-                    color={TEXT}
-                    border="1px solid"
-                    borderColor="#E5DDD5"
-                    borderRadius="8px"
-                    outline="none"
-                  >
-                    <option>Todos</option>
-                    <option>Ativo</option>
-                    <option>Bloqueado</option>
-                  </Box>
-                </Stack>
+                <FiltroSelect
+                  label="Status"
+                  opcoes={[
+                    "Todos",
+                    "Ativo",
+                    "Bloqueado",
+                  ]}
+                />
 
                 {/* PERFIL */}
 
-                <Stack
-                  gap={1.5}
-                  w="165px"
-                >
-                  <Text
-                    fontSize="11px"
-                    color={TEXT_LIGHT}
-                  >
-                    Perfil
-                  </Text>
-
-                  <Box
-                    as="select"
-                    h="50px"
-                    px={3}
-                    fontSize="13px"
-                    bg={WHITE}
-                    color={TEXT}
-                    border="1px solid"
-                    borderColor="#E5DDD5"
-                    borderRadius="8px"
-                    outline="none"
-                  >
-                    <option>Todos</option>
-                    <option>Aluno</option>
-                    <option>Professor</option>
-                  </Box>
-                </Stack>
+                <FiltroSelect
+                  label="Perfil"
+                  opcoes={[
+                    "Todos",
+                    "Aluno",
+                    "Professor",
+                  ]}
+                />
 
                 {/* NOVO USUÁRIO */}
 
@@ -546,7 +609,6 @@ export default function GestaoUsuarios() {
                 minW="1050px"
                 w="100%"
               >
-
                 {/* CABEÇALHO */}
 
                 <Flex
@@ -640,7 +702,6 @@ export default function GestaoUsuarios() {
                       bg: "#FCF9F6",
                     }}
                   >
-
                     {/* AVATAR */}
 
                     <Box w="90px">
@@ -739,7 +800,6 @@ export default function GestaoUsuarios() {
                 </Text>
 
                 <HStack gap={2}>
-
                   <Button
                     minW="36px"
                     h="36px"
