@@ -1,9 +1,21 @@
 import jwt from 'jsonwebtoken';
 import UsuarioModel from '../models/UsuarioModel.js';
 import { JWT_CONFIG } from '../config/jwt.js';
-import { comparePassword } from '../config/database.js';
 import { setAuthCookie, clearAuthCookie } from '../utils/authCookie.js';
 import { enviarEmail } from '../utils/email.js';
+
+const ehTexto = (v) => typeof v === 'string';
+
+// O token de redefinição é assinado com o segredo + hash atual da senha.
+// Assim ele vale uma única vez: ao trocar a senha, o hash muda e o token
+// (ou qualquer outro emitido antes) deixa de verificar — sem precisar de
+// coluna extra no banco.
+function segredoRedefinicao(usuario) {
+    return `${JWT_CONFIG.secret}:${usuario.senha}`;
+}
+
+const MENSAGEM_REDEFINICAO =
+    'Se este e-mail estiver cadastrado, enviaremos um link de redefinição.';
 
 class AuthController {
 
@@ -12,7 +24,7 @@ class AuthController {
         try {
             const { email, senha } = req.body;
 
-            if (!email || !senha) {
+            if (!ehTexto(email) || !ehTexto(senha) || !email.trim() || !senha) {
                 return res.status(400).json({
                     sucesso: false,
                     erro: 'Email e senha são obrigatórios'
@@ -65,7 +77,7 @@ class AuthController {
         }
     }
 
-    // LOGOUT
+    // LOGOUT — sempre limpa o cookie, independente do estado do token.
     static async logout(req, res) {
         try {
             clearAuthCookie(res);
@@ -85,11 +97,12 @@ class AuthController {
     }
 
     // SOLICITAR REDEFINIÇÃO DE SENHA
+    // Responde sempre a mesma coisa para não revelar quais e-mails existem.
     static async solicitarRedefinicaoSenha(req, res) {
         try {
             const { email } = req.body;
 
-            if (!email || email.trim() === '') {
+            if (!ehTexto(email) || email.trim() === '') {
                 return res.status(400).json({
                     sucesso: false,
                     erro: 'Email é obrigatório'
@@ -100,32 +113,29 @@ class AuthController {
             const usuario = await UsuarioModel.buscarPorEmail(emailNormalizado);
 
             if (!usuario) {
-                return res.status(404).json({
-                    sucesso: false,
-                    erro: 'Usuário não encontrado'
+                return res.status(200).json({
+                    sucesso: true,
+                    mensagem: MENSAGEM_REDEFINICAO
                 });
             }
 
             const token = jwt.sign(
                 {
                     id: usuario.id,
-                    email: usuario.email,
                     finalidade: 'redefinir-senha'
                 },
-                JWT_CONFIG.secret,
+                segredoRedefinicao(usuario),
                 { expiresIn: '15m' }
             );
 
             const frontendUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
             const linkRedefinicao = `${frontendUrl}/redefinir-senha?token=${token}`;
 
-            let enviado = false;
-
             try {
-                const resultado = await enviarEmail({
+                await enviarEmail({
                     para: usuario.email,
-                    assunto: 'Redefinição de senha - LectorHUb',
-                    texto: `Olá ${usuario.nome},\n\nRecebemos uma solicitação para redefinir sua senha.\n\nAcesse o link abaixo para criar uma nova senha:\n${linkRedefinicao}\n\nEste link expira em 15 minutos.\n\nSe você não solicitou isso, ignore este e-mail.\n\nAtenciosamente,\nEquipe LectorHub`,
+                    assunto: 'Redefinição de senha - LectorHub',
+                    texto: `Olá ${usuario.nome},\n\nRecebemos uma solicitação para redefinir sua senha.\n\nAcesse o link abaixo para criar uma nova senha:\n${linkRedefinicao}\n\nEste link expira em 15 minutos e só pode ser usado uma vez.\n\nSe você não solicitou isso, ignore este e-mail.\n\nAtenciosamente,\nEquipe LectorHub`,
                     html: `
                         <div style="font-family: Arial, sans-serif; color: #221f20;">
                             <h2 style="color: #febd17;">Olá ${usuario.nome},</h2>
@@ -136,29 +146,22 @@ class AuthController {
                                     Redefinir senha
                                 </a>
                             </p>
-                            <p>Este link expira em 15 minutos.</p>
+                            <p>Este link expira em 15 minutos e só pode ser usado uma vez.</p>
                             <p>Se você não solicitou isso, ignore este e-mail.</p>
                             <br>
                             <p>Atenciosamente,<br><strong>Equipe LectorHub</strong></p>
                         </div>
                     `,
                 });
-
-                enviado = resultado.enviado;
             } catch (erroEnvio) {
-                console.error('Erro ao enviar e-mail via SMTP:', erroEnvio);
-                return res.status(400).json({
-                    sucesso: false,
-                    erro: 'Erro ao enviar e-mail de redefinição',
-                    mensagem: erroEnvio.message
-                });
+                // Loga, mas não muda a resposta: o cliente não precisa saber
+                // se o e-mail existe ou se o SMTP falhou.
+                console.error('Erro ao enviar e-mail de redefinição:', erroEnvio);
             }
 
             return res.status(200).json({
                 sucesso: true,
-                mensagem: enviado
-                    ? 'Enviamos um link de redefinição para o seu e-mail.'
-                    : 'Envio de e-mail desabilitado. O link de redefinição foi exibido no console do servidor.'
+                mensagem: MENSAGEM_REDEFINICAO
             });
 
         } catch (error) {
@@ -171,12 +174,12 @@ class AuthController {
         }
     }
 
-    // REDEFINIR SENHA COM TOKEN
+    // REDEFINIR SENHA COM TOKEN (uso único)
     static async redefinirSenha(req, res) {
         try {
             const { token, senha } = req.body;
 
-            if (!token || !senha) {
+            if (!ehTexto(token) || !ehTexto(senha) || !token || !senha) {
                 return res.status(400).json({
                     sucesso: false,
                     erro: 'Token e nova senha são obrigatórios'
@@ -190,23 +193,28 @@ class AuthController {
                 });
             }
 
-            const decoded = jwt.verify(token, JWT_CONFIG.secret);
+            // 1º passo: ler o id sem verificar, para saber qual hash usar no segredo.
+            const naoVerificado = jwt.decode(token);
 
-            if (decoded.finalidade !== 'redefinir-senha') {
+            if (!naoVerificado || naoVerificado.finalidade !== 'redefinir-senha') {
                 return res.status(401).json({
                     sucesso: false,
                     erro: 'Token inválido'
                 });
             }
 
-            const usuario = await UsuarioModel.buscarPorId(decoded.id);
+            const usuario = await UsuarioModel.buscarPorId(naoVerificado.id);
 
-            if (!usuario || usuario.email !== decoded.email) {
-                return res.status(404).json({
+            if (!usuario) {
+                return res.status(401).json({
                     sucesso: false,
-                    erro: 'Usuário não encontrado'
+                    erro: 'Token inválido'
                 });
             }
+
+            // 2º passo: verificar de verdade. Se a senha já foi trocada com este
+            // token, o segredo mudou e cai no JsonWebTokenError abaixo.
+            jwt.verify(token, segredoRedefinicao(usuario));
 
             await UsuarioModel.atualizar(usuario.id, { senha });
 
@@ -227,142 +235,12 @@ class AuthController {
             if (error.name === 'JsonWebTokenError') {
                 return res.status(401).json({
                     sucesso: false,
-                    erro: 'Token inválido'
+                    erro: 'Token inválido',
+                    mensagem: 'Este link já foi usado ou não é válido. Solicite uma nova redefinição.'
                 });
             }
 
             console.error('Erro ao redefinir senha:', error);
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno no servidor'
-            });
-        }
-    }
-
-    // OBTER PERFIL (usuário logado)
-    static async obterPerfil(req, res) {
-        try {
-            const usuario = await UsuarioModel.buscarPorId(req.usuario.id);
-
-            if (!usuario) {
-                return res.status(404).json({
-                    sucesso: false,
-                    erro: 'Usuário não encontrado'
-                });
-            }
-
-            delete usuario.senha;
-
-            return res.status(200).json({
-                sucesso: true,
-                dados: usuario
-            });
-
-        } catch (error) {
-            console.error('Erro ao obter perfil:', error);
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno no servidor'
-            });
-        }
-    }
-
-    // ATUALIZAR PERFIL (usuário logado)
-    static async atualizarPerfil(req, res) {
-        try {
-            const id = req.usuario.id;
-
-            const {
-                nome,
-                senha,
-                telefone
-            } = req.body;
-
-            const usuarioAtual = await UsuarioModel.buscarPorId(id);
-
-            if (!usuarioAtual) {
-                return res.status(404).json({
-                    sucesso: false,
-                    erro: 'Usuário não encontrado'
-                });
-            }
-
-            const dadosAtualizacao = {};
-
-            if (nome !== undefined) {
-                if (!nome.trim()) {
-                    return res.status(400).json({
-                        sucesso: false,
-                        erro: 'Nome é obrigatório'
-                    });
-                }
-
-                const nomeNormalizado = nome.trim();
-
-                if (nomeNormalizado !== usuarioAtual.nome) {
-                    dadosAtualizacao.nome = nomeNormalizado;
-                }
-            }
-
-            if (telefone !== undefined) {
-                const telefoneNormalizado = telefone ? telefone.trim() : null;
-
-                if (telefoneNormalizado !== usuarioAtual.telefone) {
-                    dadosAtualizacao.telefone = telefoneNormalizado;
-                }
-            }
-
-            if (senha !== undefined) {
-                if (senha.length < 6) {
-                    return res.status(400).json({
-                        sucesso: false,
-                        erro: 'A senha deve ter pelo menos 6 caracteres'
-                    });
-                }
-
-                dadosAtualizacao.senha = senha;
-            }
-
-            if (Object.keys(dadosAtualizacao).length === 0) {
-                return res.status(200).json({
-                    sucesso: true,
-                    mensagem: 'Nenhuma alteração necessária',
-                    dados: {
-                        id: usuarioAtual.id,
-                        nome: usuarioAtual.nome,
-                        email: usuarioAtual.email,
-                        telefone: usuarioAtual.telefone,
-                        tipo: usuarioAtual.tipo
-                    }
-                });
-            }
-
-            // Se estiver alterando senha, já deixa pronto pro model hashear
-            const resultado = await UsuarioModel.atualizarPerfil(id, dadosAtualizacao);
-
-            if (resultado === 0) {
-                return res.status(200).json({
-                    sucesso: true,
-                    mensagem: 'Nenhuma alteração necessária'
-                });
-            }
-
-            const atualizado = await UsuarioModel.buscarPorId(id);
-
-            return res.status(200).json({
-                sucesso: true,
-                mensagem: 'Perfil atualizado com sucesso',
-                dados: {
-                    id: atualizado.id,
-                    nome: atualizado.nome,
-                    email: atualizado.email,
-                    telefone: atualizado.telefone,
-                    tipo: atualizado.tipo
-                }
-            });
-
-        } catch (error) {
-            console.error('Erro ao atualizar perfil:', error);
             return res.status(500).json({
                 sucesso: false,
                 erro: 'Erro interno no servidor'

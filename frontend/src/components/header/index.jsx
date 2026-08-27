@@ -17,7 +17,7 @@ const ACCENT_SOFT = "rgba(122, 49, 49, 0.20)";
 const BORDER = "#EFEBE3";
 
 // Páginas de autenticação usam layout de tela cheia — sem header em cima.
-const ROTAS_SEM_HEADER = ["/login", "/cadastrar"];
+const ROTAS_SEM_HEADER = ["/login", "/cadastrar", "/redefinir-senha"];
 
 const underlineVariants = {
  rest: { scaleX: 0, opacity: 0 },

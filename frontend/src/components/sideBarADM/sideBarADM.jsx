@@ -18,7 +18,10 @@ import {
     FiBookmark,
     FiBarChart2,
     FiSettings,
+    FiLogOut,
 } from "react-icons/fi";
+
+import { logoutUsuario } from "../../api";
 
 import {
     usePathname,
@@ -161,6 +164,26 @@ export default function SideBarAdm() {
                     />
                 ))}
             </VStack>
+
+            {/* LINHA */}
+            <Box
+                h="px"
+                bg="rgba(255,255,255,0.18)"
+                my={6}
+            />
+
+            {/* SAIR */}
+            <ItemSidebar
+                item={{ label: "Sair", icon: FiLogOut }}
+                ativo={false}
+                onClick={async () => {
+                    try {
+                        await logoutUsuario();
+                    } finally {
+                        router.push("/login");
+                    }
+                }}
+            />
 
         </Box>
     );

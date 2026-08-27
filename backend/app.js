@@ -72,8 +72,6 @@ app.get('/', (req, res) => {
             registrar: 'POST /api/auth/criarUsuario',
             login: 'POST /api/auth/login',
             logout: 'POST /api/auth/logout',
-            perfil: 'GET /api/auth/perfil',
-            atualizarPerfil: 'PUT /api/auth/perfil',
             solicitarRedefinicao: 'POST /api/auth/solicitar-redefinicao-senha',
             redefinirSenha: 'POST /api/auth/redefinir-senha',
 

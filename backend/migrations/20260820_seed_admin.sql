@@ -1,12 +1,11 @@
 -- Migration: inserir admin na tabela de usuarios
 -- Data: 2026-08-20
 -- Descrição: Criação do admin
-
-INSERT IGNORE INTO usuarios (nome, email, senha, telefone, tipo) 
-VALUES (
-    'Administrador', 
-    'admin@lectorhub.com', 
-    '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 
-    NULL, 
-    'admin'
-);
+--
+-- A senha do admin NÃO fica mais neste arquivo (o hash antigo era o bcrypt
+-- público de "password"). Para criar/atualizar o admin, defina ADMIN_EMAIL e
+-- ADMIN_PASSWORD no .env e rode:
+--
+--     npm run seed:admin
+--
+-- (ver backend/scripts/seedAdmin.js)

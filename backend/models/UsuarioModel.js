@@ -182,7 +182,7 @@ class UsuarioModel {
         }
     }
 
-    // ATUALIZAR PRÓPRIO PERFIL (NOME, TELEFONE E SENHA)
+    // ATUALIZAR PRÓPRIO PERFIL (NOME, E-MAIL, TELEFONE E SENHA)
     static async atualizarPerfil(id, dados) {
         const campos = [];
         const valores = [];
@@ -190,6 +190,11 @@ class UsuarioModel {
         if (dados.nome !== undefined) {
             campos.push('nome = ?');
             valores.push(dados.nome);
+        }
+
+        if (dados.email !== undefined) {
+            campos.push('email = ?');
+            valores.push(dados.email);
         }
 
         if (dados.telefone !== undefined) {

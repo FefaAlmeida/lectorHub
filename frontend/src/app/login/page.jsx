@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { loginUsuario, solicitarRedefinicaoSenha } from "../../api";
 
@@ -19,7 +20,8 @@ import {
 
 import { toaster } from "@/components/ui/toaster";
 
-export default function Logar() {
+function Logar() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,9 @@ export default function Logar() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   async function handleLogin() {
-    if (!email || !senha) {
+    const emailNormalizado = email.trim().toLowerCase();
+
+    if (!emailNormalizado || !senha) {
       toaster.create({
         title: "Campos obrigatórios",
         description: "Preencha todos os campos.",
@@ -37,7 +41,7 @@ export default function Logar() {
       return;
     }
 
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(emailNormalizado)) {
       toaster.create({
         title: "E-mail inválido",
         description: "Digite um e-mail válido.",
@@ -50,7 +54,7 @@ export default function Logar() {
 
     try {
       const response = await loginUsuario({
-        email: email.trim().toLowerCase(),
+        email: emailNormalizado,
         senha,
       });
 
@@ -61,11 +65,15 @@ export default function Logar() {
           type: "success",
         });
 
-        // Admin cai no catálogo de gestão; cliente, na própria biblioteca.
+        // Volta para a rota que pediu login (?next=), senão:
+        // admin cai no catálogo de gestão; cliente, na própria biblioteca.
+        const next = searchParams.get("next");
+        const nextSeguro = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
         const destino =
-          response?.dados?.usuario?.tipo === "admin"
+          nextSeguro ||
+          (response?.dados?.usuario?.tipo === "admin"
             ? "/catalogoDeLivros"
-            : "/inicio";
+            : "/inicio");
 
         setTimeout(() => {
           window.location.href = destino;
@@ -96,7 +104,9 @@ export default function Logar() {
   }
 
   async function handleSolicitarRedefinicaoSenha() {
-    if (!email) {
+    const emailNormalizado = email.trim().toLowerCase();
+
+    if (!emailNormalizado) {
       toaster.create({
         title: "E-mail obrigatório",
         description: "Digite seu e-mail para redefinir a senha.",
@@ -105,7 +115,7 @@ export default function Logar() {
       return;
     }
 
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(emailNormalizado)) {
       toaster.create({
         title: "E-mail inválido",
         description: "Digite um e-mail válido.",
@@ -117,9 +127,7 @@ export default function Logar() {
     setLoadingRedefinicao(true);
 
     try {
-      const response = await solicitarRedefinicaoSenha(
-        email.trim().toLowerCase()
-      );
+      const response = await solicitarRedefinicaoSenha(emailNormalizado);
 
       if (response?.sucesso) {
         toaster.create({
@@ -532,4 +540,13 @@ return (
     </Flex>
   </Flex>
 );
+}
+
+// useSearchParams exige um limite de Suspense na página.
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <Logar />
+    </Suspense>
+  );
 }

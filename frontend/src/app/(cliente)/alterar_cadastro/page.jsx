@@ -119,13 +119,14 @@ export default function MeuCadastro() {
     setCarregando(true);
     try {
       const perfilResponse = await getPerfil();
-      const usuarioAtual =
-        perfilResponse?.dados || perfilResponse?.usuario || perfilResponse || {};
 
-      if (!usuarioAtual || perfilResponse.sucesso === false) {
+      // Respostas 401 vêm como { sucesso: false, erro } — nunca tratar como perfil.
+      if (!perfilResponse?.sucesso || !perfilResponse.dados) {
         toast.error(perfilResponse?.erro || "Erro ao carregar dados do perfil.");
         return;
       }
+
+      const usuarioAtual = perfilResponse.dados;
 
       setDados((prev) => ({
         ...prev,
@@ -168,11 +169,10 @@ export default function MeuCadastro() {
         payload.senha = dados.senha;
       }
 
-      const response = await atualizarPerfil(
-        dados.id_usuario ? { id_usuario: dados.id_usuario, ...payload } : payload
-      );
+      // O backend identifica o usuário pelo cookie; não enviamos id.
+      const response = await atualizarPerfil(payload);
 
-      if (response?.sucesso === false) {
+      if (!response?.sucesso) {
         toast.error(response?.erro || "Erro ao atualizar perfil.");
         return;
       }

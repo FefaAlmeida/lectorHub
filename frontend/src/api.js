@@ -1,4 +1,8 @@
-const BASE_URL = "http://localhost:3001/api";
+// Configure NEXT_PUBLIC_API_URL no .env.local (ver .env.example).
+// O fallback só serve para desenvolvimento local.
+const BASE_URL =
+  (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001").replace(/\/+$/, "") +
+  "/api";
 
 // REGISTRO
 export async function criarUsuario(data) {

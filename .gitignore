@@ -44,3 +44,4 @@ package-lock.json
 # Misc
 .DS_Store
 *.pem
+.env*

@@ -25,8 +25,11 @@ export default function Cadastrar() {
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit() {
+    const nomeNormalizado = nome.trim();
+    const emailNormalizado = email.trim().toLowerCase();
+
     // Verifica campos obrigatórios
-    if (!nome || !email || !senha || !confirmarSenha) {
+    if (!nomeNormalizado || !emailNormalizado || !senha || !confirmarSenha) {
       toaster.create({
         title: "Campos obrigatórios",
         description: "Preencha todos os campos.",
@@ -39,7 +42,7 @@ export default function Cadastrar() {
     // Verifica formato do e-mail
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(emailNormalizado)) {
       toaster.create({
         title: "E-mail inválido",
         description: "Digite um e-mail válido.",
@@ -75,8 +78,8 @@ export default function Cadastrar() {
 
     try {
       const data = {
-        nome: nome.trim(),
-        email: email.trim().toLowerCase(),
+        nome: nomeNormalizado,
+        email: emailNormalizado,
         senha,
       };
 
@@ -85,7 +88,7 @@ export default function Cadastrar() {
       if (response?.sucesso) {
         // Login automático após o cadastro
         const loginResponse = await loginUsuario({
-          email: email.trim().toLowerCase(),
+          email: emailNormalizado,
           senha,
         });
 
@@ -348,7 +351,15 @@ return (
           </VStack>
 
           {/* FORMULÁRIO */}
-          <VStack as="form" w="100%" gap={0}>
+          <VStack
+            as="form"
+            w="100%"
+            gap={0}
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+          >
             {/* Nome */}
             <Field.Root gap="3px" mb="22px" w="100%">
               <Field.Label color="#4A4542" fontSize="13px" m={0}>
@@ -359,6 +370,8 @@ return (
                 id="nome"
                 type="text"
                 placeholder="Seu nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
                 h="48px"
                 borderRadius="8px"
                 border="1px solid"
@@ -383,6 +396,8 @@ return (
                 id="email"
                 type="email"
                 placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 h="48px"
                 borderRadius="8px"
                 border="1px solid"
@@ -407,6 +422,8 @@ return (
                 id="senha"
                 type="password"
                 placeholder="Password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
                 h="48px"
                 borderRadius="8px"
                 border="1px solid"
@@ -431,6 +448,8 @@ return (
                 id="confirmPassword"
                 type="password"
                 placeholder="Password"
+                value={confirmarSenha}
+                onChange={(e) => setConfirmarSenha(e.target.value)}
                 h="48px"
                 borderRadius="8px"
                 border="1px solid"
@@ -450,6 +469,8 @@ return (
               type="submit"
               w="100%"
               h="50px"
+              loading={loading}
+              disabled={loading}
               bg="#4A0E17"
               color="#FFFFFF"
               borderRadius="8px"
