@@ -329,20 +329,21 @@ export default function BuscarLivros() {
   return (
     <Flex minH="100vh" bg={BG_COLOR}>
       {/* BARRA LATERAL */}
-      <Sidebar/>
+      <Sidebar />
 
       {/* CONTEÚDO PRINCIPAL */}
-      <Box flex={1} p={{ base: 6, md: 8 }} pb={16} overflow="hidden">
-        <Stack gap={8} align="stretch" maxW="8xl" mx="auto">
+      <Box flex={1} ml = "-150px" p={{ base: 8, md: 9 }} pb={16} overflow="hidden">
+        <Stack gap={6} align="stretch" maxW="8xl" mx="auto">
 
           {/* Cabeçalho */}
-          <Stack gap={2}>
+          <Stack gap={1 } align="flex-start" mb={2}>
             <Heading
               as="h1"
               fontSize={{ base: "3xl", md: "4xl" }}
               fontWeight="bold"
               color={PRIMARY_COLOR}
               fontFamily="Georgia, serif"
+
             >
               Buscar Livros
             </Heading>
@@ -390,10 +391,7 @@ export default function BuscarLivros() {
               Buscar
             </Button>
 
-            <Button variant="outline" color={PRIMARY_COLOR} borderColor={PRIMARY_COLOR} _hover={{ bg: "#f2e6e8" }} size="lg" borderRadius="full">
-              <Icon mr={2}><FiSliders /></Icon>
-              Busca Avançada
-            </Button>
+
           </Flex>
 
           {/* Filtros */}
@@ -432,31 +430,14 @@ export default function BuscarLivros() {
           </Flex>
 
           {/* Cabeçalho dos Resultados */}
-          <Flex justify="space-between" align="center" mt={4} borderBottom="1px solid" borderColor={BORDER_COLOR} pb={4}>
-            <HStack gap={4}>
-              <Flex bg="white" borderRadius="16px" border="1px solid" borderColor="#E8E1D8" p={5}>
-                <FiBookOpen size={18} />
-              </Flex>
-              <Stack gap={0}>
-                <Text fontWeight="bold" color={PRIMARY_COLOR} fontSize="lg">
-                  {paginacao.total} {paginacao.total === 1 ? "livro encontrado" : "livros encontrados"}
-                </Text>
-                <Text fontSize="sm" color={TEXT_LIGHT}>
-                  Exibindo resultados da sua busca
-                </Text>
-              </Stack>
-            </HStack>
-
-            <HStack gap={2}>
-              <Text fontSize="sm" color={TEXT_LIGHT} mr={2}>Visualização:</Text>
-              <IconButton bg={PRIMARY_COLOR} color="white" aria-label="Grade" size="sm" borderRadius="md">
-                <FiGrid />
-              </IconButton>
-              <IconButton bg={CARD_BG} border="1px solid" borderColor={BORDER_COLOR} color={TEXT_LIGHT} aria-label="Lista" size="sm" borderRadius="md">
-                <FiList />
-              </IconButton>
-            </HStack>
-          </Flex>
+          <Flex
+            justify="space-between"
+            align="center"
+            mt={2}
+            borderBottom="1px solid"
+            borderColor={BORDER_COLOR}
+            pb={4}
+          ></Flex>
 
           {/* Resultados */}
           {carregando ? (
@@ -486,7 +467,7 @@ export default function BuscarLivros() {
             <Flex
               gap={6}
               wrap="wrap"
-              py={8} /* Padding vertical para a sombra do hover não cortar */
+              py={4} /* Padding vertical para a sombra do hover não cortar */
               px={2}
             >
               {livros.map((livro) => (

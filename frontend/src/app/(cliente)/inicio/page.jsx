@@ -48,7 +48,7 @@ import {
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 
 const PRIMARY_COLOR = "#4A0E17";
-const BG_COLOR = "#FFFFFF";
+const BG_COLOR = "#F5F2EE";
 const CARD_BG = "#FFFFFF";
 const BORDER_COLOR = "#EFEBE3";
 
@@ -520,12 +520,13 @@ export default function DashboardPage() {
 
           <SimpleGrid
             columns={{ base: 1, md: 2 }}
-            spacing={8}
+            spacing={20}
             align="center"
           >
             <VStack
               align="flex-start"
-              spacing={4}
+              spacing={6}
+              pb={8}
             >
               <Heading
                 as="h1"
@@ -550,10 +551,6 @@ export default function DashboardPage() {
                 forma fácil e rápida.
               </Text>
             </VStack>
-
-            {/* ============================================
-                ILUSTRAÇÃO DA BIBLIOTECA
-            ============================================= */}
 
             <Flex
               justify="center"

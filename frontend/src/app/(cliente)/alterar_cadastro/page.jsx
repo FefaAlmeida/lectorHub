@@ -205,50 +205,64 @@ export default function MeuCadastro() {
     <Flex minH="100vh" bg={BG_COLOR}>
       <Sidebar />
 
-      <Box flex={1} p={{ base: 6, md: 8 }} pb={16} overflow="hidden">
-        <Stack gap={7} align="stretch" maxW="8xl" mx="auto">
-          {/* CABEÇALHO */}
-          <Flex justify="space-between" align="center">
-            <Stack gap={2}>
-              <Heading
-                as="h1"
-                fontSize={{ base: "3xl", md: "4xl" }}
-                fontWeight="bold"
-                color={PRIMARY_COLOR}
-                fontFamily="Georgia, serif"
-              >
-                Meu Cadastro
-              </Heading>
-              <Text fontSize="md" color={TEXT_LIGHT}>
-                Atualize seus dados cadastrais e mantenha suas informações sempre em dia.
-              </Text>
-            </Stack>
-          </Flex>
+      <Box
+        flex={1}
+        p={{ base: 6, md: 8 }}
+        pb={16}
+        overflow="hidden"
+      >
+        <Box
+          maxW="8xl"
+          mx="auto"
+          bg="white"
+          borderRadius="12px"
+          border="1px solid"
+          borderColor={BORDER_COLOR}
+          p={{ base: 5, md: 7 }}
+        >
+          <Stack gap={7}>
 
-          {/* DUAS COLUNAS */}
-          <Flex
-            gap={6}
-            align="flex-start"
-            direction={{ base: "column", lg: "row" }}
-          >
-            {/* COLUNA ESQUERDA */}
-            <Stack flex="1" w="full" gap={5}>
-              <Card.Root
-                bg={CARD_BG}
-                borderRadius="8px"
-                border="1px solid"
-                borderColor={BORDER_COLOR}
-              >
-                <Card.Header px={5} pt={5} pb={3}>
-                  <HStack gap={2}>
+            {/* CABEÇALHO */}
+            <Flex justify="space-between" align="center">
+              <Stack gap={2}>
+                <Heading
+                  as="h1"
+                  fontSize={{ base: "3xl", md: "4xl" }}
+                  fontWeight="bold"
+                  color={PRIMARY_COLOR}
+                  fontFamily="Georgia, serif"
+                >
+                  Meu Cadastro
+                </Heading>
+
+                <Text fontSize="md" color={TEXT_LIGHT}>
+                  Atualize seus dados cadastrais e mantenha suas informações sempre em dia.
+                </Text>
+              </Stack>
+            </Flex>
+
+            {/* CONTEÚDO */}
+            <Flex
+              gap={6}
+              align="flex-start"
+              direction={{ base: "column", lg: "row" }}
+            >
+
+              {/* COLUNA ESQUERDA */}
+              <Stack flex="1" w="full" gap={6}>
+
+                <Box>
+                  <HStack gap={2} mb={5}>
                     <Icon as={FiUser} color={PRIMARY_COLOR} boxSize={4} />
-                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
+                    <Heading
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color={PRIMARY_COLOR}
+                    >
                       Dados Pessoais
                     </Heading>
                   </HStack>
-                </Card.Header>
 
-                <Card.Body px={5} pb={5}>
                   <Stack gap={4}>
                     <Campo
                       label="Nome Completo"
@@ -275,97 +289,35 @@ export default function MeuCadastro() {
                       onChange={(e) => alterarCampo("telefone", e.target.value)}
                     />
                   </Stack>
-                </Card.Body>
-              </Card.Root>
+                </Box>
 
-              <Card.Root
-                bg={CARD_BG}
-                borderRadius="8px"
-                border="1px solid"
-                borderColor={BORDER_COLOR}
+                
+
+              </Stack>
+
+              {/* COLUNA DIREITA */}
+              <Stack
+                w={{ base: "full", lg: "390px" }}
+                gap={6}
               >
-                <Card.Header px={5} pt={5} pb={3}>
-                  <HStack gap={2}>
-                    <Icon as={FiCheckCircle} color={PRIMARY_COLOR} boxSize={4} />
-                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
-                      Informações da Conta
-                    </Heading>
-                  </HStack>
-                </Card.Header>
 
-                <Card.Body px={5} pb={5}>
-                  <Flex gap={8} direction={{ base: "column", md: "row" }}>
-                    <HStack flex="1">
-                      <Box
-                        w="36px"
-                        h="36px"
-                        bg="#F8EEE9"
-                        borderRadius="full"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                      >
-                        <Icon as={FiCreditCard} color={PRIMARY_COLOR} boxSize={4} />
-                      </Box>
-                      <Stack gap={0}>
-                        <Text fontSize="xs" color={TEXT_LIGHT}>
-                          Código do Usuário (ID)
-                        </Text>
-                        <Text fontSize="sm" fontWeight="bold" color={TEXT_DARK}>
-                          #{dados.id_usuario || "—"}
-                        </Text>
-                      </Stack>
-                    </HStack>
+                <Box>
+                  <HStack gap={2} mb={5}>
+                    <Icon
+                      as={FiLock}
+                      color={PRIMARY_COLOR}
+                      boxSize={4}
+                    />
 
-                    <HStack flex="1">
-                      <Box
-                        w="36px"
-                        h="36px"
-                        bg="#EAF5EC"
-                        borderRadius="full"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                      >
-                        <Icon as={FiCheckCircle} color="#48BB78" boxSize={4} />
-                      </Box>
-                      <Stack gap={0}>
-                        <Text fontSize="xs" color={TEXT_LIGHT}>
-                          Tipo de Perfil
-                        </Text>
-                        <Text
-                          fontSize="sm"
-                          color="#48BB78"
-                          fontWeight="bold"
-                          textTransform="capitalize"
-                        >
-                          {dados.tipo || "cliente"}
-                        </Text>
-                      </Stack>
-                    </HStack>
-                  </Flex>
-                </Card.Body>
-              </Card.Root>
-            </Stack>
-
-            {/* COLUNA DIREITA */}
-            <Stack w={{ base: "full", lg: "390px" }} gap={5}>
-              <Card.Root
-                bg={CARD_BG}
-                borderRadius="8px"
-                border="1px solid"
-                borderColor={BORDER_COLOR}
-              >
-                <Card.Header px={5} pt={5} pb={3}>
-                  <HStack gap={2}>
-                    <Icon as={FiLock} color={PRIMARY_COLOR} boxSize={4} />
-                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
+                    <Heading
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color={PRIMARY_COLOR}
+                    >
                       Segurança da Conta
                     </Heading>
                   </HStack>
-                </Card.Header>
 
-                <Card.Body px={5} pb={5}>
                   <Campo
                     label="Nova Senha"
                     value={dados.senha}
@@ -374,130 +326,167 @@ export default function MeuCadastro() {
                     placeholder="Digite para alterar a senha"
                     onChange={(e) => alterarCampo("senha", e.target.value)}
                   />
-                </Card.Body>
-              </Card.Root>
+                </Box>
 
-              <Card.Root
-                bg={CARD_BG}
-                borderRadius="8px"
-                border="1px solid"
-                borderColor={BORDER_COLOR}
-              >
-                <Card.Header px={5} pt={5} pb={3}>
-                  <HStack gap={2}>
-                    <Icon as={FiBell} color={PRIMARY_COLOR} boxSize={4} />
-                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
+                <Box>
+                  <HStack gap={2} mb={5}>
+                    <Icon
+                      as={FiBell}
+                      color={PRIMARY_COLOR}
+                      boxSize={4}
+                    />
+
+                    <Heading
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color={PRIMARY_COLOR}
+                    >
                       Preferências de Notificação
                     </Heading>
                   </HStack>
-                </Card.Header>
 
-                <Card.Body px={5} pb={5}>
-                  <Flex justify="space-between" align="center" mb={5}>
-                    <Stack gap={0} pr={4}>
-                      <Text fontSize="xs" fontWeight="semibold" color={TEXT_DARK}>
-                        E-mail
-                      </Text>
-                      <Text fontSize="10px" color={TEXT_LIGHT}>
-                        Avisos sobre devoluções e empréstimos.
-                      </Text>
-                    </Stack>
-                    <Switch.Root
-                      checked={dados.emailNotificacao}
-                      disabled={!editando}
-                      onCheckedChange={(e) =>
-                        alterarCampo("emailNotificacao", e.checked)
-                      }
+                  <Stack gap={5}>
+
+                    <Flex
+                      justify="space-between"
+                      align="center"
                     >
-                      <Switch.HiddenInput />
-                      <Switch.Control />
-                    </Switch.Root>
-                  </Flex>
+                      <Stack gap={0} pr={4}>
+                        <Text
+                          fontSize="xs"
+                          fontWeight="semibold"
+                          color={TEXT_DARK}
+                        >
+                          E-mail
+                        </Text>
 
-                  <Flex justify="space-between" align="center">
-                    <Stack gap={0} pr={4}>
-                      <Text fontSize="xs" fontWeight="semibold" color={TEXT_DARK}>
-                        Novidades
-                      </Text>
-                      <Text fontSize="10px" color={TEXT_LIGHT}>
-                        Novidades do acervo.
-                      </Text>
-                    </Stack>
-                    <Switch.Root
-                      checked={dados.novidades}
-                      disabled={!editando}
-                      onCheckedChange={(e) =>
-                        alterarCampo("novidades", e.checked)
-                      }
+                        <Text
+                          fontSize="10px"
+                          color={TEXT_LIGHT}
+                        >
+                          Avisos sobre devoluções e empréstimos.
+                        </Text>
+                      </Stack>
+
+                      <Switch.Root
+                        checked={dados.emailNotificacao}
+                        disabled={!editando}
+                        onCheckedChange={(e) =>
+                          alterarCampo(
+                            "emailNotificacao",
+                            e.checked
+                          )
+                        }
+                      >
+                        <Switch.HiddenInput />
+                        <Switch.Control />
+                      </Switch.Root>
+                    </Flex>
+
+                    <Flex
+                      justify="space-between"
+                      align="center"
                     >
-                      <Switch.HiddenInput />
-                      <Switch.Control />
-                    </Switch.Root>
-                  </Flex>
-                </Card.Body>
-              </Card.Root>
-            </Stack>
-          </Flex>
+                      <Stack gap={0} pr={4}>
+                        <Text
+                          fontSize="xs"
+                          fontWeight="semibold"
+                          color={TEXT_DARK}
+                        >
+                          Novidades
+                        </Text>
 
-          {/* AÇÕES */}
-          <Flex justify="flex-end" gap={3} mt={1}>
-            {editando && (
-              <Button
-                variant="outline"
-                color={PRIMARY_COLOR}
-                borderColor={PRIMARY_COLOR}
-                borderRadius="14px"
-                size="md"
-                disabled={salvando}
-                onClick={() => {
-                  setEditando(false);
-                  carregarDados();
-                }}
-              >
-                Cancelar
-              </Button>
-            )}
+                        <Text
+                          fontSize="10px"
+                          color={TEXT_LIGHT}
+                        >
+                          Novidades do acervo.
+                        </Text>
+                      </Stack>
 
-            {!editando ? (
-              <Button
-                bg={PRIMARY_COLOR}
-                color="white"
-                borderRadius="14px"
-                size="md"
-                px={6}
-                boxShadow="0 4px 12px rgba(74,14,23,.15)"
-                onClick={() => setEditando(true)}
-                _hover={{
-                  bg: PRIMARY_DARK,
-                  transform: "translateY(-2px)",
-                }}
-                transition={`all .3s ${EASE}`}
-              >
-                <Icon as={FiEdit3} mr={2} />
-                Editar Dados
-              </Button>
-            ) : (
-              <Button
-                bg={PRIMARY_COLOR}
-                color="white"
-                borderRadius="14px"
-                size="md"
-                px={6}
-                boxShadow="0 4px 12px rgba(74,14,23,.15)"
-                disabled={salvando}
-                onClick={salvarAlteracoes}
-                _hover={{
-                  bg: PRIMARY_DARK,
-                  transform: "translateY(-2px)",
-                }}
-                transition={`all .3s ${EASE}`}
-              >
-                <Icon as={FiSave} mr={2} />
-                {salvando ? "Salvando..." : "Salvar Alterações"}
-              </Button>
-            )}
-          </Flex>
-        </Stack>
+                      <Switch.Root
+                        checked={dados.novidades}
+                        disabled={!editando}
+                        onCheckedChange={(e) =>
+                          alterarCampo(
+                            "novidades",
+                            e.checked
+                          )
+                        }
+                      >
+                        <Switch.HiddenInput />
+                        <Switch.Control />
+                      </Switch.Root>
+                    </Flex>
+
+                  </Stack>
+                </Box>
+
+              </Stack>
+
+            </Flex>
+
+            {/* AÇÕES */}
+            <Flex justify="flex-end" gap={3} mt={1}>
+              {editando && (
+                <Button
+                  variant="outline"
+                  color={PRIMARY_COLOR}
+                  borderColor={PRIMARY_COLOR}
+                  borderRadius="14px"
+                  size="md"
+                  disabled={salvando}
+                  onClick={() => {
+                    setEditando(false);
+                    carregarDados();
+                  }}
+                >
+                  Cancelar
+                </Button>
+              )}
+
+              {!editando ? (
+                <Button
+                  bg={PRIMARY_COLOR}
+                  color="white"
+                  borderRadius="14px"
+                  size="md"
+                  px={6}
+                  boxShadow="0 4px 12px rgba(74,14,23,.15)"
+                  onClick={() => setEditando(true)}
+                  _hover={{
+                    bg: PRIMARY_DARK,
+                    transform: "translateY(-2px)",
+                  }}
+                  transition={`all .3s ${EASE}`}
+                >
+                  <Icon as={FiEdit3} mr={2} />
+                  Editar Dados
+                </Button>
+              ) : (
+                <Button
+                  bg={PRIMARY_COLOR}
+                  color="white"
+                  borderRadius="14px"
+                  size="md"
+                  px={6}
+                  boxShadow="0 4px 12px rgba(74,14,23,.15)"
+                  disabled={salvando}
+                  onClick={salvarAlteracoes}
+                  _hover={{
+                    bg: PRIMARY_DARK,
+                    transform: "translateY(-2px)",
+                  }}
+                  transition={`all .3s ${EASE}`}
+                >
+                  <Icon as={FiSave} mr={2} />
+                  {salvando ? "Salvando..." : "Salvar Alterações"}
+                </Button>
+              )}
+            </Flex>
+
+          </Stack>
+        </Box>
       </Box>
     </Flex>
   );
