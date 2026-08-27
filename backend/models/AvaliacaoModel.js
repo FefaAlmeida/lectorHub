@@ -8,9 +8,9 @@ import { getConnection } from '../config/database.js';
 export const avaliacaoModel = {
 
     // LISTAR AVALIAÇÕES DE UM LIVRO (com o nome de quem avaliou)
-    async listarPorLivro(idLivro, limite = 20) {
+    async listarPorLivro(idLivro, limite = 50) {
         // LIMIT não aceita placeholder em prepared statement no MySQL.
-        const limiteSeguro = Math.min(Math.max(parseInt(limite) || 20, 1), 100);
+        const limiteSeguro = Math.min(Math.max(parseInt(limite) || 50, 1), 100);
 
         const connection = await getConnection();
 

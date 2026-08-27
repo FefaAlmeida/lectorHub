@@ -7,8 +7,6 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 // 1. IMPORTAR TODAS AS ROTAS DA API
 import authRotas from './routes/authRotas.js';
@@ -21,8 +19,6 @@ import { errorMiddleware } from './middlewares/errorMiddleware.js';
 
 
 const app = express();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Configurações do servidor
 const PORT = process.env.PORT || 3001;
@@ -44,9 +40,6 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-// Servir arquivos estáticos (uploads de imagens)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // 2. ATIVAÇÃO DAS ROTAS DA API
 app.use('/api/auth', authRotas);
@@ -77,18 +70,21 @@ app.get('/', (req, res) => {
 
             // Usuários
             meuPerfil: 'GET /api/usuarios/me',
-            atualizarMeuPerfil: 'PUT /api/usuarios/me',
-            listarUsuarios: 'GET /api/usuarios (admin)',
+            atualizarMeuPerfil: 'PUT /api/usuarios/me (senha_atual obrigatória p/ trocar e-mail ou senha)',
+            listarUsuarios: 'GET /api/usuarios?pagina=&limite= (admin)',
             atualizarUsuario: 'PUT /api/usuarios/:id (admin)',
 
             // Livros
             listarLivros: 'GET /api/livros?busca=&categoria=&disponivel=&ordem=&pagina=&limite=',
             categoriasLivros: 'GET /api/livros/categorias',
             detalhesLivro: 'GET /api/livros/:id',
+            criarLivro: 'POST /api/livros (admin)',
+            atualizarLivro: 'PUT /api/livros/:id (admin)',
             atualizarDisponibilidade: 'PUT /api/livros/:id/disponibilidade (admin)',
+            excluirLivro: 'DELETE /api/livros/:id (admin; 409 se houver empréstimo ativo)',
 
             // Avaliações
-            listarAvaliacoes: 'GET /api/livros/:id/avaliacoes',
+            listarAvaliacoes: 'GET /api/livros/:id/avaliacoes?limite=',
             avaliarLivro: 'POST /api/livros/:id/avaliacoes (autenticado)',
             removerAvaliacao: 'DELETE /api/livros/:id/avaliacoes (autenticado)',
 
@@ -96,10 +92,11 @@ app.get('/', (req, res) => {
             solicitarEmprestimo: 'POST /api/emprestimos (autenticado)',
             meusEmprestimos: 'GET /api/emprestimos/meus (autenticado)',
             elegibilidade: 'GET /api/emprestimos/elegibilidade (autenticado)',
-            cancelarEmprestimo: 'PATCH /api/emprestimos/:id/cancelar (autenticado)',
-            ultimoEmprestimo: 'GET /api/emprestimos/ultimo/:id_usuario (autenticado)',
+            cancelarEmprestimo: 'PATCH /api/emprestimos/:id/cancelar (autenticado, só PENDENTE)',
             listarEmprestimos: 'GET /api/emprestimos?status=&pagina=&limite= (admin)',
-            atualizarStatusEmprestimo: 'PATCH /api/emprestimos/:id/status (admin)'
+            resumoAdmin: 'GET /api/emprestimos/resumo (admin)',
+            atualizarStatusEmprestimo: 'PATCH /api/emprestimos/:id/status { status, prazo_dias? } (admin; PENDENTE->EMPRESTADO|RECUSADO, EMPRESTADO->DEVOLVIDO)',
+            estenderPrazo: 'PATCH /api/emprestimos/:id/prazo { dias } (admin, só EMPRESTADO)'
         }
     });
 });
@@ -108,7 +105,6 @@ app.get('/', (req, res) => {
 app.use('*', (req, res) => {
     res.status(404).json({
         sucesso: false,
-        erro: 'Rota não encontrada',
         mensagem: `A rota ${req.method} ${req.originalUrl} não foi encontrada`
     });
 });

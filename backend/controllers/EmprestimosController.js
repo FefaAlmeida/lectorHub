@@ -1,27 +1,38 @@
 import EmprestimoModel, {
     LIMITE_EMPRESTIMOS,
     PRAZO_DIAS
-} from "../models/EmprestimosModel.js";
-import { livroModel } from "../models/LivroModel.js";
+} from '../models/EmprestimosModel.js';
+import { livroModel } from '../models/LivroModel.js';
+import { erro, erroInterno } from '../utils/resposta.js';
 
-const STATUS_VALIDOS = [
-    'PENDENTE',
-    'EMPRESTADO',
-    'DEVOLVIDO',
-    'RECUSADO',
-    'CANCELADO'
-];
+const STATUS_VALIDOS = ['PENDENTE', 'EMPRESTADO', 'DEVOLVIDO', 'RECUSADO', 'CANCELADO'];
+
+// Máquina de estados: de qual status o admin pode ir para qual.
+// PENDENTE -> aprovado (EMPRESTADO) ou recusado; EMPRESTADO -> devolvido.
+// CANCELADO só nasce da ação do próprio cliente (cancelarEmprestimo).
+const TRANSICOES = {
+    PENDENTE: ['EMPRESTADO', 'RECUSADO'],
+    EMPRESTADO: ['DEVOLVIDO']
+};
+
+const PRAZO_MIN = 1;
+const PRAZO_MAX = 90;
 
 function lerId(valor) {
     const id = Number(valor);
     return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+// Devolve o inteiro de dias ou null se estiver fora de 1..90.
+function lerDias(valor, padrao) {
+    if (valor === undefined || valor === null || valor === '') return padrao;
+    const n = Number(valor);
+    return Number.isInteger(n) && n >= PRAZO_MIN && n <= PRAZO_MAX ? n : null;
+}
+
 // --- REGRAS DE EMPRÉSTIMO ---
 // 1. No máximo LIMITE_EMPRESTIMOS empréstimos ativos ao mesmo tempo.
 // 2. Quem tem livro atrasado não pega outro até devolver.
-// Fica isolado aqui porque é consultado em dois lugares: antes de criar o
-// pedido e pela tela, que precisa avisar o usuário ANTES de ele clicar.
 async function verificarElegibilidade(idUsuario) {
     const [ativos, atrasados] = await Promise.all([
         EmprestimoModel.contarAtivos(idUsuario),
@@ -37,7 +48,6 @@ async function verificarElegibilidade(idUsuario) {
 
     if (atrasados.length > 0) {
         const titulos = atrasados.map((item) => item.titulo).join(', ');
-
         return {
             ...base,
             podeEmprestar: false,
@@ -55,81 +65,49 @@ async function verificarElegibilidade(idUsuario) {
         };
     }
 
-    return {
-        ...base,
-        podeEmprestar: true,
-        codigo: null,
-        motivo: null
-    };
+    return { ...base, podeEmprestar: true, codigo: null, motivo: null };
 }
 
 class EmprestimoController {
 
-    // CONSULTAR SE O USUÁRIO PODE PEGAR OUTRO LIVRO
+    // --- CLIENTE ---
+
     static async minhaElegibilidade(req, res) {
         try {
             const elegibilidade = await verificarElegibilidade(req.usuario.id);
-
-            return res.status(200).json({
-                sucesso: true,
-                dados: elegibilidade
-            });
-
+            return res.status(200).json({ sucesso: true, dados: elegibilidade });
         } catch (error) {
-            console.error('Erro ao verificar elegibilidade:', error);
-            return res.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro ao verificar elegibilidade para empréstimo.'
-            });
+            return erroInterno(res, 'minhaElegibilidade', error);
         }
     }
 
-    // SOLICITAR EMPRÉSTIMO
     static async solicitarEmprestimo(req, res) {
         try {
             const idUsuario = req.usuario.id;
             const idLivro = lerId(req.body?.id_livro);
 
-            if (!idLivro) {
-                return res.status(400).json({
-                    sucesso: false,
-                    mensagem: 'Informe um id_livro válido.'
-                });
-            }
+            if (!idLivro) return erro(res, 400, 'Informe um id_livro válido.');
 
             const livro = await livroModel.buscarPorId(idLivro);
-
-            if (!livro) {
-                return res.status(404).json({
-                    sucesso: false,
-                    mensagem: 'Livro não encontrado.'
-                });
-            }
+            if (!livro) return erro(res, 404, 'Livro não encontrado.');
 
             if (!livro.disponivel) {
-                return res.status(409).json({
-                    sucesso: false,
-                    codigo: 'LIVRO_INDISPONIVEL',
-                    mensagem: 'Este livro não está disponível no momento.'
-                });
+                return erro(res, 409, 'Este livro não está disponível no momento.', 'LIVRO_INDISPONIVEL');
             }
 
             const jaTem = await EmprestimoModel.possuiAtivoDoLivro(idUsuario, idLivro);
-
             if (jaTem) {
-                return res.status(409).json({
-                    sucesso: false,
-                    codigo: 'JA_SOLICITADO',
-                    mensagem:
-                        jaTem.status === 'PENDENTE'
-                            ? 'Você já tem uma solicitação pendente para este livro.'
-                            : 'Este livro já está com você.'
-                });
+                return erro(
+                    res,
+                    409,
+                    jaTem.status === 'PENDENTE'
+                        ? 'Você já tem uma solicitação pendente para este livro.'
+                        : 'Este livro já está com você.',
+                    'JA_SOLICITADO'
+                );
             }
 
             const elegibilidade = await verificarElegibilidade(idUsuario);
-
-            // 409: o pedido é válido, mas o estado atual do usuário o impede.
             if (!elegibilidade.podeEmprestar) {
                 return res.status(409).json({
                     sucesso: false,
@@ -139,33 +117,22 @@ class EmprestimoController {
                 });
             }
 
-            const idEmprestimo = await EmprestimoModel.criarSolicitacao(
-                idUsuario,
-                idLivro
-            );
-
+            const idEmprestimo = await EmprestimoModel.criarSolicitacao(idUsuario, idLivro);
             const emprestimo = await EmprestimoModel.buscarPorId(idEmprestimo);
 
             return res.status(201).json({
                 sucesso: true,
-                mensagem:
-                    'Solicitação registrada. Aguarde a aprovação da biblioteca.',
+                mensagem: 'Solicitação registrada. Aguarde a aprovação da biblioteca.',
                 dados: {
                     emprestimo,
                     elegibilidade: await verificarElegibilidade(idUsuario)
                 }
             });
-
         } catch (error) {
-            console.error('Erro ao registrar empréstimo:', error);
-            return res.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro ao registrar empréstimo.'
-            });
+            return erroInterno(res, 'solicitarEmprestimo', error);
         }
     }
 
-    // MEUS EMPRÉSTIMOS
     static async meusEmprestimos(req, res) {
         try {
             const [emprestimos, elegibilidade] = await Promise.all([
@@ -175,49 +142,26 @@ class EmprestimoController {
 
             return res.status(200).json({
                 sucesso: true,
-                dados: {
-                    emprestimos,
-                    elegibilidade,
-                    prazo_dias: PRAZO_DIAS
-                }
+                dados: { emprestimos, elegibilidade, prazo_dias: PRAZO_DIAS }
             });
-
         } catch (error) {
-            console.error('Erro ao listar empréstimos do usuário:', error);
-            return res.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro ao listar seus empréstimos.'
-            });
+            return erroInterno(res, 'meusEmprestimos', error);
         }
     }
 
-    // CANCELAR A PRÓPRIA SOLICITAÇÃO (só enquanto pendente)
+    // Cancelar a própria solicitação (só enquanto pendente)
     static async cancelarEmprestimo(req, res) {
         try {
             const id = lerId(req.params.id);
-
-            if (!id) {
-                return res.status(400).json({
-                    sucesso: false,
-                    mensagem: 'ID de empréstimo inválido.'
-                });
-            }
+            if (!id) return erro(res, 400, 'ID de empréstimo inválido.');
 
             const emprestimo = await EmprestimoModel.buscarPorId(id);
-
             if (!emprestimo || emprestimo.id_usuario !== req.usuario.id) {
-                return res.status(404).json({
-                    sucesso: false,
-                    mensagem: 'Empréstimo não encontrado.'
-                });
+                return erro(res, 404, 'Empréstimo não encontrado.');
             }
 
             if (emprestimo.status !== 'PENDENTE') {
-                return res.status(409).json({
-                    sucesso: false,
-                    mensagem:
-                        'Só é possível cancelar solicitações que ainda estão pendentes.'
-                });
+                return erro(res, 409, 'Só é possível cancelar solicitações que ainda estão pendentes.');
             }
 
             await EmprestimoModel.atualizarStatus(id, 'CANCELADO');
@@ -225,59 +169,10 @@ class EmprestimoController {
             return res.status(200).json({
                 sucesso: true,
                 mensagem: 'Solicitação cancelada.',
-                dados: {
-                    elegibilidade: await verificarElegibilidade(req.usuario.id)
-                }
+                dados: { elegibilidade: await verificarElegibilidade(req.usuario.id) }
             });
-
         } catch (error) {
-            console.error('Erro ao cancelar empréstimo:', error);
-            return res.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro ao cancelar empréstimo.'
-            });
-        }
-    }
-
-    // ÚLTIMO EMPRÉSTIMO — o usuário só enxerga o próprio; admin vê qualquer um.
-    static async buscarUltimoEmprestimo(req, res) {
-        try {
-            const idUsuario = lerId(req.params.id_usuario);
-
-            if (!idUsuario) {
-                return res.status(400).json({
-                    sucesso: false,
-                    mensagem: 'ID do usuário inválido.'
-                });
-            }
-
-            if (idUsuario !== req.usuario.id && req.usuario.tipo !== 'admin') {
-                return res.status(403).json({
-                    sucesso: false,
-                    mensagem: 'Você só pode consultar os próprios empréstimos.'
-                });
-            }
-
-            const emprestimo = await EmprestimoModel.buscarUltimoPorUsuario(idUsuario);
-
-            if (!emprestimo) {
-                return res.status(404).json({
-                    sucesso: false,
-                    mensagem: 'Nenhum empréstimo encontrado para este usuário.'
-                });
-            }
-
-            return res.status(200).json({
-                sucesso: true,
-                dados: emprestimo
-            });
-
-        } catch (error) {
-            console.error('Erro ao buscar último empréstimo:', error);
-            return res.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro ao buscar último empréstimo.'
-            });
+            return erroInterno(res, 'cancelarEmprestimo', error);
         }
     }
 
@@ -287,11 +182,16 @@ class EmprestimoController {
         try {
             const { status, pagina, limite } = req.query;
 
-            const resultado = await EmprestimoModel.listarTodos({
-                status: status?.trim().toUpperCase() || '',
-                pagina,
-                limite
-            });
+            let statusFiltro = '';
+            if (status !== undefined && status !== '') {
+                if (typeof status !== 'string') return erro(res, 400, 'Status inválido.');
+                statusFiltro = status.trim().toUpperCase();
+                if (!STATUS_VALIDOS.includes(statusFiltro)) {
+                    return erro(res, 400, `Status inválido. Use um destes: ${STATUS_VALIDOS.join(', ')}.`);
+                }
+            }
+
+            const resultado = await EmprestimoModel.listarTodos({ status: statusFiltro, pagina, limite });
 
             return res.status(200).json({
                 sucesso: true,
@@ -303,87 +203,75 @@ class EmprestimoController {
                     totalPaginas: resultado.totalPaginas
                 }
             });
-
         } catch (error) {
-            console.error('Erro ao listar empréstimos:', error);
-            return res.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro ao listar empréstimos.'
-            });
+            return erroInterno(res, 'listarEmprestimos', error);
         }
     }
 
-    static async totalEmprestados(req, res) {
+    static async resumo(req, res) {
         try {
-            const total = await EmprestimoModel.totalEmprestados();
-
-            return res.status(200).json({ sucesso: true, total });
-
+            const dados = await EmprestimoModel.resumo();
+            return res.status(200).json({ sucesso: true, dados });
         } catch (error) {
-            console.error('Erro ao buscar total de empréstimos:', error);
-            return res.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro ao buscar total de empréstimos.'
-            });
+            return erroInterno(res, 'resumo', error);
         }
     }
 
-    // APROVAR / RECUSAR / REGISTRAR DEVOLUÇÃO
+    // Aprovar (EMPRESTADO) / recusar / registrar devolução
     static async atualizarStatus(req, res) {
         try {
             const id = lerId(req.params.id);
-
-            if (!id) {
-                return res.status(400).json({
-                    sucesso: false,
-                    mensagem: 'ID de empréstimo inválido.'
-                });
-            }
+            if (!id) return erro(res, 400, 'ID de empréstimo inválido.');
 
             const status = String(req.body?.status || '').trim().toUpperCase();
-
             if (!STATUS_VALIDOS.includes(status)) {
-                return res.status(400).json({
-                    sucesso: false,
-                    mensagem: `Status inválido. Use um destes: ${STATUS_VALIDOS.join(', ')}.`
-                });
+                return erro(res, 400, `Status inválido. Use um destes: ${STATUS_VALIDOS.join(', ')}.`);
+            }
+
+            const prazoDias = lerDias(req.body?.prazo_dias, PRAZO_DIAS);
+            if (prazoDias === null) {
+                return erro(res, 400, `prazo_dias deve ser um inteiro entre ${PRAZO_MIN} e ${PRAZO_MAX}.`);
             }
 
             const emprestimo = await EmprestimoModel.buscarPorId(id);
+            if (!emprestimo) return erro(res, 404, 'Empréstimo não encontrado.');
 
-            if (!emprestimo) {
-                return res.status(404).json({
-                    sucesso: false,
-                    mensagem: 'Empréstimo não encontrado.'
-                });
+            const permitidos = TRANSICOES[emprestimo.status] || [];
+            if (!permitidos.includes(status)) {
+                return erro(
+                    res,
+                    409,
+                    `Não é possível mudar de ${emprestimo.status} para ${status}.`,
+                    'TRANSICAO_INVALIDA'
+                );
             }
 
-            // Aprovar um pedido de quem ficou inelegível no meio do caminho
-            // furaria a regra pela porta dos fundos.
-            if (status === 'EMPRESTADO' && emprestimo.status !== 'EMPRESTADO') {
+            if (status === 'EMPRESTADO') {
+                // O exemplar precisa estar na estante (outro pedido pode ter sido aprovado antes).
+                const livro = await livroModel.buscarPorId(emprestimo.id_livro);
+                if (!livro || !livro.disponivel) {
+                    return erro(res, 409, 'Este livro não está disponível para empréstimo.', 'LIVRO_INDISPONIVEL');
+                }
+
+                // O próprio pedido PENDENTE já conta como ativo, por isso "acima do limite".
                 const elegibilidade = await verificarElegibilidade(emprestimo.id_usuario);
-
-                // O próprio pedido em análise já conta como ativo, por isso a
-                // comparação usa "acima do limite" e não "no limite".
-                const excedeLimite = elegibilidade.ativos > LIMITE_EMPRESTIMOS;
-
-                if (elegibilidade.atrasados.length > 0 || excedeLimite) {
-                    return res.status(409).json({
-                        sucesso: false,
-                        codigo: elegibilidade.codigo || 'LIMITE_ATINGIDO',
-                        mensagem: `Não é possível aprovar: ${elegibilidade.motivo}`
-                    });
+                if (elegibilidade.atrasados.length > 0 || elegibilidade.ativos > LIMITE_EMPRESTIMOS) {
+                    return erro(
+                        res,
+                        409,
+                        `Não é possível aprovar: ${elegibilidade.motivo}`,
+                        elegibilidade.codigo || 'LIMITE_ATINGIDO'
+                    );
                 }
             }
 
-            const prazoDias = Number(req.body?.prazo_dias) || PRAZO_DIAS;
-
             await EmprestimoModel.atualizarStatus(id, status, prazoDias);
 
-            // O livro sai e volta do acervo junto com o empréstimo.
+            // O livro sai da estante ao ser aprovado e volta ao ser devolvido.
+            // Recusar não mexe no livro: ele nunca saiu.
             if (status === 'EMPRESTADO') {
                 await livroModel.atualizarDisponibilidade(emprestimo.id_livro, false);
-            } else if (['DEVOLVIDO', 'RECUSADO', 'CANCELADO'].includes(status)) {
+            } else if (status === 'DEVOLVIDO') {
                 await livroModel.atualizarDisponibilidade(emprestimo.id_livro, true);
             }
 
@@ -392,13 +280,38 @@ class EmprestimoController {
                 mensagem: 'Status do empréstimo atualizado.',
                 dados: await EmprestimoModel.buscarPorId(id)
             });
-
         } catch (error) {
-            console.error('Erro ao atualizar status do empréstimo:', error);
-            return res.status(500).json({
-                sucesso: false,
-                mensagem: 'Erro ao atualizar status do empréstimo.'
+            return erroInterno(res, 'atualizarStatus', error);
+        }
+    }
+
+    // Estender o prazo de um empréstimo em andamento
+    static async estenderPrazo(req, res) {
+        try {
+            const id = lerId(req.params.id);
+            if (!id) return erro(res, 400, 'ID de empréstimo inválido.');
+
+            const dias = lerDias(req.body?.dias, null);
+            if (dias === null) {
+                return erro(res, 400, `dias deve ser um inteiro entre ${PRAZO_MIN} e ${PRAZO_MAX}.`);
+            }
+
+            const emprestimo = await EmprestimoModel.buscarPorId(id);
+            if (!emprestimo) return erro(res, 404, 'Empréstimo não encontrado.');
+
+            if (emprestimo.status !== 'EMPRESTADO') {
+                return erro(res, 409, 'Só é possível estender o prazo de empréstimos em andamento.');
+            }
+
+            await EmprestimoModel.estenderPrazo(id, dias);
+
+            return res.status(200).json({
+                sucesso: true,
+                mensagem: `Prazo estendido em ${dias} dia(s).`,
+                dados: await EmprestimoModel.buscarPorId(id)
             });
+        } catch (error) {
+            return erroInterno(res, 'estenderPrazo', error);
         }
     }
 }

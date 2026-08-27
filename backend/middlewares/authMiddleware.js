@@ -2,8 +2,9 @@ import jwt from 'jsonwebtoken';
 import { JWT_CONFIG } from '../config/jwt.js';
 import { AUTH_COOKIE } from '../utils/authCookie.js';
 import UsuarioModel from '../models/UsuarioModel.js';
+import { erro, erroInterno } from '../utils/resposta.js';
 
-// AUTH MIDDLEWARE
+// Lê o token do cookie httpOnly (ou do header Bearer) e carrega o usuário.
 const authMiddleware = async (req, res, next) => {
     try {
         let token = req.cookies?.[AUTH_COOKIE];
@@ -15,77 +16,31 @@ const authMiddleware = async (req, res, next) => {
             }
         }
 
-        if (!token) {
-            return res.status(401).json({
-                sucesso: false,
-                erro: 'Token de acesso não fornecido',
-                mensagem: 'É necessário fornecer um token de autenticação'
-            });
-        }
+        if (!token) return erro(res, 401, 'É necessário estar logado.', 'NAO_AUTENTICADO');
 
         const decoded = jwt.verify(token, JWT_CONFIG.secret);
-
         const usuario = await UsuarioModel.buscarPorId(decoded.id);
 
-        if (!usuario) {
-            return res.status(401).json({
-                sucesso: false,
-                erro: 'Usuário não encontrado',
-                mensagem: 'Usuário inválido'
-            });
-        }
+        if (!usuario) return erro(res, 401, 'Usuário não encontrado.', 'NAO_AUTENTICADO');
 
-        req.usuario = {
-            id: usuario.id,
-            tipo: usuario.tipo,
-            email: usuario.email
-        };
-
+        req.usuario = { id: usuario.id, tipo: usuario.tipo, email: usuario.email };
         next();
-
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({
-                sucesso: false,
-                erro: 'Token expirado',
-                mensagem: 'Faça login novamente'
-            });
+            return erro(res, 401, 'Sessão expirada. Faça login novamente.', 'NAO_AUTENTICADO');
         }
-
         if (error.name === 'JsonWebTokenError') {
-            return res.status(401).json({
-                sucesso: false,
-                erro: 'Token inválido',
-                mensagem: 'Token de autenticação inválido'
-            });
+            return erro(res, 401, 'Token de autenticação inválido.', 'NAO_AUTENTICADO');
         }
-
-        console.error('Erro no middleware de autenticação:', error);
-
-        return res.status(500).json({
-                sucesso: false,
-            erro: 'Erro interno do servidor'
-        });
+        return erroInterno(res, 'authMiddleware', error);
     }
 };
 
-// ADMIN MIDDLEWARE (FORA DO AUTH)
 const adminMiddleware = (req, res, next) => {
-    if (!req.usuario) {
-        return res.status(401).json({
-                sucesso: false,
-            erro: 'Não autenticado'
-        });
-    }
-
+    if (!req.usuario) return erro(res, 401, 'É necessário estar logado.', 'NAO_AUTENTICADO');
     if (req.usuario.tipo !== 'admin') {
-        return res.status(403).json({
-                sucesso: false,
-            erro: 'Acesso negado',
-            mensagem: 'Apenas administradores podem acessar este recurso'
-        });
+        return erro(res, 403, 'Apenas administradores podem acessar este recurso.', 'ACESSO_NEGADO');
     }
-
     next();
 };
 

@@ -12,6 +12,8 @@ export const STATUS_ATIVOS = ['PENDENTE', 'EMPRESTADO'];
 export const LIMITE_EMPRESTIMOS = 2;
 export const PRAZO_DIAS = 14;
 
+// Atraso é contado por DIA (não por hora): no dia do vencimento ainda não
+// está atrasado; no dia seguinte, está. DATEDIFF e CURDATE() usam a mesma régua.
 const SELECT_COM_LIVRO = `
     SELECT
         e.id_emprestimo,
@@ -22,14 +24,18 @@ const SELECT_COM_LIVRO = `
         e.data_devolucao_prevista,
         e.data_devolucao_real,
         e.status,
-        DATEDIFF(e.data_devolucao_prevista, NOW()) AS dias_restantes,
+        DATEDIFF(DATE(e.data_devolucao_prevista), CURDATE()) AS dias_restantes,
         l.titulo,
         l.autor,
         l.categoria,
         l.ano_publicacao,
-        l.capa_url
+        l.capa_url,
+        u.nome AS usuario_nome,
+        u.email AS usuario_email,
+        u.telefone AS usuario_telefone
     FROM emprestimos e
     INNER JOIN livros l ON e.id_livro = l.id_livro
+    INNER JOIN usuarios u ON e.id_usuario = u.id_usuario
 `;
 
 // `atrasado` só faz sentido para quem está com o livro na mão.
@@ -51,136 +57,90 @@ function normalizar(emprestimo) {
     };
 }
 
+async function consultar(sql, valores = []) {
+    const connection = await getConnection();
+    try {
+        const [rows] = await connection.execute(sql, valores);
+        return rows;
+    } finally {
+        connection.release();
+    }
+}
+
 class EmprestimoModel {
 
     // --- CONSULTAS DE REGRA ---
 
     // Quantos empréstimos ocupam vaga hoje (pendentes + em mãos)
     static async contarAtivos(idUsuario) {
-        const connection = await getConnection();
+        const rows = await consultar(
+            `SELECT COUNT(*) AS total FROM emprestimos
+             WHERE id_usuario = ? AND status IN ('PENDENTE', 'EMPRESTADO')`,
+            [idUsuario]
+        );
+        return Number(rows[0].total);
+    }
 
-        try {
-            const [rows] = await connection.execute(
-                `
-                SELECT COUNT(*) AS total
-                FROM emprestimos
-                WHERE id_usuario = ?
-                  AND status IN ('PENDENTE', 'EMPRESTADO')
-                `,
-                [idUsuario]
-            );
+    // Quantos pedidos/empréstimos ativos um LIVRO tem (bloqueia exclusão)
+    static async contarAtivosDoLivro(idLivro) {
+        const rows = await consultar(
+            `SELECT COUNT(*) AS total FROM emprestimos
+             WHERE id_livro = ? AND status IN ('PENDENTE', 'EMPRESTADO')`,
+            [idLivro]
+        );
+        return Number(rows[0].total);
+    }
 
-            return Number(rows[0].total);
-
-        } finally {
-            connection.release();
-        }
+    // O livro está na mão de alguém agora?
+    static async livroEstaEmprestado(idLivro) {
+        const rows = await consultar(
+            `SELECT COUNT(*) AS total FROM emprestimos
+             WHERE id_livro = ? AND status = 'EMPRESTADO'`,
+            [idLivro]
+        );
+        return Number(rows[0].total) > 0;
     }
 
     // Empréstimos com prazo vencido e livro ainda não devolvido
     static async listarAtrasados(idUsuario) {
-        const connection = await getConnection();
-
-        try {
-            const [rows] = await connection.execute(
-                `
-                ${SELECT_COM_LIVRO}
-                WHERE e.id_usuario = ?
-                  AND e.status = 'EMPRESTADO'
-                  AND e.data_devolucao_prevista < NOW()
-                ORDER BY e.data_devolucao_prevista ASC
-                `,
-                [idUsuario]
-            );
-
-            return rows.map(normalizar);
-
-        } finally {
-            connection.release();
-        }
+        const rows = await consultar(
+            `${SELECT_COM_LIVRO}
+             WHERE e.id_usuario = ?
+               AND e.status = 'EMPRESTADO'
+               AND DATE(e.data_devolucao_prevista) < CURDATE()
+             ORDER BY e.data_devolucao_prevista ASC`,
+            [idUsuario]
+        );
+        return rows.map(normalizar);
     }
 
     // Impede pedir de novo um livro que o usuário já tem ou já solicitou
     static async possuiAtivoDoLivro(idUsuario, idLivro) {
-        const connection = await getConnection();
-
-        try {
-            const [rows] = await connection.execute(
-                `
-                SELECT id_emprestimo, status
-                FROM emprestimos
-                WHERE id_usuario = ?
-                  AND id_livro = ?
-                  AND status IN ('PENDENTE', 'EMPRESTADO')
-                LIMIT 1
-                `,
-                [idUsuario, idLivro]
-            );
-
-            return rows[0] || null;
-
-        } finally {
-            connection.release();
-        }
+        const rows = await consultar(
+            `SELECT id_emprestimo, status FROM emprestimos
+             WHERE id_usuario = ? AND id_livro = ? AND status IN ('PENDENTE', 'EMPRESTADO')
+             LIMIT 1`,
+            [idUsuario, idLivro]
+        );
+        return rows[0] || null;
     }
 
     // --- LEITURA ---
 
     static async listarPorUsuario(idUsuario) {
-        const connection = await getConnection();
-
-        try {
-            const [rows] = await connection.execute(
-                `
-                ${SELECT_COM_LIVRO}
-                WHERE e.id_usuario = ?
-                ORDER BY e.data_solicitacao DESC
-                `,
-                [idUsuario]
-            );
-
-            return rows.map(normalizar);
-
-        } finally {
-            connection.release();
-        }
+        const rows = await consultar(
+            `${SELECT_COM_LIVRO} WHERE e.id_usuario = ? ORDER BY e.data_solicitacao DESC`,
+            [idUsuario]
+        );
+        return rows.map(normalizar);
     }
 
     static async buscarPorId(idEmprestimo) {
-        const connection = await getConnection();
-
-        try {
-            const [rows] = await connection.execute(
-                `${SELECT_COM_LIVRO} WHERE e.id_emprestimo = ?`,
-                [idEmprestimo]
-            );
-
-            return normalizar(rows[0]);
-
-        } finally {
-            connection.release();
-        }
-    }
-
-    static async buscarUltimoPorUsuario(idUsuario) {
-        const connection = await getConnection();
-
-        try {
-            const [rows] = await connection.execute(
-                `
-                ${SELECT_COM_LIVRO}
-                WHERE e.id_usuario = ?
-                ORDER BY e.data_solicitacao DESC
-                LIMIT 1
-                `,
-                [idUsuario]
-            );
-
-            return normalizar(rows[0]);
-
-        } finally {
-            connection.release();
-        }
+        const rows = await consultar(
+            `${SELECT_COM_LIVRO} WHERE e.id_emprestimo = ?`,
+            [idEmprestimo]
+        );
+        return normalizar(rows[0]);
     }
 
     static async listarTodos({ status = '', pagina = 1, limite = 20 } = {}) {
@@ -189,123 +149,116 @@ class EmprestimoModel {
         const paginaSegura = Math.max(parseInt(pagina) || 1, 1);
         const offset = (paginaSegura - 1) * limiteSeguro;
 
-        const filtros = [];
-        const valores = [];
+        const where = status ? 'WHERE e.status = ?' : '';
+        const valores = status ? [status] : [];
 
-        if (status) {
-            filtros.push('e.status = ?');
-            valores.push(status);
-        }
+        const rows = await consultar(
+            `${SELECT_COM_LIVRO} ${where}
+             ORDER BY e.data_solicitacao DESC
+             LIMIT ${limiteSeguro} OFFSET ${offset}`,
+            valores
+        );
 
-        const where = filtros.length ? `WHERE ${filtros.join(' AND ')}` : '';
+        const totalRows = await consultar(
+            `SELECT COUNT(*) AS total FROM emprestimos e ${where}`,
+            valores
+        );
 
-        const connection = await getConnection();
+        const total = Number(totalRows[0].total);
 
-        try {
-            const [rows] = await connection.execute(
-                `
-                ${SELECT_COM_LIVRO}
-                ${where}
-                ORDER BY e.data_solicitacao DESC
-                LIMIT ${limiteSeguro} OFFSET ${offset}
-                `,
-                valores
-            );
-
-            const [totalResult] = await connection.execute(
-                `SELECT COUNT(*) AS total FROM emprestimos e ${where}`,
-                valores
-            );
-
-            return {
-                emprestimos: rows.map(normalizar),
-                total: totalResult[0].total,
-                pagina: paginaSegura,
-                limite: limiteSeguro,
-                totalPaginas: Math.ceil(totalResult[0].total / limiteSeguro)
-            };
-
-        } finally {
-            connection.release();
-        }
+        return {
+            emprestimos: rows.map(normalizar),
+            total,
+            pagina: paginaSegura,
+            limite: limiteSeguro,
+            totalPaginas: Math.ceil(total / limiteSeguro)
+        };
     }
 
-    static async totalEmprestados() {
-        const connection = await getConnection();
+    // Números do painel admin
+    static async resumo() {
+        const rows = await consultar(`
+            SELECT
+                (SELECT COUNT(*) FROM livros) AS livros,
+                (SELECT COUNT(*) FROM livros WHERE disponivel = 1) AS livros_disponiveis,
+                (SELECT COUNT(*) FROM usuarios WHERE tipo = 'cliente') AS usuarios,
+                (SELECT COUNT(*) FROM emprestimos WHERE status = 'PENDENTE') AS pendentes,
+                (SELECT COUNT(*) FROM emprestimos WHERE status = 'EMPRESTADO') AS emprestados,
+                (SELECT COUNT(*) FROM emprestimos
+                   WHERE status = 'EMPRESTADO'
+                     AND DATE(data_devolucao_prevista) < CURDATE()) AS atrasados
+        `);
 
-        try {
-            const [rows] = await connection.execute(
-                `SELECT COUNT(*) AS total FROM emprestimos WHERE status = 'EMPRESTADO'`
-            );
-
-            return Number(rows[0].total);
-
-        } finally {
-            connection.release();
-        }
+        const r = rows[0];
+        return {
+            livros: Number(r.livros),
+            livros_disponiveis: Number(r.livros_disponiveis),
+            usuarios: Number(r.usuarios),
+            pendentes: Number(r.pendentes),
+            emprestados: Number(r.emprestados),
+            atrasados: Number(r.atrasados)
+        };
     }
 
     // --- ESCRITA ---
 
     static async criarSolicitacao(idUsuario, idLivro) {
         const connection = await getConnection();
-
         try {
             const [result] = await connection.execute(
-                `
-                INSERT INTO emprestimos (id_livro, id_usuario, status)
-                VALUES (?, ?, 'PENDENTE')
-                `,
+                `INSERT INTO emprestimos (id_livro, id_usuario, status) VALUES (?, ?, 'PENDENTE')`,
                 [idLivro, idUsuario]
             );
-
             return result.insertId;
-
         } finally {
             connection.release();
         }
     }
 
     // Aprovar marca a data de saída e o prazo; devolver registra a volta.
+    // `prazoDias` já chega validado como inteiro pelo controller.
     static async atualizarStatus(idEmprestimo, status, prazoDias = PRAZO_DIAS) {
+        let sql;
+        let valores;
+
+        if (status === 'EMPRESTADO') {
+            sql = `UPDATE emprestimos
+                   SET status = 'EMPRESTADO',
+                       data_emprestimo = NOW(),
+                       data_devolucao_prevista = DATE_ADD(NOW(), INTERVAL ? DAY),
+                       data_devolucao_real = NULL
+                   WHERE id_emprestimo = ?`;
+            valores = [prazoDias, idEmprestimo];
+        } else if (status === 'DEVOLVIDO') {
+            sql = `UPDATE emprestimos
+                   SET status = 'DEVOLVIDO', data_devolucao_real = NOW()
+                   WHERE id_emprestimo = ?`;
+            valores = [idEmprestimo];
+        } else {
+            sql = `UPDATE emprestimos SET status = ? WHERE id_emprestimo = ?`;
+            valores = [status, idEmprestimo];
+        }
+
         const connection = await getConnection();
-
         try {
-            let sql;
-
-            if (status === 'EMPRESTADO') {
-                sql = `
-                    UPDATE emprestimos
-                    SET status = 'EMPRESTADO',
-                        data_emprestimo = NOW(),
-                        data_devolucao_prevista = DATE_ADD(NOW(), INTERVAL ${Number(prazoDias) || PRAZO_DIAS} DAY),
-                        data_devolucao_real = NULL
-                    WHERE id_emprestimo = ?
-                `;
-            } else if (status === 'DEVOLVIDO') {
-                sql = `
-                    UPDATE emprestimos
-                    SET status = 'DEVOLVIDO',
-                        data_devolucao_real = NOW()
-                    WHERE id_emprestimo = ?
-                `;
-            } else {
-                sql = `
-                    UPDATE emprestimos
-                    SET status = ?
-                    WHERE id_emprestimo = ?
-                `;
-            }
-
-            const valores =
-                status === 'EMPRESTADO' || status === 'DEVOLVIDO'
-                    ? [idEmprestimo]
-                    : [status, idEmprestimo];
-
             const [result] = await connection.execute(sql, valores);
-
             return result.affectedRows > 0;
+        } finally {
+            connection.release();
+        }
+    }
 
+    // Soma dias ao prazo atual (só faz sentido em EMPRESTADO)
+    static async estenderPrazo(idEmprestimo, dias) {
+        const connection = await getConnection();
+        try {
+            const [result] = await connection.execute(
+                `UPDATE emprestimos
+                 SET data_devolucao_prevista = DATE_ADD(data_devolucao_prevista, INTERVAL ? DAY)
+                 WHERE id_emprestimo = ?`,
+                [dias, idEmprestimo]
+            );
+            return result.affectedRows > 0;
         } finally {
             connection.release();
         }

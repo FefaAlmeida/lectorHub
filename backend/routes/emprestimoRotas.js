@@ -4,32 +4,16 @@ import { authMiddleware, adminMiddleware } from '../middlewares/authMiddleware.j
 
 const router = express.Router();
 
-
 // --- CLIENTE ---
-
-// SOLICITAR EMPRÉSTIMO (aplica as regras de limite e atraso)
 router.post('/', authMiddleware, EmprestimoController.solicitarEmprestimo);
-
-// MEUS EMPRÉSTIMOS + situação atual perante as regras
 router.get('/meus', authMiddleware, EmprestimoController.meusEmprestimos);
-
-// POSSO PEGAR OUTRO LIVRO? — usado para avisar antes do clique
 router.get('/elegibilidade', authMiddleware, EmprestimoController.minhaElegibilidade);
-
-// CANCELAR A PRÓPRIA SOLICITAÇÃO PENDENTE
 router.patch('/:id/cancelar', authMiddleware, EmprestimoController.cancelarEmprestimo);
 
-// ÚLTIMO EMPRÉSTIMO DE UM USUÁRIO (o próprio, ou qualquer um se for admin)
-router.get('/ultimo/:id_usuario', authMiddleware, EmprestimoController.buscarUltimoEmprestimo);
-
-
-// --- ADMIN ---
-
+// --- ADMIN --- (rotas fixas antes de '/:id')
+router.get('/resumo', authMiddleware, adminMiddleware, EmprestimoController.resumo);
 router.get('/', authMiddleware, adminMiddleware, EmprestimoController.listarEmprestimos);
-
-router.get('/total', authMiddleware, adminMiddleware, EmprestimoController.totalEmprestados);
-
-// APROVAR ('EMPRESTADO'), RECUSAR, DEVOLVER...
 router.patch('/:id/status', authMiddleware, adminMiddleware, EmprestimoController.atualizarStatus);
+router.patch('/:id/prazo', authMiddleware, adminMiddleware, EmprestimoController.estenderPrazo);
 
 export default router;

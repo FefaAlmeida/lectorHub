@@ -1,4 +1,6 @@
 import UsuarioModel from '../models/UsuarioModel.js';
+import { comparePassword } from '../config/database.js';
+import { erro, erroInterno } from '../utils/resposta.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -7,7 +9,12 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ehTexto = (v) => typeof v === 'string';
 
 function erro400(res, mensagem) {
-    return res.status(400).json({ sucesso: false, erro: mensagem });
+    return erro(res, 400, mensagem);
+}
+
+function lerId(valor) {
+    const id = Number(valor);
+    return Number.isInteger(id) && id > 0 ? id : null;
 }
 
 // Valida e normaliza os campos editáveis. Retorna { dados } ou { erro }.
@@ -86,10 +93,7 @@ class UsuarioController {
             const existe = await UsuarioModel.buscarPorEmail(emailNormalizado);
 
             if (existe) {
-                return res.status(409).json({
-                    sucesso: false,
-                    erro: 'Esse e-mail já está em uso.'
-                });
+                return erro(res, 409, 'Esse e-mail já está em uso.');
             }
 
             // O tipo nunca vem do client: todo cadastro público nasce como 'cliente'.
@@ -113,11 +117,7 @@ class UsuarioController {
             });
 
         } catch (error) {
-            console.error('Erro ao criar usuário:', error);
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno do servidor'
-            });
+            return erroInterno(res, 'Erro ao criar usuário:', error);
         }
     }
 
@@ -145,42 +145,38 @@ class UsuarioController {
             });
 
         } catch (error) {
-            console.error('Erro ao listar usuários:', error);
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno do servidor'
-            });
+            return erroInterno(res, 'Erro ao listar usuários:', error);
         }
     }
 
     // ATUALIZAR QUALQUER USUÁRIO (ADMIN)
     static async atualizarUsuario(req, res) {
         try {
-            const { id } = req.params;
+            const id = lerId(req.params.id);
+            if (!id) return erro400(res, 'ID de usuário inválido.');
 
             const usuario = await UsuarioModel.buscarPorId(id);
 
             if (!usuario) {
-                return res.status(404).json({
-                    sucesso: false,
-                    erro: 'Usuário não encontrado'
-                });
+                return erro(res, 404, 'Usuário não encontrado');
             }
 
             const resultado = await validarCamposUsuario(req.body, usuario);
 
             if (resultado.erro) {
-                return res.status(resultado.status || 400).json({
-                    sucesso: false,
-                    erro: resultado.erro
-                });
+                return erro(res, resultado.status || 400, resultado.erro);
             }
 
             const dadosAtualizacao = resultado.dados;
 
             if (req.body.tipo !== undefined) {
-                if (!ehTexto(req.body.tipo)) return erro400(res, 'Tipo inválido');
-                dadosAtualizacao.tipo = req.body.tipo;
+                if (!ehTexto(req.body.tipo) || !['admin', 'cliente'].includes(req.body.tipo.toLowerCase())) {
+                    return erro400(res, 'Tipo inválido (admin ou cliente).');
+                }
+                if (id === req.usuario.id && req.body.tipo.toLowerCase() !== 'admin') {
+                    return erro400(res, 'Você não pode remover seu próprio acesso de administrador.');
+                }
+                dadosAtualizacao.tipo = req.body.tipo.toLowerCase();
             }
 
             if (Object.keys(dadosAtualizacao).length === 0) {
@@ -198,11 +194,7 @@ class UsuarioController {
             });
 
         } catch (error) {
-            console.error('Erro ao atualizar usuário:', error);
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno do servidor'
-            });
+            return erroInterno(res, 'Erro ao atualizar usuário:', error);
         }
     }
 
@@ -212,10 +204,7 @@ class UsuarioController {
             const usuario = await UsuarioModel.buscarPorId(req.usuario.id);
 
             if (!usuario) {
-                return res.status(404).json({
-                    sucesso: false,
-                    erro: 'Usuário não encontrado'
-                });
+                return erro(res, 404, 'Usuário não encontrado');
             }
 
             delete usuario.senha;
@@ -226,11 +215,7 @@ class UsuarioController {
             });
 
         } catch (error) {
-            console.error('Erro ao obter perfil:', error);
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno do servidor'
-            });
+            return erroInterno(res, 'Erro ao obter perfil:', error);
         }
     }
 
@@ -240,22 +225,26 @@ class UsuarioController {
             const usuarioAtual = await UsuarioModel.buscarPorId(req.usuario.id);
 
             if (!usuarioAtual) {
-                return res.status(404).json({
-                    sucesso: false,
-                    erro: 'Usuário não encontrado'
-                });
+                return erro(res, 404, 'Usuário não encontrado');
             }
 
             const resultado = await validarCamposUsuario(req.body, usuarioAtual);
 
             if (resultado.erro) {
-                return res.status(resultado.status || 400).json({
-                    sucesso: false,
-                    erro: resultado.erro
-                });
+                return erro(res, resultado.status || 400, resultado.erro);
             }
 
             const dadosAtualizacao = resultado.dados;
+
+            // Trocar senha ou e-mail exige provar que é o dono da conta.
+            if (dadosAtualizacao.senha !== undefined || dadosAtualizacao.email !== undefined) {
+                const senhaAtual = req.body.senha_atual;
+                if (!ehTexto(senhaAtual) || !senhaAtual) {
+                    return erro400(res, 'Informe a senha atual para alterar e-mail ou senha.');
+                }
+                const confere = await comparePassword(senhaAtual, usuarioAtual.senha);
+                if (!confere) return erro(res, 401, 'Senha atual incorreta.');
+            }
 
             if (Object.keys(dadosAtualizacao).length === 0) {
                 return res.status(200).json({
@@ -276,11 +265,7 @@ class UsuarioController {
             });
 
         } catch (error) {
-            console.error('Erro ao atualizar perfil:', error);
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno do servidor'
-            });
+            return erroInterno(res, 'Erro ao atualizar perfil:', error);
         }
     }
 

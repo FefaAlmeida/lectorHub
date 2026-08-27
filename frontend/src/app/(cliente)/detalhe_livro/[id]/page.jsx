@@ -18,15 +18,9 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import {
-  FiHome,
-  FiSearch,
   FiBookOpen,
-  FiClock,
-  FiUser,
-  FiLogOut,
   FiArrowLeft,
   FiStar,
-  FiBookmark,
   FiCheckCircle,
   FiXCircle,
   FiAlertCircle,
@@ -44,28 +38,21 @@ import {
   getAvaliacoes,
   salvarAvaliacao,
   excluirAvaliacao,
-  getPerfil,
   getElegibilidade,
+  getMeusEmprestimos,
   solicitarEmprestimo,
-  logoutUsuario,
 } from "../../../../api";
+import Sidebar from "../../../../components/sideBar/sideBar";
+import { useUsuario } from "../../../../components/auth/RequireAuth";
 
 // --- CONFIGURAÇÕES VISUAIS ---
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
-const PRIMARY_COLOR = "#7A3131";
+const PRIMARY_COLOR = "#4A0E17";
 const BG_COLOR = "#FFFFFF";
 const CARD_BG = "#FFFFFF";
 const BORDER_COLOR = "#EFEBE3";
 const TEXT_DARK = "#333333";
 const TEXT_LIGHT = "#777777";
-
-const NAV_ITEMS = [
-  { label: "Início", icon: FiHome, href: "/inicio" },
-  { label: "Buscar Livros", icon: FiSearch, href: "/buscar_livro", active: true },
-  { label: "Meus Empréstimos", icon: FiBookOpen, href: "/emprestimo_livro" },
-  { label: "Histórico", icon: FiClock, href: "/emprestimo_livro?aba=historico" },
-  { label: "Meu Cadastro", icon: FiUser, href: "/alterar_cadastro" },
-];
 
 // `capa_url` é opcional no banco, então nem todo livro tem imagem.
 function Capa({ src, alt, ...props }) {
@@ -110,41 +97,16 @@ function formatarData(valor) {
   return Number.isNaN(data.getTime()) ? "" : data.toLocaleDateString("pt-BR");
 }
 
-function NavItem({ item }) {
-  return (
-    <HStack
-      as="a"
-      href={item.href}
-      gap={3}
-      p={3}
-      pl={4}
-      borderRadius="6px"
-      color={item.active ? "white" : PRIMARY_COLOR}
-      bg={item.active ? PRIMARY_COLOR : "transparent"}
-      _hover={!item.active ? { bg: "#F5F1E9" } : {}}
-      transition={`all 0.2s ${EASE}`}
-      cursor="pointer"
-      fontWeight={item.active ? "semibold" : "normal"}
-    >
-      <Icon as={item.icon} w={5} h={5} />
-      <Text fontSize="md">{item.label}</Text>
-    </HStack>
-  );
-}
-
-export default function DetalhesLivroPage() {
-  // Rota dinâmica /detalhe_livro/[id] — o ID vem sempre da URL.
-  const { id: bookId } = useParams();
+function DetalhesLivro({ bookId }) {
   const router = useRouter();
 
   const [livro, setLivro] = useState(null);
   const [semelhantes, setSemelhantes] = useState([]);
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [estatisticas, setEstatisticas] = useState(null);
-  const [usuario, setUsuario] = useState(null);
+  const usuario = useUsuario();
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [novoComentario, setNovoComentario] = useState("");
   const [userRating, setUserRating] = useState(5);
   const [enviando, setEnviando] = useState(false);
@@ -152,23 +114,7 @@ export default function DetalhesLivroPage() {
   const [elegibilidade, setElegibilidade] = useState(null);
   const [solicitando, setSolicitando] = useState(false);
   const [avisoEmprestimo, setAvisoEmprestimo] = useState(null);
-
-  // Quem está logado — define se o formulário de avaliação aparece.
-  useEffect(() => {
-    let ativo = true;
-
-    getPerfil()
-      .then((resposta) => {
-        if (ativo && resposta?.sucesso) setUsuario(resposta.dados);
-      })
-      .catch(() => {
-        /* visitante não logado: o formulário vira convite para entrar */
-      });
-
-    return () => {
-      ativo = false;
-    };
-  }, []);
+  const [jaSolicitado, setJaSolicitado] = useState(false);
 
   useEffect(() => {
     let ativo = true;
@@ -209,6 +155,11 @@ export default function DetalhesLivroPage() {
         setAvaliacoes(dados.avaliacoes || []);
         setEstatisticas(dados.estatisticas || null);
         setErro(null);
+
+        // Se o usuário já avaliou, o formulário abre preenchido para editar.
+        const minha = usuario ? (dados.avaliacoes || []).find((a) => a.id_usuario === usuario.id) : null;
+        setUserRating(minha?.nota ?? 5);
+        setNovoComentario(minha?.comentario || "");
       } catch (error) {
         console.error("[DetalhesLivro] Erro na busca:", error);
 
@@ -217,9 +168,7 @@ export default function DetalhesLivroPage() {
           setSemelhantes([]);
           setAvaliacoes([]);
           setEstatisticas(null);
-          setErro(
-            "Não foi possível falar com o servidor. Verifique se a API está rodando em http://localhost:3001."
-          );
+          setErro("Não foi possível falar com o servidor.");
         }
       } finally {
         if (ativo) setCarregando(false);
@@ -242,33 +191,19 @@ export default function DetalhesLivroPage() {
     [avaliacoes, usuario]
   );
 
-  // Ao encontrar a avaliação já existente, o formulário abre preenchido
-  // para o usuário editar em vez de escrever de novo do zero.
   useEffect(() => {
-    if (minhaAvaliacao) {
-      setUserRating(minhaAvaliacao.nota);
-      setNovoComentario(minhaAvaliacao.comentario || "");
-    }
-  }, [minhaAvaliacao?.id]);
+    if (!usuario) return;
+    getElegibilidade().then((r) => r?.sucesso && setElegibilidade(r.dados));
 
-  // Regras de empréstimo: o aviso aparece ANTES do clique, não depois do erro.
-  const recarregarElegibilidade = useCallback(async () => {
-    const resposta = await getElegibilidade();
-
-    if (resposta?.sucesso) setElegibilidade(resposta.dados);
-  }, []);
-
-  useEffect(() => {
-    if (usuario) recarregarElegibilidade().catch(() => {});
-  }, [usuario, recarregarElegibilidade]);
-
-  async function sair() {
-    try {
-      await logoutUsuario();
-    } finally {
-      router.push("/login");
-    }
-  }
+    // Se já existe pedido/empréstimo ativo deste livro, o botão fica travado.
+    getMeusEmprestimos().then((r) => {
+      if (!r?.sucesso) return;
+      const ativo = r.dados.emprestimos.some(
+        (e) => String(e.id_livro) === String(bookId) && ["PENDENTE", "EMPRESTADO"].includes(e.status)
+      );
+      setJaSolicitado(ativo);
+    });
+  }, [usuario, bookId]);
 
   async function pedirEmprestimo() {
     setAvisoEmprestimo(null);
@@ -288,6 +223,7 @@ export default function DetalhesLivroPage() {
       }
 
       setElegibilidade(resposta.dados.elegibilidade);
+      setJaSolicitado(true);
       setAvisoEmprestimo({ tipo: "ok", texto: resposta.mensagem });
     } catch {
       setAvisoEmprestimo({
@@ -396,7 +332,7 @@ export default function DetalhesLivroPage() {
             bg={PRIMARY_COLOR}
             color="white"
             onClick={() => router.push("/buscar_livro")}
-            _hover={{ bg: "#632727" }}
+            _hover={{ bg: "#360A11" }}
           >
             Voltar para a busca
           </Button>
@@ -408,41 +344,7 @@ export default function DetalhesLivroPage() {
   // 3. TELA DE DADOS DO LIVRO
   return (
     <Flex minH="100vh" bg={BG_COLOR}>
-      {/* BARRA LATERAL */}
-      <Box
-        as="nav"
-        w="260px"
-        bg="#FAF9F6"
-        borderRight="1px solid"
-        borderColor={BORDER_COLOR}
-        p={5}
-        flexShrink={0}
-        display={{ base: "none", md: "block" }}
-      >
-        <VStack gap={3} align="stretch">
-          {NAV_ITEMS.map((item, index) => (
-            <NavItem key={index} item={item} />
-          ))}
-
-          <Separator borderColor={BORDER_COLOR} my={4} />
-
-          <HStack
-            as="button"
-            gap={3}
-            p={3}
-            pl={4}
-            borderRadius="6px"
-            color={PRIMARY_COLOR}
-            _hover={{ bg: "#F5F1E9" }}
-            transition={`all 0.2s ${EASE}`}
-            cursor="pointer"
-            onClick={sair}
-          >
-            <Icon as={FiLogOut} w={5} h={5} />
-            <Text fontSize="md">Sair</Text>
-          </HStack>
-        </VStack>
-      </Box>
+      <Sidebar />
 
       {/* CONTEÚDO PRINCIPAL */}
       <Box flex={1} p={{ base: 6, md: 8 }} pb={16} overflowY="auto">
@@ -552,37 +454,25 @@ export default function DetalhesLivroPage() {
                     color="white"
                     size="lg"
                     disabled={
+                      jaSolicitado ||
                       !livro.isAvailable ||
                       (Boolean(usuario) && elegibilidade?.podeEmprestar === false)
                     }
                     loading={solicitando}
-                    _hover={{ bg: "#632727" }}
+                    _hover={{ bg: "#360A11" }}
                     onClick={
-                      usuario ? pedirEmprestimo : () => router.push("/login")
+                      usuario ? pedirEmprestimo : () => router.push(`/login?next=/detalhe_livro/${bookId}`)
                     }
                   >
-                    {!livro.isAvailable
+                    {jaSolicitado
+                      ? "Solicitação em andamento"
+                      : !livro.isAvailable
                       ? "Indisponível"
                       : usuario
                       ? "Solicitar Empréstimo"
                       : "Entrar para solicitar"}
                   </Button>
 
-                  <Button
-                    variant="outline"
-                    borderColor={BORDER_COLOR}
-                    color={PRIMARY_COLOR}
-                    size="lg"
-                    aria-label="Salvar livro"
-                    onClick={() => setIsBookmarked(!isBookmarked)}
-                    _hover={{ bg: "#FAF9F6" }}
-                  >
-                    <Icon
-                      as={FiBookmark}
-                      fill={isBookmarked ? PRIMARY_COLOR : "none"}
-                      color={PRIMARY_COLOR}
-                    />
-                  </Button>
                 </HStack>
 
                 {avisoEmprestimo && (
@@ -759,7 +649,7 @@ export default function DetalhesLivroPage() {
                       size="sm"
                       loading={enviando}
                       onClick={enviarAvaliacao}
-                      _hover={{ bg: "#632727" }}
+                      _hover={{ bg: "#360A11" }}
                     >
                       <Icon as={FiSend} mr={2} />
                       {minhaAvaliacao ? "Atualizar avaliação" : "Enviar avaliação"}
@@ -776,7 +666,7 @@ export default function DetalhesLivroPage() {
                     color="white"
                     size="sm"
                     onClick={() => router.push("/login")}
-                    _hover={{ bg: "#632727" }}
+                    _hover={{ bg: "#360A11" }}
                   >
                     Fazer login
                   </Button>
@@ -849,4 +739,11 @@ export default function DetalhesLivroPage() {
       </Box>
     </Flex>
   );
+}
+
+// Rota dinâmica /detalhe_livro/[id]. A `key` remonta a página ao navegar
+// entre livros ("Da mesma categoria"), zerando comentário, avisos etc.
+export default function DetalhesLivroPage() {
+  const { id } = useParams();
+  return <DetalhesLivro key={id} bookId={id} />;
 }

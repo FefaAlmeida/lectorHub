@@ -1,6 +1,6 @@
 'use client';
 import Sidebar from "../../../components/sideBar/sideBar";
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
@@ -14,36 +14,13 @@ import {
   Tabs,
   SimpleGrid,
 } from '@chakra-ui/react';
-import {
-  FiHome,
-  FiSearch,
-  FiBookOpen,
-  FiClock,
-  FiUser,
-  FiLogOut,
-  FiCalendar,
-  FiCheckCircle,
-  FiAlertCircle,
-  FiXCircle,
-  FiVolume2,
-} from 'react-icons/fi';
+import { FiBookOpen, FiClock, FiCalendar, FiCheckCircle, FiAlertCircle, FiXCircle, FiVolume2 } from 'react-icons/fi';
 
-import {
-  getMeusEmprestimos,
-  cancelarEmprestimo,
-  logoutUsuario,
-} from '../../../api';
+import { getMeusEmprestimos, cancelarEmprestimo } from '../../../api';
+import { toaster } from '@/components/ui/toaster';
 
 const PRIMARY = '#4A0E17';
 const BORDA = '#E8DCC4';
-
-const NAV_ITEMS = [
-  { label: 'Meus Empréstimos', icon: FiBookOpen, href: '/emprestimo_livro', active: true },
-  { label: 'Início', icon: FiHome, href: '/inicio' },
-  { label: 'Buscar Livros', icon: FiSearch, href: '/buscar_livro' },
-  { label: 'Histórico', icon: FiClock, href: '/emprestimo_livro?aba=historico' },
-  { label: 'Meu Cadastro', icon: FiUser, href: '/alterar_cadastro' },
-];
 
 const EM_ANDAMENTO = ['PENDENTE', 'EMPRESTADO'];
 
@@ -122,36 +99,8 @@ function descreverSituacao(emprestimo) {
     icone: FiCheckCircle,
     bg: '#E8F5E9',
     cor: '#388E3C',
-    detalhe: `Faltam ${dias} dias para a devolução.`,
+    detalhe: dias === null ? 'Empréstimo em andamento.' : `Faltam ${dias} dias para a devolução.`,
   };
-}
-
-function NavItem({ item, onClick }) {
-  const conteudo = (
-    <>
-      <item.icon size={22} style={{ marginRight: '14px' }} />
-      <Text fontSize="md">{item.label}</Text>
-    </>
-  );
-
-  return (
-    <Flex
-      as={onClick ? 'button' : 'a'}
-      href={onClick ? undefined : item.href}
-      onClick={onClick}
-      align="center"
-      p={3.5}
-      borderRadius="xl"
-      textAlign="left"
-      bg={item.active ? PRIMARY : 'transparent'}
-      color={item.active ? '#FFFFFF' : '#2D2D2D'}
-      fontWeight={item.active ? 'bold' : 'normal'}
-      _hover={item.active ? {} : { bg: BORDA }}
-      cursor="pointer"
-    >
-      {conteudo}
-    </Flex>
-  );
 }
 
 function CardEmprestimo({ emprestimo, onVerDetalhes, onCancelar, cancelando }) {
@@ -213,13 +162,9 @@ function CardEmprestimo({ emprestimo, onVerDetalhes, onCancelar, cancelando }) {
             <Flex align="center" gap={2} fontSize="sm" color="#6B6B6B">
               <Box color={PRIMARY}><FiCalendar size={16} /></Box>
               <Text>
-                {emprestimo.status === 'PENDENTE' ? 'Solicitado em: ' : 'Emprestado em: '}
+                {emprestimo.data_emprestimo ? 'Emprestado em: ' : 'Solicitado em: '}
                 <strong>
-                  {formatarData(
-                    emprestimo.status === 'PENDENTE'
-                      ? emprestimo.data_solicitacao
-                      : emprestimo.data_emprestimo
-                  )}
+                  {formatarData(emprestimo.data_emprestimo || emprestimo.data_solicitacao)}
                 </strong>
               </Text>
             </Flex>
@@ -302,50 +247,52 @@ function MeusEmprestimosConteudo() {
   const abaInicial =
     searchParams.get('aba') === 'historico' ? 'historico' : 'em-andamento';
 
-  const carregar = useCallback(async () => {
-    try {
-      const resposta = await getMeusEmprestimos();
-
-      // A rota exige login; sem sessão, manda para o login.
-      if (!resposta?.sucesso) {
-        router.push('/login');
-        return;
-      }
-
-      setEmprestimos(resposta.dados.emprestimos);
-      setElegibilidade(resposta.dados.elegibilidade);
-      setPrazoDias(resposta.dados.prazo_dias);
-      setErro(null);
-    } catch {
-      setErro(
-        'Não foi possível falar com o servidor. Verifique se a API está rodando em http://localhost:3001.'
-      );
-    } finally {
-      setCarregando(false);
-    }
-  }, [router]);
+  // `versao` força uma nova busca depois de cancelar.
+  const [versao, setVersao] = useState(0);
+  const carregar = () => setVersao((v) => v + 1);
 
   useEffect(() => {
-    carregar();
-  }, [carregar]);
+    let ativo = true;
+
+    getMeusEmprestimos().then((resposta) => {
+      if (!ativo) return;
+
+      if (!resposta?.sucesso) {
+        // Sessão expirada: o RequireAuth do layout cuida do redirecionamento
+        // na próxima navegação; aqui só mostramos o motivo.
+        setErro(resposta?.mensagem || 'Não foi possível carregar seus empréstimos.');
+      } else {
+        setEmprestimos(resposta.dados.emprestimos);
+        setElegibilidade(resposta.dados.elegibilidade);
+        setPrazoDias(resposta.dados.prazo_dias);
+        setErro(null);
+      }
+
+      setCarregando(false);
+    });
+
+    return () => {
+      ativo = false;
+    };
+  }, [versao]);
 
   async function cancelar(idEmprestimo) {
     setCancelandoId(idEmprestimo);
 
-    try {
-      await cancelarEmprestimo(idEmprestimo);
-      await carregar();
-    } finally {
-      setCancelandoId(null);
-    }
-  }
+    const resposta = await cancelarEmprestimo(idEmprestimo);
 
-  async function sair() {
-    try {
-      await logoutUsuario();
-    } finally {
-      router.push('/login');
+    if (resposta?.sucesso) {
+      toaster.create({ title: 'Solicitação cancelada', type: 'success' });
+      carregar();
+    } else {
+      toaster.create({
+        title: 'Não foi possível cancelar',
+        description: resposta?.mensagem || 'Tente novamente.',
+        type: 'error',
+      });
     }
+
+    setCancelandoId(null);
   }
 
   const emAndamento = emprestimos.filter((item) =>
@@ -425,7 +372,7 @@ function MeusEmprestimosConteudo() {
         ) : erro ? (
           <Text color="#C5221F" fontSize="sm">{erro}</Text>
         ) : (
-          <Tabs.Root defaultValue={abaInicial} variant="plain" w="100%">
+          <Tabs.Root key={abaInicial} defaultValue={abaInicial} variant="plain" w="100%">
             <Tabs.List borderBottom="1px solid" borderColor={BORDA} mb={8} w="100%">
               <Tabs.Trigger
                 value="em-andamento"

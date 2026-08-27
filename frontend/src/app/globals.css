@@ -24,3 +24,9 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.lh-focusable:focus-visible {
+  outline: 2px solid #4A0E17;
+  outline-offset: 2px;
+  border-radius: 8px;
+}

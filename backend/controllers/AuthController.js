@@ -3,6 +3,7 @@ import UsuarioModel from '../models/UsuarioModel.js';
 import { JWT_CONFIG } from '../config/jwt.js';
 import { setAuthCookie, clearAuthCookie } from '../utils/authCookie.js';
 import { enviarEmail } from '../utils/email.js';
+import { erro, erroInterno } from '../utils/resposta.js';
 
 const ehTexto = (v) => typeof v === 'string';
 
@@ -25,10 +26,7 @@ class AuthController {
             const { email, senha } = req.body;
 
             if (!ehTexto(email) || !ehTexto(senha) || !email.trim() || !senha) {
-                return res.status(400).json({
-                    sucesso: false,
-                    erro: 'Email e senha são obrigatórios'
-                });
+                return erro(res, 400, 'Email e senha são obrigatórios');
             }
 
             const usuario = await UsuarioModel.verificarCredenciais(
@@ -37,10 +35,7 @@ class AuthController {
             );
 
             if (!usuario) {
-                return res.status(401).json({
-                    sucesso: false,
-                    erro: 'Credenciais inválidas'
-                });
+                return erro(res, 401, 'Credenciais inválidas');
             }
 
             const token = jwt.sign(
@@ -69,11 +64,7 @@ class AuthController {
             });
 
         } catch (error) {
-            console.error('Erro no login:', error);
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno no servidor'
-            });
+            return erroInterno(res, 'Erro no login:', error);
         }
     }
 
@@ -88,11 +79,7 @@ class AuthController {
             });
 
         } catch (error) {
-            console.error('Erro no logout:', error);
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno no servidor'
-            });
+            return erroInterno(res, 'Erro no logout:', error);
         }
     }
 
@@ -103,10 +90,7 @@ class AuthController {
             const { email } = req.body;
 
             if (!ehTexto(email) || email.trim() === '') {
-                return res.status(400).json({
-                    sucesso: false,
-                    erro: 'Email é obrigatório'
-                });
+                return erro(res, 400, 'Email é obrigatório');
             }
 
             const emailNormalizado = email.trim().toLowerCase();
@@ -165,12 +149,7 @@ class AuthController {
             });
 
         } catch (error) {
-            console.error('Erro ao solicitar redefinição de senha:', error);
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno no servidor',
-                mensagem: 'Não foi possível processar o envio.'
-            });
+            return erroInterno(res, 'Erro ao solicitar redefinição de senha:', error);
         }
     }
 
@@ -180,36 +159,24 @@ class AuthController {
             const { token, senha } = req.body;
 
             if (!ehTexto(token) || !ehTexto(senha) || !token || !senha) {
-                return res.status(400).json({
-                    sucesso: false,
-                    erro: 'Token e nova senha são obrigatórios'
-                });
+                return erro(res, 400, 'Token e nova senha são obrigatórios');
             }
 
             if (senha.length < 6) {
-                return res.status(400).json({
-                    sucesso: false,
-                    erro: 'A senha deve ter pelo menos 6 caracteres'
-                });
+                return erro(res, 400, 'A senha deve ter pelo menos 6 caracteres');
             }
 
             // 1º passo: ler o id sem verificar, para saber qual hash usar no segredo.
             const naoVerificado = jwt.decode(token);
 
             if (!naoVerificado || naoVerificado.finalidade !== 'redefinir-senha') {
-                return res.status(401).json({
-                    sucesso: false,
-                    erro: 'Token inválido'
-                });
+                return erro(res, 401, 'Token inválido');
             }
 
             const usuario = await UsuarioModel.buscarPorId(naoVerificado.id);
 
             if (!usuario) {
-                return res.status(401).json({
-                    sucesso: false,
-                    erro: 'Token inválido'
-                });
+                return erro(res, 401, 'Token inválido');
             }
 
             // 2º passo: verificar de verdade. Se a senha já foi trocada com este
@@ -225,26 +192,14 @@ class AuthController {
 
         } catch (error) {
             if (error.name === 'TokenExpiredError') {
-                return res.status(401).json({
-                    sucesso: false,
-                    erro: 'Link expirado',
-                    mensagem: 'Solicite uma nova redefinição de senha.'
-                });
+                return erro(res, 401, 'Solicite uma nova redefinição de senha.');
             }
 
             if (error.name === 'JsonWebTokenError') {
-                return res.status(401).json({
-                    sucesso: false,
-                    erro: 'Token inválido',
-                    mensagem: 'Este link já foi usado ou não é válido. Solicite uma nova redefinição.'
-                });
+                return erro(res, 401, 'Este link já foi usado ou não é válido. Solicite uma nova redefinição.');
             }
 
-            console.error('Erro ao redefinir senha:', error);
-            return res.status(500).json({
-                sucesso: false,
-                erro: 'Erro interno no servidor'
-            });
+            return erroInterno(res, 'Erro ao redefinir senha:', error);
         }
     }
 }

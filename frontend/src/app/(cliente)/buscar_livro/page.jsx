@@ -24,24 +24,9 @@ import {
   AspectRatio,
 } from "@chakra-ui/react";
 
-import {
-  FiGrid,
-  FiList,
-  FiSearch,
-  FiSliders,
-  FiRefreshCcw,
-  FiBookOpen,
-  FiHeart,
-  FiChevronLeft,
-  FiChevronRight,
-  FiChevronDown,
-  FiHome,
-  FiClock,
-  FiUser,
-  FiLogOut,
-} from "react-icons/fi";
+import { FiSearch, FiRefreshCcw, FiBookOpen, FiChevronLeft, FiChevronRight, FiChevronDown } from "react-icons/fi";
 
-import { getLivros, getCategorias, logoutUsuario } from "../../../api";
+import { getLivros, getCategorias } from "../../../api";
 
 // --- CONFIGURAÇÕES VISUAIS ---
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
@@ -53,15 +38,6 @@ const TEXT_DARK = "#333333";
 const TEXT_LIGHT = "#777777";
 
 const LIMITE_POR_PAGINA = 12;
-
-// --- DADOS DA NAVEGAÇÃO ---
-const NAV_ITEMS = [
-  { label: "Início", icon: FiHome, href: "/inicio" },
-  { label: "Buscar Livros", icon: FiSearch, href: "/buscar_livro", active: true },
-  { label: "Meus Empréstimos", icon: FiBookOpen, href: "/emprestimo_livro" },
-  { label: "Histórico", icon: FiClock, href: "/emprestimo_livro?aba=historico" },
-  { label: "Meu Cadastro", icon: FiUser, href: "/alterar_cadastro" },
-];
 
 // Cada opção guarda o rótulo exibido e o valor enviado à API.
 const OPCOES_DISPONIBILIDADE = [
@@ -103,29 +79,6 @@ function Capa({ livro }) {
         </Flex>
       )}
     </AspectRatio>
-  );
-}
-
-// --- COMPONENTE AUXILIAR DA SIDEBAR ---
-function NavItem({ item }) {
-  return (
-    <HStack
-      as="a"
-      href={item.href}
-      gap={3}
-      p={3}
-      pl={4}
-      borderRadius="6px"
-      color={item.active ? "white" : TEXT_DARK}
-      bg={item.active ? PRIMARY_COLOR : "transparent"}
-      _hover={!item.active ? { bg: "#FFFFFF" } : {}}
-      transition={`all 0.2s ${EASE}`}
-      cursor="pointer"
-      fontWeight={item.active ? "semibold" : "normal"}
-    >
-      <Icon as={item.icon} w={5} h={5} mr={3} />
-      <Text fontSize="md">{item.label}</Text>
-    </HStack>
   );
 }
 
@@ -265,6 +218,7 @@ export default function BuscarLivros() {
 
         if (!resposta?.sucesso) {
           setLivros([]);
+          setPaginacao({ total: 0, totalPaginas: 1 });
           setErro(resposta?.mensagem || "Não foi possível carregar os livros.");
           return;
         }
@@ -272,13 +226,6 @@ export default function BuscarLivros() {
         setLivros(resposta.dados);
         setPaginacao(resposta.paginacao);
         setErro(null);
-      } catch {
-        if (ativo) {
-          setLivros([]);
-          setErro(
-            "Não foi possível falar com o servidor. Verifique se a API está rodando em http://localhost:3001."
-          );
-        }
       } finally {
         if (ativo) setCarregando(false);
       }
@@ -311,14 +258,6 @@ export default function BuscarLivros() {
 
   function abrirDetalhes(id) {
     router.push(`/detalhe_livro/${id}`);
-  }
-
-  async function sair() {
-    try {
-      await logoutUsuario();
-    } finally {
-      router.push("/login");
-    }
   }
 
   const paginas = Array.from(
@@ -390,10 +329,6 @@ export default function BuscarLivros() {
               Buscar
             </Button>
 
-            <Button variant="outline" color={PRIMARY_COLOR} borderColor={PRIMARY_COLOR} _hover={{ bg: "#f2e6e8" }} size="lg" borderRadius="full">
-              <Icon mr={2}><FiSliders /></Icon>
-              Busca Avançada
-            </Button>
           </Flex>
 
           {/* Filtros */}
@@ -447,15 +382,6 @@ export default function BuscarLivros() {
               </Stack>
             </HStack>
 
-            <HStack gap={2}>
-              <Text fontSize="sm" color={TEXT_LIGHT} mr={2}>Visualização:</Text>
-              <IconButton bg={PRIMARY_COLOR} color="white" aria-label="Grade" size="sm" borderRadius="md">
-                <FiGrid />
-              </IconButton>
-              <IconButton bg={CARD_BG} border="1px solid" borderColor={BORDER_COLOR} color={TEXT_LIGHT} aria-label="Lista" size="sm" borderRadius="md">
-                <FiList />
-              </IconButton>
-            </HStack>
           </Flex>
 
           {/* Resultados */}
@@ -510,17 +436,6 @@ export default function BuscarLivros() {
                   }}
                 >
                   <Box p={3} pb={0} position="relative">
-                    <Icon
-                      as={FiHeart}
-                      position="absolute"
-                      top={5}
-                      right={5}
-                      color="gray.400"
-                      cursor="pointer"
-                      zIndex={2}
-                      _hover={{ color: PRIMARY_COLOR }}
-                      onClick={(evento) => evento.stopPropagation()}
-                    />
                     <Capa livro={livro} />
                   </Box>
 

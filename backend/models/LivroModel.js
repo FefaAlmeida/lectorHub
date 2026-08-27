@@ -17,9 +17,32 @@ const ORDENACOES = {
     recentes: 'ano_publicacao DESC, titulo ASC'
 };
 
+const COLUNAS = `
+    id_livro AS id,
+    titulo,
+    autor,
+    categoria,
+    sinopse,
+    ano_publicacao,
+    disponivel,
+    capa_url
+`;
+
+// Campos que o admin pode gravar (na ordem: nome no JSON = nome da coluna)
+const CAMPOS_EDITAVEIS = ['titulo', 'autor', 'categoria', 'sinopse', 'ano_publicacao', 'capa_url', 'disponivel'];
+
+async function consultar(sql, valores = []) {
+    const connection = await getConnection();
+    try {
+        const [rows] = await connection.execute(sql, valores);
+        return rows;
+    } finally {
+        connection.release();
+    }
+}
+
 export const livroModel = {
 
-    // LISTAR COM BUSCA, FILTROS E PAGINAÇÃO
     async listar({
         busca = '',
         categoria = '',
@@ -28,8 +51,7 @@ export const livroModel = {
         pagina = 1,
         limite = 12
     } = {}) {
-        // LIMIT/OFFSET não aceitam placeholder em prepared statement no MySQL,
-        // por isso são interpolados — sempre como inteiros sanitizados.
+        // LIMIT/OFFSET não aceitam placeholder em prepared statement no MySQL.
         const limiteSeguro = Math.min(Math.max(parseInt(limite) || 12, 1), 100);
         const paginaSegura = Math.max(parseInt(pagina) || 1, 1);
         const offset = (paginaSegura - 1) * limiteSeguro;
@@ -56,141 +78,111 @@ export const livroModel = {
         const where = filtros.length ? `WHERE ${filtros.join(' AND ')}` : '';
         const orderBy = ORDENACOES[ordem] || ORDENACOES.titulo_asc;
 
-        const connection = await getConnection();
+        const livros = await consultar(
+            `SELECT ${COLUNAS} FROM livros ${where} ORDER BY ${orderBy} LIMIT ${limiteSeguro} OFFSET ${offset}`,
+            valores
+        );
+        const totalRows = await consultar(`SELECT COUNT(*) AS total FROM livros ${where}`, valores);
+        const total = Number(totalRows[0].total);
 
-        try {
-            const [livros] = await connection.execute(
-                `
-                SELECT
-                    id_livro AS id,
-                    titulo,
-                    autor,
-                    categoria,
-                    ano_publicacao,
-                    disponivel,
-                    capa_url
-                FROM livros
-                ${where}
-                ORDER BY ${orderBy}
-                LIMIT ${limiteSeguro} OFFSET ${offset}
-                `,
-                valores
-            );
-
-            const [totalResult] = await connection.execute(
-                `SELECT COUNT(*) AS total FROM livros ${where}`,
-                valores
-            );
-
-            return {
-                livros: livros.map(normalizar),
-                total: totalResult[0].total,
-                pagina: paginaSegura,
-                limite: limiteSeguro,
-                totalPaginas: Math.ceil(totalResult[0].total / limiteSeguro)
-            };
-
-        } finally {
-            connection.release();
-        }
+        return {
+            livros: livros.map(normalizar),
+            total,
+            pagina: paginaSegura,
+            limite: limiteSeguro,
+            totalPaginas: Math.ceil(total / limiteSeguro)
+        };
     },
 
-    // CATEGORIAS EXISTENTES (alimenta o filtro da tela de busca)
     async listarCategorias() {
-        const connection = await getConnection();
-
-        try {
-            const [rows] = await connection.execute(
-                `
-                SELECT DISTINCT categoria
-                FROM livros
-                WHERE categoria IS NOT NULL AND categoria <> ''
-                ORDER BY categoria ASC
-                `
-            );
-
-            return rows.map((linha) => linha.categoria);
-
-        } finally {
-            connection.release();
-        }
+        const rows = await consultar(
+            `SELECT DISTINCT categoria FROM livros
+             WHERE categoria IS NOT NULL AND categoria <> ''
+             ORDER BY categoria ASC`
+        );
+        return rows.map((linha) => linha.categoria);
     },
 
-    // BUSCAR POR ID
     async buscarPorId(id) {
-        const connection = await getConnection();
-
-        try {
-            const [rows] = await connection.execute(
-                `
-                SELECT
-                    id_livro AS id,
-                    titulo,
-                    autor,
-                    categoria,
-                    sinopse,
-                    ano_publicacao,
-                    disponivel,
-                    capa_url
-                FROM livros
-                WHERE id_livro = ?
-                `,
-                [id]
-            );
-
-            return normalizar(rows[0]) || null;
-
-        } finally {
-            connection.release();
-        }
+        const rows = await consultar(`SELECT ${COLUNAS} FROM livros WHERE id_livro = ?`, [id]);
+        return normalizar(rows[0]) || null;
     },
 
-    // OUTROS LIVROS DA MESMA CATEGORIA
     async buscarSemelhantes(categoria, idLivroAtual, limite = 4) {
         if (!categoria) return [];
-
         const limiteSeguro = Math.min(Math.max(parseInt(limite) || 4, 1), 20);
 
+        const rows = await consultar(
+            `SELECT id_livro AS id, titulo, autor, capa_url, disponivel
+             FROM livros
+             WHERE categoria = ? AND id_livro != ?
+             ORDER BY titulo ASC
+             LIMIT ${limiteSeguro}`,
+            [categoria, idLivroAtual]
+        );
+        return rows.map(normalizar);
+    },
+
+    // --- ESCRITA (admin) ---
+
+    async criar(dados) {
         const connection = await getConnection();
-
         try {
-            const [rows] = await connection.execute(
-                `
-                SELECT
-                    id_livro AS id,
-                    titulo,
-                    autor,
-                    capa_url,
-                    disponivel
-                FROM livros
-                WHERE categoria = ? AND id_livro != ?
-                ORDER BY titulo ASC
-                LIMIT ${limiteSeguro}
-                `,
-                [categoria, idLivroAtual]
+            const [result] = await connection.execute(
+                `INSERT INTO livros (titulo, autor, categoria, sinopse, ano_publicacao, capa_url, disponivel)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    dados.titulo,
+                    dados.autor,
+                    dados.categoria,
+                    dados.sinopse ?? null,
+                    dados.ano_publicacao,
+                    dados.capa_url ?? null,
+                    dados.disponivel === false ? 0 : 1
+                ]
             );
-
-            return rows.map(normalizar);
-
+            return this.buscarPorId(result.insertId);
         } finally {
             connection.release();
         }
     },
 
-    // MARCAR COMO DISPONÍVEL / INDISPONÍVEL
-    async atualizarDisponibilidade(id, disponivel) {
-        const connection = await getConnection();
+    // Atualiza só os campos presentes em `dados`
+    async atualizar(id, dados) {
+        const campos = [];
+        const valores = [];
 
+        for (const campo of CAMPOS_EDITAVEIS) {
+            if (dados[campo] !== undefined) {
+                campos.push(`${campo} = ?`);
+                valores.push(campo === 'disponivel' ? (dados[campo] ? 1 : 0) : dados[campo]);
+            }
+        }
+
+        if (campos.length === 0) return this.buscarPorId(id);
+
+        const connection = await getConnection();
         try {
             const [result] = await connection.execute(
-                'UPDATE livros SET disponivel = ? WHERE id_livro = ?',
-                [disponivel ? 1 : 0, id]
+                `UPDATE livros SET ${campos.join(', ')} WHERE id_livro = ?`,
+                [...valores, id]
             );
-
             if (result.affectedRows === 0) return null;
-
             return this.buscarPorId(id);
+        } finally {
+            connection.release();
+        }
+    },
 
+    async atualizarDisponibilidade(id, disponivel) {
+        return this.atualizar(id, { disponivel });
+    },
+
+    async excluir(id) {
+        const connection = await getConnection();
+        try {
+            const [result] = await connection.execute('DELETE FROM livros WHERE id_livro = ?', [id]);
+            return result.affectedRows > 0;
         } finally {
             connection.release();
         }

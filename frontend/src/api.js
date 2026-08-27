@@ -1,276 +1,84 @@
 // Configure NEXT_PUBLIC_API_URL no .env.local (ver .env.example).
 // O fallback só serve para desenvolvimento local.
-const BASE_URL =
-  (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001").replace(/\/+$/, "") +
-  "/api";
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001").replace(/\/+$/, "");
+const BASE_URL = `${API_URL}/api`;
 
-// REGISTRO
-export async function criarUsuario(data) {
-  const res = await fetch(`${BASE_URL}/auth/criarUsuario`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
+// Toda chamada passa por aqui: envia o cookie de sessão, serializa o body
+// e garante que a resposta seja SEMPRE um objeto { sucesso, mensagem, ... }
+// — mesmo quando o servidor cai ou devolve algo que não é JSON.
+async function requisitar(caminho, { method = "GET", body } = {}) {
+  try {
+    const res = await fetch(`${BASE_URL}${caminho}`, {
+      method,
+      credentials: "include",
+      headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
 
-  return res.json();
+    try {
+      return await res.json();
+    } catch {
+      return { sucesso: false, mensagem: `Resposta inválida do servidor (HTTP ${res.status}).` };
+    }
+  } catch {
+    return { sucesso: false, mensagem: "Não foi possível conectar ao servidor.", codigo: "SEM_CONEXAO" };
+  }
 }
 
-// LOGIN
-export async function loginUsuario(data) {
-  const res = await fetch(`${BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(data),
+function query(params = {}) {
+  const q = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") q.append(k, v);
   });
-
-  return res.json();
+  const s = q.toString();
+  return s ? `?${s}` : "";
 }
 
-// LOGOUT
-export async function logoutUsuario() {
-  const res = await fetch(`${BASE_URL}/auth/logout`, {
-    method: "POST",
-    credentials: "include",
-  });
-
-  return res.json();
-}
-
-// SOLICITAR REDEFINIÇÃO DE SENHA
-export async function solicitarRedefinicaoSenha(email) {
-  const res = await fetch(`${BASE_URL}/auth/solicitar-redefinicao-senha`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email }),
-  });
-
-  return res.json();
-}
-
-// REDEFINIR SENHA
-export async function redefinirSenha(token, senha) {
-  const res = await fetch(`${BASE_URL}/auth/redefinir-senha`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ token, senha }),
-  });
-
-  return res.json();
-}
+// AUTENTICAÇÃO
+export const criarUsuario = (data) => requisitar("/auth/criarUsuario", { method: "POST", body: data });
+export const loginUsuario = (data) => requisitar("/auth/login", { method: "POST", body: data });
+export const logoutUsuario = () => requisitar("/auth/logout", { method: "POST" });
+export const solicitarRedefinicaoSenha = (email) =>
+  requisitar("/auth/solicitar-redefinicao-senha", { method: "POST", body: { email } });
+export const redefinirSenha = (token, senha) =>
+  requisitar("/auth/redefinir-senha", { method: "POST", body: { token, senha } });
 
 // PERFIL
-export async function getPerfil() {
-  const res = await fetch(`${BASE_URL}/usuarios/me`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  return res.json();
-}
-
-export async function atualizarPerfil(data) {
-  const res = await fetch(`${BASE_URL}/usuarios/me`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
-
-  return res.json();
-}
-
+export const getPerfil = () => requisitar("/usuarios/me");
+export const atualizarPerfil = (data) => requisitar("/usuarios/me", { method: "PUT", body: data });
 
 // USUÁRIOS (ADMIN)
-export async function getUsuarios(pagina = 1, limite = 10) {
-  const res = await fetch(
-    `${BASE_URL}/usuarios?pagina=${pagina}&limite=${limite}`,
-    {
-      method: "GET",
-      credentials: "include",
-    }
-  );
+export const getUsuarios = (pagina = 1, limite = 10) => requisitar(`/usuarios${query({ pagina, limite })}`);
+export const atualizarUsuario = (id, data) => requisitar(`/usuarios/${id}`, { method: "PUT", body: data });
 
-  return res.json();
-}
+// LIVROS — filtros: { busca, categoria, disponivel, ordem, pagina, limite }
+export const getLivros = (filtros = {}) => requisitar(`/livros${query(filtros)}`);
+export const getCategorias = () => requisitar("/livros/categorias");
+export const getLivroPorId = (id) => requisitar(`/livros/${id}`);
 
-// LIVROS
-// filtros aceitos: { busca, categoria, disponivel, pagina, limite }
-export async function getLivros(filtros = {}) {
-  const query = new URLSearchParams();
-
-  Object.entries(filtros).forEach(([chave, valor]) => {
-    if (valor !== undefined && valor !== null && valor !== "") {
-      query.append(chave, valor);
-    }
-  });
-
-  const queryString = query.toString();
-
-  const res = await fetch(
-    `${BASE_URL}/livros${queryString ? `?${queryString}` : ""}`,
-    {
-      method: "GET",
-      credentials: "include",
-    }
-  );
-
-  return res.json();
-}
-
-export async function getCategorias() {
-  const res = await fetch(`${BASE_URL}/livros/categorias`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  return res.json();
-}
-
-export async function getLivroPorId(id) {
-  const res = await fetch(`${BASE_URL}/livros/${id}`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  return res.json();
-}
-
-export async function atualizarDisponibilidade(id, disponivel) {
-  const res = await fetch(`${BASE_URL}/livros/${id}/disponibilidade`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({ disponivel }),
-  });
-
-  return res.json();
-}
-
+// LIVROS (ADMIN)
+export const criarLivro = (data) => requisitar("/livros", { method: "POST", body: data });
+export const atualizarLivro = (id, data) => requisitar(`/livros/${id}`, { method: "PUT", body: data });
+export const excluirLivro = (id) => requisitar(`/livros/${id}`, { method: "DELETE" });
+export const atualizarDisponibilidade = (id, disponivel) =>
+  requisitar(`/livros/${id}/disponibilidade`, { method: "PUT", body: { disponivel } });
 
 // AVALIAÇÕES
-export async function getAvaliacoes(idLivro) {
-  const res = await fetch(`${BASE_URL}/livros/${idLivro}/avaliacoes`, {
-    method: "GET",
-    credentials: "include",
-  });
+export const getAvaliacoes = (idLivro) => requisitar(`/livros/${idLivro}/avaliacoes`);
+export const salvarAvaliacao = (idLivro, { nota, comentario }) =>
+  requisitar(`/livros/${idLivro}/avaliacoes`, { method: "POST", body: { nota, comentario } });
+export const excluirAvaliacao = (idLivro) => requisitar(`/livros/${idLivro}/avaliacoes`, { method: "DELETE" });
 
-  return res.json();
-}
+// EMPRÉSTIMOS (CLIENTE)
+export const getMeusEmprestimos = () => requisitar("/emprestimos/meus");
+export const getElegibilidade = () => requisitar("/emprestimos/elegibilidade");
+export const solicitarEmprestimo = (id_livro) => requisitar("/emprestimos", { method: "POST", body: { id_livro } });
+export const cancelarEmprestimo = (id) => requisitar(`/emprestimos/${id}/cancelar`, { method: "PATCH" });
 
-// Cria ou atualiza a avaliação do usuário logado (uma por livro).
-export async function salvarAvaliacao(idLivro, { nota, comentario }) {
-  const res = await fetch(`${BASE_URL}/livros/${idLivro}/avaliacoes`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({ nota, comentario }),
-  });
-
-  return res.json();
-}
-
-export async function excluirAvaliacao(idLivro) {
-  const res = await fetch(`${BASE_URL}/livros/${idLivro}/avaliacoes`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-
-  return res.json();
-}
-
-// EMPRÉSTIMOS
-export async function getUltimoEmprestimo(id_usuario) {
-  const res = await fetch(`${BASE_URL}/emprestimos/ultimo/${id_usuario}`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  return res.json();
-}
-
-// Lista os empréstimos do usuário logado junto com a situação dele
-// perante as regras (limite de 2 ativos e bloqueio por atraso).
-export async function getMeusEmprestimos() {
-  const res = await fetch(`${BASE_URL}/emprestimos/meus`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  return res.json();
-}
-
-export async function getElegibilidade() {
-  const res = await fetch(`${BASE_URL}/emprestimos/elegibilidade`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  return res.json();
-}
-
-export async function solicitarEmprestimo(id_livro) {
-  const res = await fetch(`${BASE_URL}/emprestimos`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({ id_livro }),
-  });
-
-  return res.json();
-}
-
-export async function cancelarEmprestimo(id_emprestimo) {
-  const res = await fetch(`${BASE_URL}/emprestimos/${id_emprestimo}/cancelar`, {
-    method: "PATCH",
-    credentials: "include",
-  });
-
-  return res.json();
-}
-
-// ADMIN: aprovar ("EMPRESTADO"), recusar, registrar devolução...
-export async function atualizarStatusEmprestimo(id_emprestimo, status) {
-  const res = await fetch(`${BASE_URL}/emprestimos/${id_emprestimo}/status`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({ status }),
-  });
-
-  return res.json();
-}
-
-export async function atualizarUsuario(id, data) {
-  const res = await fetch(`${BASE_URL}/usuarios/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
-
-  
-  
-
-  return res.json();
-}
+// EMPRÉSTIMOS (ADMIN)
+export const getEmprestimosAdmin = (filtros = {}) => requisitar(`/emprestimos${query(filtros)}`);
+export const getResumoAdmin = () => requisitar("/emprestimos/resumo");
+// status: EMPRESTADO (aprovar, aceita prazo_dias) | RECUSADO | DEVOLVIDO
+export const atualizarStatusEmprestimo = (id, status, prazo_dias) =>
+  requisitar(`/emprestimos/${id}/status`, { method: "PATCH", body: { status, prazo_dias } });
+export const estenderPrazo = (id, dias) => requisitar(`/emprestimos/${id}/prazo`, { method: "PATCH", body: { dias } });

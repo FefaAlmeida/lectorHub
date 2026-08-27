@@ -1,196 +1,150 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Box, Button, Card, Flex, Heading, HStack, Icon, Input, Stack, Text, Spinner } from "@chakra-ui/react";
+import { FiUser, FiLock, FiEdit3, FiCreditCard, FiCheckCircle, FiSave } from "react-icons/fi";
+
 import Sidebar from "../../../components/sideBar/sideBar";
 import { getPerfil, atualizarPerfil } from "../../../api";
+import { toaster } from "@/components/ui/toaster";
 
-import {
-  Box,
-  Button,
-  Card,
-  Flex,
-  Heading,
-  HStack,
-  Icon,
-  Input,
-  Stack,
-  Text,
-  Switch,
-  Spinner,
-} from "@chakra-ui/react";
-
-import {
-  FiUser,
-  FiLock,
-  FiEdit3,
-  FiBell,
-  FiCreditCard,
-  FiCheckCircle,
-  FiSave,
-} from "react-icons/fi";
-
-const toast = {
-  success: (msg) => alert(msg),
-  error: (msg) => alert(msg),
-};
-
-const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 const PRIMARY_COLOR = "#4A0E17";
 const PRIMARY_DARK = "#360A11";
 const BG_COLOR = "#F5F2EE";
-const CARD_BG = "#FFFFFF";
 const BORDER_COLOR = "#EFEBE3";
 const TEXT_DARK = "#333333";
 const TEXT_LIGHT = "#777777";
 
-// Componente ajustado para alternar a estrutura do DOM entre leitura e edição
-function Campo({
-  label,
-  value,
-  onChange,
-  type = "text",
-  editando = false,
-  placeholder,
-}) {
+const SENHAS_VAZIAS = { senha_atual: "", senha: "", confirmar: "" };
+
+function Campo({ label, value, onChange, type = "text", editando, placeholder }) {
   return (
     <Stack gap={1.5} flex="1">
-      <Text fontSize="xs" color={TEXT_DARK} fontWeight="semibold">
-        {label}
-      </Text>
-
+      <Text fontSize="xs" color={TEXT_DARK} fontWeight="semibold">{label}</Text>
       {editando ? (
         <Input
           value={value ?? ""}
-          onChange={onChange}
+          onChange={(e) => onChange(e.target.value)}
           type={type}
           placeholder={placeholder}
-          bg={CARD_BG}
+          bg="white"
           border="1px solid"
           borderColor={PRIMARY_COLOR}
           borderRadius="6px"
           h="38px"
           fontSize="sm"
           color={TEXT_DARK}
-          _focus={{
-            borderColor: PRIMARY_COLOR,
-            boxShadow: `0 0 0 1px ${PRIMARY_COLOR}`,
-          }}
+          _focus={{ borderColor: PRIMARY_COLOR, boxShadow: `0 0 0 1px ${PRIMARY_COLOR}` }}
         />
       ) : (
-        <Flex
-          align="center"
-          px={3}
-          h="38px"
-          bg="#FAFAFA"
-          border="1px solid #E7DED8"
-          borderRadius="6px"
-          userSelect="text"
-        >
-          <Text fontSize="sm" color={TEXT_DARK}>
-            {type === "password"
-              ? value
-                ? "••••••••"
-                : "••••••••"
-              : value || "—"}
-          </Text>
+        <Flex align="center" px={3} h="38px" bg="#FAFAFA" border="1px solid #E7DED8" borderRadius="6px">
+          <Text fontSize="sm" color={TEXT_DARK}>{value || "—"}</Text>
         </Flex>
       )}
     </Stack>
   );
 }
 
-export default function MeuCadastro() {
-  const [dados, setDados] = useState({
-    id_usuario: "",
-    nome: "",
-    email: "",
-    telefone: "",
-    tipo: "",
-    senha: "",
-    emailNotificacao: true,
-    novidades: true,
-  });
+function Secao({ icone, titulo, children }) {
+  return (
+    <Card.Root bg="white" borderRadius="8px" border="1px solid" borderColor={BORDER_COLOR}>
+      <Card.Header px={5} pt={5} pb={3}>
+        <HStack gap={2}>
+          <Icon as={icone} color={PRIMARY_COLOR} boxSize={4} />
+          <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>{titulo}</Heading>
+        </HStack>
+      </Card.Header>
+      <Card.Body px={5} pb={5}>{children}</Card.Body>
+    </Card.Root>
+  );
+}
 
+export default function MeuCadastro() {
+  const router = useRouter();
+
+  const [perfil, setPerfil] = useState({}); // como está no servidor
+  const [dados, setDados] = useState(null); // como está no formulário
+  const [senhas, setSenhas] = useState(SENHAS_VAZIAS);
   const [editando, setEditando] = useState(false);
-  const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
 
-  async function carregarDados() {
-    setCarregando(true);
-    try {
-      const perfilResponse = await getPerfil();
-
-      // Respostas 401 vêm como { sucesso: false, erro } — nunca tratar como perfil.
-      if (!perfilResponse?.sucesso || !perfilResponse.dados) {
-        toast.error(perfilResponse?.erro || "Erro ao carregar dados do perfil.");
-        return;
-      }
-
-      const usuarioAtual = perfilResponse.dados;
-
-      setDados((prev) => ({
-        ...prev,
-        id_usuario: usuarioAtual.id_usuario || usuarioAtual.id || "",
-        nome: usuarioAtual.nome || "",
-        email: usuarioAtual.email || "",
-        telefone: usuarioAtual.telefone || "",
-        tipo: usuarioAtual.tipo || "cliente",
-        senha: "",
-      }));
-    } catch (error) {
-      console.error("Erro ao carregar perfil:", error);
-      toast.error("Erro de conexão ao carregar o perfil.");
-    } finally {
-      setCarregando(false);
-    }
-  }
-
   useEffect(() => {
-    carregarDados();
-  }, []);
+    let ativo = true;
 
-  function alterarCampo(campo, valor) {
-    setDados((prev) => ({
-      ...prev,
-      [campo]: valor,
-    }));
-  }
-
-  async function salvarAlteracoes() {
-    setSalvando(true);
-    try {
-      const payload = {
-        nome: dados.nome,
-        email: dados.email,
-        telefone: dados.telefone,
-      };
-
-      if (dados.senha && dados.senha.trim() !== "") {
-        payload.senha = dados.senha;
-      }
-
-      // O backend identifica o usuário pelo cookie; não enviamos id.
-      const response = await atualizarPerfil(payload);
-
-      if (!response?.sucesso) {
-        toast.error(response?.erro || "Erro ao atualizar perfil.");
+    getPerfil().then((r) => {
+      if (!ativo) return;
+      if (!r?.sucesso) {
+        toaster.create({ title: "Erro", description: r?.mensagem || "Não foi possível carregar seu perfil.", type: "error" });
+        router.replace("/inicio");
         return;
       }
+      setPerfil(r.dados);
+      setDados(r.dados);
+    });
 
-      toast.success("Perfil atualizado com sucesso!");
-      setEditando(false);
-      await carregarDados();
-    } catch (error) {
-      console.error("Erro ao salvar perfil:", error);
-      toast.error(
-        error.response?.data?.message || "Erro de conexão ao salvar alterações."
-      );
-    } finally {
-      setSalvando(false);
-    }
+    return () => {
+      ativo = false;
+    };
+  }, [router]);
+
+  const alterar = (campo) => (valor) => setDados((d) => ({ ...d, [campo]: valor }));
+  const alterarSenha = (campo) => (valor) => setSenhas((s) => ({ ...s, [campo]: valor }));
+
+  function cancelar() {
+    setDados(perfil);
+    setSenhas(SENHAS_VAZIAS);
+    setEditando(false);
   }
 
-  if (carregando) {
+  async function salvar(e) {
+    e.preventDefault();
+
+    if (!dados || !perfil) return;
+
+    const payload = {};
+    if (dados.nome !== perfil.nome) payload.nome = dados.nome;
+    if (dados.email !== perfil.email) payload.email = dados.email;
+    if ((dados.telefone || "") !== (perfil.telefone || "")) payload.telefone = dados.telefone || null;
+
+    if (senhas.senha) {
+      if (senhas.senha.length < 6) {
+        return toaster.create({ title: "Senha inválida", description: "A nova senha deve ter pelo menos 6 caracteres.", type: "error" });
+      }
+      if (senhas.senha !== senhas.confirmar) {
+        return toaster.create({ title: "Senhas diferentes", description: "A confirmação não coincide com a nova senha.", type: "error" });
+      }
+      payload.senha = senhas.senha;
+    }
+
+    // Backend exige a senha atual para trocar e-mail ou senha.
+    if ((payload.senha || payload.email) && !senhas.senha_atual) {
+      return toaster.create({ title: "Senha atual obrigatória", description: "Informe sua senha atual para alterar e-mail ou senha.", type: "error" });
+    }
+    if (senhas.senha_atual) payload.senha_atual = senhas.senha_atual;
+
+    if (Object.keys(payload).length === 0) {
+      setEditando(false);
+      return;
+    }
+
+    setSalvando(true);
+    const r = await atualizarPerfil(payload);
+    setSalvando(false);
+
+    if (!r?.sucesso) {
+      return toaster.create({ title: "Erro ao salvar", description: r?.mensagem || "Não foi possível atualizar o perfil.", type: "error" });
+    }
+
+    toaster.create({ title: "Perfil atualizado", description: r.mensagem, type: "success" });
+    const atualizado = r.dados || dados;
+    setPerfil(atualizado);
+    setDados(atualizado);
+    setSenhas(SENHAS_VAZIAS);
+    setEditando(false);
+  }
+
+  if (!dados) {
     return (
       <Flex minH="100vh" bg={BG_COLOR} align="center" justify="center">
         <Stack align="center" gap={3}>
@@ -205,295 +159,80 @@ export default function MeuCadastro() {
     <Flex minH="100vh" bg={BG_COLOR}>
       <Sidebar />
 
-      <Box flex={1} p={{ base: 6, md: 8 }} pb={16} overflow="hidden">
-        <Stack gap={7} align="stretch" maxW="8xl" mx="auto">
-          {/* CABEÇALHO */}
-          <Flex justify="space-between" align="center">
-            <Stack gap={2}>
-              <Heading
-                as="h1"
-                fontSize={{ base: "3xl", md: "4xl" }}
-                fontWeight="bold"
-                color={PRIMARY_COLOR}
-                fontFamily="Georgia, serif"
-              >
-                Meu Cadastro
-              </Heading>
-              <Text fontSize="md" color={TEXT_LIGHT}>
-                Atualize seus dados cadastrais e mantenha suas informações sempre em dia.
-              </Text>
-            </Stack>
-          </Flex>
+      <Box flex={1} p={{ base: 6, md: 8 }} pb={16}>
+        <Stack as="form" onSubmit={salvar} gap={7} align="stretch" maxW="8xl" mx="auto">
+          <Stack gap={2}>
+            <Heading as="h1" fontSize={{ base: "3xl", md: "4xl" }} fontWeight="bold" color={PRIMARY_COLOR} fontFamily="Georgia, serif">
+              Meu Cadastro
+            </Heading>
+            <Text fontSize="md" color={TEXT_LIGHT}>Atualize seus dados cadastrais e mantenha suas informações sempre em dia.</Text>
+          </Stack>
 
-          {/* DUAS COLUNAS */}
-          <Flex
-            gap={6}
-            align="flex-start"
-            direction={{ base: "column", lg: "row" }}
-          >
-            {/* COLUNA ESQUERDA */}
+          <Flex gap={6} align="flex-start" direction={{ base: "column", lg: "row" }}>
             <Stack flex="1" w="full" gap={5}>
-              <Card.Root
-                bg={CARD_BG}
-                borderRadius="8px"
-                border="1px solid"
-                borderColor={BORDER_COLOR}
-              >
-                <Card.Header px={5} pt={5} pb={3}>
-                  <HStack gap={2}>
-                    <Icon as={FiUser} color={PRIMARY_COLOR} boxSize={4} />
-                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
-                      Dados Pessoais
-                    </Heading>
+              <Secao icone={FiUser} titulo="Dados Pessoais">
+                <Stack gap={4}>
+                  <Campo label="Nome Completo" value={dados.nome} editando={editando} placeholder="Seu nome completo" onChange={alterar("nome")} />
+                  <Campo label="E-mail" value={dados.email} editando={editando} type="email" placeholder="seu.email@exemplo.com" onChange={alterar("email")} />
+                  <Campo label="Telefone" value={dados.telefone} editando={editando} placeholder="(00) 00000-0000" onChange={alterar("telefone")} />
+                </Stack>
+              </Secao>
+
+              <Secao icone={FiCheckCircle} titulo="Informações da Conta">
+                <Flex gap={8} direction={{ base: "column", md: "row" }}>
+                  <HStack flex="1">
+                    <Flex w="36px" h="36px" bg="#F8EEE9" borderRadius="full" align="center" justify="center">
+                      <Icon as={FiCreditCard} color={PRIMARY_COLOR} boxSize={4} />
+                    </Flex>
+                    <Stack gap={0}>
+                      <Text fontSize="xs" color={TEXT_LIGHT}>Código do Usuário (ID)</Text>
+                      <Text fontSize="sm" fontWeight="bold" color={TEXT_DARK}>#{dados.id}</Text>
+                    </Stack>
                   </HStack>
-                </Card.Header>
-
-                <Card.Body px={5} pb={5}>
-                  <Stack gap={4}>
-                    <Campo
-                      label="Nome Completo"
-                      value={dados.nome}
-                      editando={editando}
-                      placeholder="Seu nome completo"
-                      onChange={(e) => alterarCampo("nome", e.target.value)}
-                    />
-
-                    <Campo
-                      label="E-mail"
-                      value={dados.email}
-                      editando={editando}
-                      type="email"
-                      placeholder="seu.email@exemplo.com"
-                      onChange={(e) => alterarCampo("email", e.target.value)}
-                    />
-
-                    <Campo
-                      label="Telefone"
-                      value={dados.telefone}
-                      editando={editando}
-                      placeholder="(00) 00000-0000"
-                      onChange={(e) => alterarCampo("telefone", e.target.value)}
-                    />
-                  </Stack>
-                </Card.Body>
-              </Card.Root>
-
-              <Card.Root
-                bg={CARD_BG}
-                borderRadius="8px"
-                border="1px solid"
-                borderColor={BORDER_COLOR}
-              >
-                <Card.Header px={5} pt={5} pb={3}>
-                  <HStack gap={2}>
-                    <Icon as={FiCheckCircle} color={PRIMARY_COLOR} boxSize={4} />
-                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
-                      Informações da Conta
-                    </Heading>
+                  <HStack flex="1">
+                    <Flex w="36px" h="36px" bg="#EAF5EC" borderRadius="full" align="center" justify="center">
+                      <Icon as={FiCheckCircle} color="#48BB78" boxSize={4} />
+                    </Flex>
+                    <Stack gap={0}>
+                      <Text fontSize="xs" color={TEXT_LIGHT}>Tipo de Perfil</Text>
+                      <Text fontSize="sm" color="#48BB78" fontWeight="bold" textTransform="capitalize">{dados.tipo}</Text>
+                    </Stack>
                   </HStack>
-                </Card.Header>
-
-                <Card.Body px={5} pb={5}>
-                  <Flex gap={8} direction={{ base: "column", md: "row" }}>
-                    <HStack flex="1">
-                      <Box
-                        w="36px"
-                        h="36px"
-                        bg="#F8EEE9"
-                        borderRadius="full"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                      >
-                        <Icon as={FiCreditCard} color={PRIMARY_COLOR} boxSize={4} />
-                      </Box>
-                      <Stack gap={0}>
-                        <Text fontSize="xs" color={TEXT_LIGHT}>
-                          Código do Usuário (ID)
-                        </Text>
-                        <Text fontSize="sm" fontWeight="bold" color={TEXT_DARK}>
-                          #{dados.id_usuario || "—"}
-                        </Text>
-                      </Stack>
-                    </HStack>
-
-                    <HStack flex="1">
-                      <Box
-                        w="36px"
-                        h="36px"
-                        bg="#EAF5EC"
-                        borderRadius="full"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                      >
-                        <Icon as={FiCheckCircle} color="#48BB78" boxSize={4} />
-                      </Box>
-                      <Stack gap={0}>
-                        <Text fontSize="xs" color={TEXT_LIGHT}>
-                          Tipo de Perfil
-                        </Text>
-                        <Text
-                          fontSize="sm"
-                          color="#48BB78"
-                          fontWeight="bold"
-                          textTransform="capitalize"
-                        >
-                          {dados.tipo || "cliente"}
-                        </Text>
-                      </Stack>
-                    </HStack>
-                  </Flex>
-                </Card.Body>
-              </Card.Root>
+                </Flex>
+              </Secao>
             </Stack>
 
-            {/* COLUNA DIREITA */}
             <Stack w={{ base: "full", lg: "390px" }} gap={5}>
-              <Card.Root
-                bg={CARD_BG}
-                borderRadius="8px"
-                border="1px solid"
-                borderColor={BORDER_COLOR}
-              >
-                <Card.Header px={5} pt={5} pb={3}>
-                  <HStack gap={2}>
-                    <Icon as={FiLock} color={PRIMARY_COLOR} boxSize={4} />
-                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
-                      Segurança da Conta
-                    </Heading>
-                  </HStack>
-                </Card.Header>
-
-                <Card.Body px={5} pb={5}>
-                  <Campo
-                    label="Nova Senha"
-                    value={dados.senha}
-                    editando={editando}
-                    type="password"
-                    placeholder="Digite para alterar a senha"
-                    onChange={(e) => alterarCampo("senha", e.target.value)}
-                  />
-                </Card.Body>
-              </Card.Root>
-
-              <Card.Root
-                bg={CARD_BG}
-                borderRadius="8px"
-                border="1px solid"
-                borderColor={BORDER_COLOR}
-              >
-                <Card.Header px={5} pt={5} pb={3}>
-                  <HStack gap={2}>
-                    <Icon as={FiBell} color={PRIMARY_COLOR} boxSize={4} />
-                    <Heading fontSize="sm" fontWeight="bold" color={PRIMARY_COLOR}>
-                      Preferências de Notificação
-                    </Heading>
-                  </HStack>
-                </Card.Header>
-
-                <Card.Body px={5} pb={5}>
-                  <Flex justify="space-between" align="center" mb={5}>
-                    <Stack gap={0} pr={4}>
-                      <Text fontSize="xs" fontWeight="semibold" color={TEXT_DARK}>
-                        E-mail
-                      </Text>
-                      <Text fontSize="10px" color={TEXT_LIGHT}>
-                        Avisos sobre devoluções e empréstimos.
-                      </Text>
-                    </Stack>
-                    <Switch.Root
-                      checked={dados.emailNotificacao}
-                      disabled={!editando}
-                      onCheckedChange={(e) =>
-                        alterarCampo("emailNotificacao", e.checked)
-                      }
-                    >
-                      <Switch.HiddenInput />
-                      <Switch.Control />
-                    </Switch.Root>
-                  </Flex>
-
-                  <Flex justify="space-between" align="center">
-                    <Stack gap={0} pr={4}>
-                      <Text fontSize="xs" fontWeight="semibold" color={TEXT_DARK}>
-                        Novidades
-                      </Text>
-                      <Text fontSize="10px" color={TEXT_LIGHT}>
-                        Novidades do acervo.
-                      </Text>
-                    </Stack>
-                    <Switch.Root
-                      checked={dados.novidades}
-                      disabled={!editando}
-                      onCheckedChange={(e) =>
-                        alterarCampo("novidades", e.checked)
-                      }
-                    >
-                      <Switch.HiddenInput />
-                      <Switch.Control />
-                    </Switch.Root>
-                  </Flex>
-                </Card.Body>
-              </Card.Root>
+              <Secao icone={FiLock} titulo="Segurança da Conta">
+                {editando ? (
+                  <Stack gap={4}>
+                    <Text fontSize="xs" color={TEXT_LIGHT}>
+                      A senha atual é obrigatória para alterar o e-mail ou a senha.
+                    </Text>
+                    <Campo label="Senha atual" value={senhas.senha_atual} editando type="password" placeholder="Sua senha atual" onChange={alterarSenha("senha_atual")} />
+                    <Campo label="Nova senha" value={senhas.senha} editando type="password" placeholder="Deixe em branco para manter" onChange={alterarSenha("senha")} />
+                    <Campo label="Confirmar nova senha" value={senhas.confirmar} editando type="password" placeholder="Repita a nova senha" onChange={alterarSenha("confirmar")} />
+                  </Stack>
+                ) : (
+                  <Text fontSize="sm" color={TEXT_LIGHT}>Clique em &quot;Editar Dados&quot; para alterar sua senha.</Text>
+                )}
+              </Secao>
             </Stack>
           </Flex>
 
-          {/* AÇÕES */}
           <Flex justify="flex-end" gap={3} mt={1}>
-            {editando && (
-              <Button
-                variant="outline"
-                color={PRIMARY_COLOR}
-                borderColor={PRIMARY_COLOR}
-                borderRadius="14px"
-                size="md"
-                disabled={salvando}
-                onClick={() => {
-                  setEditando(false);
-                  carregarDados();
-                }}
-              >
-                Cancelar
-              </Button>
-            )}
-
-            {!editando ? (
-              <Button
-                bg={PRIMARY_COLOR}
-                color="white"
-                borderRadius="14px"
-                size="md"
-                px={6}
-                boxShadow="0 4px 12px rgba(74,14,23,.15)"
-                onClick={() => setEditando(true)}
-                _hover={{
-                  bg: PRIMARY_DARK,
-                  transform: "translateY(-2px)",
-                }}
-                transition={`all .3s ${EASE}`}
-              >
-                <Icon as={FiEdit3} mr={2} />
-                Editar Dados
-              </Button>
+            {editando ? (
+              <>
+                <Button type="button" variant="outline" color={PRIMARY_COLOR} borderColor={PRIMARY_COLOR} borderRadius="14px" disabled={salvando} onClick={cancelar}>
+                  Cancelar
+                </Button>
+                <Button type="submit" bg={PRIMARY_COLOR} color="white" borderRadius="14px" px={6} loading={salvando} _hover={{ bg: PRIMARY_DARK }}>
+                  <Icon as={FiSave} mr={2} /> Salvar Alterações
+                </Button>
+              </>
             ) : (
-              <Button
-                bg={PRIMARY_COLOR}
-                color="white"
-                borderRadius="14px"
-                size="md"
-                px={6}
-                boxShadow="0 4px 12px rgba(74,14,23,.15)"
-                disabled={salvando}
-                onClick={salvarAlteracoes}
-                _hover={{
-                  bg: PRIMARY_DARK,
-                  transform: "translateY(-2px)",
-                }}
-                transition={`all .3s ${EASE}`}
-              >
-                <Icon as={FiSave} mr={2} />
-                {salvando ? "Salvando..." : "Salvar Alterações"}
+              <Button type="button" bg={PRIMARY_COLOR} color="white" borderRadius="14px" px={6} onClick={() => setEditando(true)} _hover={{ bg: PRIMARY_DARK }}>
+                <Icon as={FiEdit3} mr={2} /> Editar Dados
               </Button>
             )}
           </Flex>

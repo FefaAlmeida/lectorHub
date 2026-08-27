@@ -3,7 +3,6 @@
 import { Flex, Text, Box, Button, Menu, Portal } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { BsBellFill } from "react-icons/bs";
 import { FiLogOut } from "react-icons/fi";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -29,25 +28,22 @@ const itemVariants = {
  visible: { opacity: 1, y: 0 },
 };
 
-export default function Header({ hasUnread = true }) {
+export default function Header() {
  const pathname = usePathname();
 
  const [isOpen, setIsOpen] = useState(false);
- const [tollTrigger, setTollTrigger] = useState(false);
  const [hoveredItem, setHoveredItem] = useState(null);
  const [usuario, setUsuario] = useState(null);
- const [carregando, setCarregando] = useState(true);
+ const [carregandoSessao, setCarregando] = useState(true);
  const [saindo, setSaindo] = useState(false);
  const shouldReduceMotion = useReducedMotion();
 
  const escondido = ROTAS_SEM_HEADER.includes(pathname);
+ const carregando = carregandoSessao && !escondido;
 
  // Descobre quem está logado a partir do cookie httpOnly.
  useEffect(() => {
-  if (escondido) {
-   setCarregando(false);
-   return;
-  }
+  if (escondido) return;
 
   let ativo = true;
 
@@ -70,16 +66,6 @@ export default function Header({ hasUnread = true }) {
  }, [escondido, pathname]);
 
  const logado = Boolean(usuario);
-
- useEffect(() => {
-  if (shouldReduceMotion || !hasUnread || !logado) return;
-  const t1 = setTimeout(() => setTollTrigger(true), 700);
-  const t2 = setTimeout(() => setTollTrigger(false), 700 + 900);
-  return () => {
-   clearTimeout(t1);
-   clearTimeout(t2);
-  };
- }, [hasUnread, shouldReduceMotion, logado]);
 
  async function handleLogout() {
   setSaindo(true);
@@ -107,14 +93,6 @@ export default function Header({ hasUnread = true }) {
 
  return (
   <>
-   <style>{`
-        .lh-focusable:focus-visible {
-          outline: 2px solid ${ACCENT};
-          outline-offset: 2px;
-          border-radius: 8px;
-        }
-      `}</style>
-
    <header
     style={{
      position: "sticky",
@@ -225,81 +203,6 @@ export default function Header({ hasUnread = true }) {
        </Flex>
       ) : (
        <>
-        {/* Sino */}
-        <motion.button
-         type="button"
-         className="lh-focusable"
-         aria-label={hasUnread ? "Notificações não lidas" : "Notificações"}
-         animate={
-          tollTrigger ? { rotate: [0, -14, 11, -8, 5, -2, 0] } : { rotate: 0 }
-         }
-         transition={{ duration: 0.9, ease: "easeInOut" }}
-         style={{
-          position: "relative",
-          background: "transparent",
-          border: "none",
-          padding: "4px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          outline: "none",
-         }}
-        >
-         <Box
-          as="span"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          boxSize="22px"
-         >
-          <BsBellFill
-           style={{
-            width: "100%",
-            height: "100%",
-            fill: "gray.900",
-            stroke: ACCENT,
-            strokeWidth: "1",
-           }}
-          />
-         </Box>
-
-         {hasUnread && (
-          <Box position="absolute" top="-2px" right="-2px" w="10px" h="10px">
-           <motion.span
-            aria-hidden
-            animate={
-             shouldReduceMotion
-              ? undefined
-              : { scale: [1, 1.35, 1], opacity: [0.85, 0.25, 0.85] }
-            }
-            transition={
-             shouldReduceMotion
-              ? undefined
-              : { duration: 2.2, repeat: Infinity, ease: "easeInOut" }
-            }
-            style={{
-             position: "absolute",
-             inset: "-4px",
-             borderRadius: "9999px",
-             background: ACCENT_SOFT,
-             filter: "blur(1.5px)",
-            }}
-           />
-           <Box
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            bg={ACCENT}
-            borderRadius="full"
-            border="2px solid white"
-           />
-          </Box>
-         )}
-        </motion.button>
-
         {/* Menu Perfil */}
         <Menu.Root
          open={isOpen}
@@ -334,7 +237,7 @@ export default function Header({ hasUnread = true }) {
              lineHeight="1.2"
              transition="color 0.2s"
              _groupHover={{ color: ACCENT }}
-             noOfLines={1}
+             lineClamp={1}
             >
              olá, {primeiroNome}!
             </Text>
@@ -438,11 +341,11 @@ export default function Header({ hasUnread = true }) {
                 fontWeight="medium"
                 fontSize="0.9rem"
                 lineHeight="1.2"
-                noOfLines={1}
+                lineClamp={1}
                >
                 {nome}
                </Text>
-               <Text color="gray.600" fontSize="0.75rem" noOfLines={1}>
+               <Text color="gray.600" fontSize="0.75rem" lineClamp={1}>
                 {usuario?.email}
                </Text>
               </Box>
