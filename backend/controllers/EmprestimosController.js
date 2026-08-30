@@ -208,10 +208,20 @@ class EmprestimoController {
         }
     }
 
+    // Alimenta o painel inteiro numa chamada só: contadores, ranking e série
+    // mensal. São três consultas independentes, então vão em paralelo.
     static async resumo(req, res) {
         try {
-            const dados = await EmprestimoModel.resumo();
-            return res.status(200).json({ sucesso: true, dados });
+            const [contadores, maisEmprestados, porMes] = await Promise.all([
+                EmprestimoModel.resumo(),
+                EmprestimoModel.maisEmprestados(5),
+                EmprestimoModel.porMes(6)
+            ]);
+
+            return res.status(200).json({
+                sucesso: true,
+                dados: { ...contadores, mais_emprestados: maisEmprestados, por_mes: porMes }
+            });
         } catch (error) {
             return erroInterno(res, 'resumo', error);
         }

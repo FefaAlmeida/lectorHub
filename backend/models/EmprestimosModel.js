@@ -27,7 +27,8 @@ const SELECT_COM_LIVRO = `
         DATEDIFF(DATE(e.data_devolucao_prevista), CURDATE()) AS dias_restantes,
         l.titulo,
         l.autor,
-        l.categoria,
+        l.categoria_id,
+        cat.nome AS categoria,
         l.ano_publicacao,
         l.capa_url,
         u.nome AS usuario_nome,
@@ -35,6 +36,7 @@ const SELECT_COM_LIVRO = `
         u.telefone AS usuario_telefone
     FROM emprestimos e
     INNER JOIN livros l ON e.id_livro = l.id_livro
+    INNER JOIN categorias cat ON cat.id_categoria = l.categoria_id
     INNER JOIN usuarios u ON e.id_usuario = u.id_usuario
 `;
 
@@ -198,6 +200,59 @@ class EmprestimoModel {
             emprestados: Number(r.emprestados),
             atrasados: Number(r.atrasados)
         };
+    }
+
+    // Ranking de livros por número de empréstimos já concedidos.
+    // Conta EMPRESTADO e DEVOLVIDO: pedido recusado ou cancelado nunca virou
+    // empréstimo, e contá-lo inflaria a popularidade do livro.
+    static async maisEmprestados(limite = 5) {
+        const limiteSeguro = Math.min(Math.max(parseInt(limite) || 5, 1), 20);
+
+        const rows = await consultar(`
+            SELECT
+                l.id_livro AS id,
+                l.titulo,
+                l.autor,
+                l.capa_url,
+                COUNT(*) AS total
+            FROM emprestimos e
+            INNER JOIN livros l ON l.id_livro = e.id_livro
+            WHERE e.status IN ('EMPRESTADO', 'DEVOLVIDO')
+            GROUP BY l.id_livro, l.titulo, l.autor, l.capa_url
+            ORDER BY total DESC, l.titulo ASC
+            LIMIT ${limiteSeguro}
+        `);
+
+        return rows.map((linha) => ({ ...linha, total: Number(linha.total) }));
+    }
+
+    // Empréstimos concedidos por mês, do mais antigo ao mais recente.
+    // A série sai completa (meses sem empréstimo entram com zero) para o
+    // gráfico não "pular" períodos e dar impressão errada de continuidade.
+    static async porMes(meses = 6) {
+        const mesesSeguro = Math.min(Math.max(parseInt(meses) || 6, 1), 24);
+
+        const rows = await consultar(`
+            SELECT
+                DATE_FORMAT(data_emprestimo, '%Y-%m') AS mes,
+                COUNT(*) AS total
+            FROM emprestimos
+            WHERE data_emprestimo IS NOT NULL
+              AND data_emprestimo >= DATE_SUB(CURDATE(), INTERVAL ${mesesSeguro - 1} MONTH)
+            GROUP BY mes
+        `);
+
+        const contagem = new Map(rows.map((r) => [r.mes, Number(r.total)]));
+        const serie = [];
+        const hoje = new Date();
+
+        for (let i = mesesSeguro - 1; i >= 0; i--) {
+            const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+            const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            serie.push({ mes: chave, total: contagem.get(chave) || 0 });
+        }
+
+        return serie;
     }
 
     // --- ESCRITA ---

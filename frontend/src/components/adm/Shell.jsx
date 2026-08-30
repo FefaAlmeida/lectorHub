@@ -1,34 +1,53 @@
 "use client";
 
-import { Box, Flex, Heading, Text } from "@chakra-ui/react";
+import { Box, Flex, Heading, Stack, Text } from "@chakra-ui/react";
 import SideBarADM from "@/components/sideBarADM/sideBarADM";
 
-export const VINHO = "#4A0E17";
-export const BORDA = "#E8DCC4";
-export const TEXTO_SUAVE = "#6B6B6B";
+import {
+  VINHO,
+  BORDA,
+  BRANCO,
+  FUNDO,
+  TEXTO,
+  TEXTO_SUAVE,
+  FONTE_TITULO,
+  TITULO_PAGINA,
+  TEXTO_APOIO,
+  RAIO_CARTAO,
+  PADDING_CARTAO,
+  PADDING_PAGINA,
+  LARGURA_CONTEUDO,
+  GAP_SECAO,
+} from "./tema";
+
+// Reexportados porque as páginas já importavam daqui.
+export { VINHO, BORDA, TEXTO_SUAVE };
 
 // Moldura comum das páginas do painel: sidebar + título + conteúdo.
 export default function Shell({ titulo, subtitulo, acoes, children }) {
   return (
-    <Flex minH="100vh" bg="#FAF7F2" color="#2D2D2D" w="100%">
+    <Flex minH="100vh" bg={FUNDO} color={TEXTO} w="100%" direction={{ base: "column", lg: "row" }}>
       <SideBarADM />
 
-      <Box flex="1" p={{ base: 6, md: 10 }} w="100%" minW={0}>
-        <Flex justify="space-between" align="flex-start" mb={8} gap={4} flexWrap="wrap">
-          <Box>
-            <Heading size="3xl" color={VINHO} fontFamily="serif" mb={1}>
-              {titulo}
-            </Heading>
-            {subtitulo && (
-              <Text color={TEXTO_SUAVE} fontSize="md">
-                {subtitulo}
-              </Text>
-            )}
-          </Box>
-          {acoes}
-        </Flex>
+      <Box flex="1" minW={0} p={PADDING_PAGINA}>
+        {/* Conteúdo centralizado: em tela larga a tabela não estica sem fim. */}
+        <Stack maxW={LARGURA_CONTEUDO} mx="auto" gap={GAP_SECAO}>
+          <Flex justify="space-between" align="flex-end" gap={4} flexWrap="wrap">
+            <Stack gap={1}>
+              <Heading fontFamily={FONTE_TITULO} fontSize={TITULO_PAGINA} fontWeight="bold" color={VINHO} lineHeight="1.1">
+                {titulo}
+              </Heading>
+              {subtitulo && (
+                <Text fontSize={TEXTO_APOIO} color={TEXTO_SUAVE}>
+                  {subtitulo}
+                </Text>
+              )}
+            </Stack>
+            {acoes}
+          </Flex>
 
-        {children}
+          {children}
+        </Stack>
       </Box>
     </Flex>
   );
@@ -36,7 +55,17 @@ export default function Shell({ titulo, subtitulo, acoes, children }) {
 
 // Cartão branco padrão
 export function Cartao(props) {
-  return <Box bg="white" border="1px solid" borderColor={BORDA} borderRadius="2xl" p={6} boxShadow="sm" {...props} />;
+  return (
+    <Box
+      bg={BRANCO}
+      border="1px solid"
+      borderColor={BORDA}
+      borderRadius={RAIO_CARTAO}
+      p={PADDING_CARTAO}
+      boxShadow="none"
+      {...props}
+    />
+  );
 }
 
 export function formatarData(valor) {

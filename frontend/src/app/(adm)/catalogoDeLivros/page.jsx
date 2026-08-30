@@ -1,18 +1,20 @@
 "use client";
 
+import { RAIO } from "@/components/tema";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Badge, Box, Flex, Image, Input, Spinner, Switch, Table, Text, Icon, SimpleGrid } from "@chakra-ui/react";
-import { FiBookOpen, FiEdit2, FiPlus, FiSearch, FiTrash2 } from "react-icons/fi";
+import { AspectRatio, Badge, Box, Flex, HStack, Image, Input, Spinner, Stack, Switch, Text, Icon, SimpleGrid } from "@chakra-ui/react";
+import { FiBookOpen, FiCheckCircle, FiEdit2, FiLayers, FiPlus, FiRefreshCcw, FiRotateCcw, FiSearch, FiTrash2, FiUser } from "react-icons/fi";
 
 import Shell, { Cartao, VINHO, TEXTO_SUAVE } from "@/components/adm/Shell";
+import { FUNDO, BORDA, RAIO_CAMPO, TEXTO_PEQUENO, ALTURA_CAMPO, HOVER_LINHA, TRANSICAO, ERRO_BG, ERRO_COR, ERRO_HOVER, TEXTO_APOIO, GAP_CARTAO, ALTURA_ACAO, BRANCO, REALCE, TEXTO, TITULO_SECAO, TEXTO_MIUDO, HOVER_CARTAO, OK_COR } from "@/components/adm/tema";
 import Modal from "@/components/adm/Modal";
 import { BotaoPrimario, BotaoSecundario, Campo, CampoArea, CampoSelect, CampoTexto, Paginacao, Vazio } from "@/components/adm/Campos";
 import { getLivros, getCategorias, criarLivro, atualizarLivro, excluirLivro } from "../../../api";
 import { toaster } from "@/components/ui/toaster";
 
 const LIMITE = 10;
-const LIVRO_VAZIO = { titulo: "", autor: "", categoria: "", ano_publicacao: "", sinopse: "", capa_url: "", disponivel: true };
+const LIVRO_VAZIO = { titulo: "", autor: "", categoria_id: "", ano_publicacao: "", sinopse: "", capa_url: "", disponivel: true };
 
 function avisar(r, tituloOk) {
   toaster.create({
@@ -25,7 +27,12 @@ function avisar(r, tituloOk) {
 
 // Formulário de criar/editar. Recebe `key` do pai para reiniciar o estado por livro.
 function FormLivro({ inicial, categorias, onSalvar, onFechar, salvando }) {
-  const [form, setForm] = useState({ ...LIVRO_VAZIO, ...inicial });
+  // O <select> trabalha com string; a API devolve categoria_id como número.
+  const [form, setForm] = useState({
+    ...LIVRO_VAZIO,
+    ...inicial,
+    categoria_id: inicial?.categoria_id ? String(inicial.categoria_id) : "",
+  });
   const set = (campo) => (valor) => setForm((f) => ({ ...f, [campo]: valor }));
 
   function enviar(e) {
@@ -33,7 +40,7 @@ function FormLivro({ inicial, categorias, onSalvar, onFechar, salvando }) {
     onSalvar({
       titulo: form.titulo,
       autor: form.autor,
-      categoria: form.categoria,
+      categoria_id: Number(form.categoria_id),
       ano_publicacao: Number(form.ano_publicacao),
       sinopse: form.sinopse || null,
       capa_url: form.capa_url || null,
@@ -43,16 +50,19 @@ function FormLivro({ inicial, categorias, onSalvar, onFechar, salvando }) {
 
   return (
     <form onSubmit={enviar} id="form-livro">
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap={GAP_CARTAO}>
         <CampoTexto label="Título *" value={form.titulo} onChange={set("titulo")} required />
         <CampoTexto label="Autor *" value={form.autor} onChange={set("autor")} required />
-        <Campo label="Categoria *">
-          <Input value={form.categoria} onChange={(e) => set("categoria")(e.target.value)} list="categorias" required
-            bg="white" border="1px solid #E8DCC4" borderRadius="10px" h="42px" />
-          <datalist id="categorias">
-            {categorias.map((c) => <option key={c} value={c} />)}
-          </datalist>
-        </Campo>
+        <CampoSelect
+          label="Categoria *"
+          value={form.categoria_id}
+          onChange={set("categoria_id")}
+          required
+          opcoes={[
+            { valor: "", label: "Selecione..." },
+            ...categorias.map((c) => ({ valor: String(c.id), label: c.nome })),
+          ]}
+        />
         <CampoTexto label="Ano de publicação *" type="number" value={form.ano_publicacao} onChange={set("ano_publicacao")} required min={0} max={new Date().getFullYear() + 1} />
         <Box gridColumn={{ md: "span 2" }}>
           <CampoTexto label="URL da capa" value={form.capa_url} onChange={set("capa_url")} placeholder="https://..." />
@@ -65,10 +75,111 @@ function FormLivro({ inicial, categorias, onSalvar, onFechar, salvando }) {
             <Switch.HiddenInput />
             <Switch.Control />
           </Switch.Root>
-          <Text fontSize="sm">Disponível na estante</Text>
+          <Text fontSize={TEXTO_APOIO}>Disponível na estante</Text>
         </Flex>
       </SimpleGrid>
     </form>
+  );
+}
+
+// Cartão de número no topo da tela. Estrutura vinda da branch `front`:
+// ícone em círculo cheio de vinho, rótulo pequeno e valor em destaque.
+function Indicador({ icon, titulo, valor }) {
+  return (
+    <Cartao>
+      <HStack gap={3}>
+        <Flex
+          w="48px"
+          h="48px"
+          flexShrink={0}
+          borderRadius="full"
+          bg={VINHO}
+          align="center"
+          justify="center"
+        >
+          <Icon as={icon} color={BRANCO} boxSize={5} />
+        </Flex>
+
+        <Stack gap={0}>
+          <Text fontSize={TEXTO_MIUDO} color={TEXTO_SUAVE}>{titulo}</Text>
+          <Text fontSize={TITULO_SECAO} fontWeight="700" color={TEXTO}>{valor}</Text>
+        </Stack>
+      </HStack>
+    </Cartao>
+  );
+}
+
+// Livro como cartão com capa, no lugar da linha de tabela. É a diferença
+// visual mais forte da branch `front`: o acervo vira vitrine, não planilha.
+function LivroCard({ livro, onEditar, onExcluir, onAlternar }) {
+  return (
+    <Cartao p={2} overflow="hidden" transition={TRANSICAO} _hover={HOVER_CARTAO}>
+      {/* Proporção 2/3, a mesma das capas na área do cliente. A altura fixa
+          de 220px desalinhava as capas conforme a largura da coluna. */}
+      <AspectRatio ratio={2 / 3} borderRadius={RAIO} overflow="hidden" bg={FUNDO}>
+        {livro.capa_url ? (
+          <Image src={livro.capa_url} alt={livro.titulo} fit="cover" />
+        ) : (
+          <Flex align="center" justify="center">
+            <Icon as={FiBookOpen} boxSize={8} color={TEXTO_SUAVE} opacity={0.5} />
+          </Flex>
+        )}
+      </AspectRatio>
+
+      <Stack gap={0.5} px={1} pt={3}>
+        <Text fontSize={TEXTO_APOIO} fontWeight="700" color={TEXTO} lineClamp={1}>
+          {livro.titulo}
+        </Text>
+        <Text fontSize={TEXTO_MIUDO} color={TEXTO_SUAVE} lineClamp={1}>
+          {livro.autor}
+        </Text>
+
+        <HStack gap={2} pt={1}>
+          <Badge bg={REALCE} color={VINHO} borderRadius="full" px={2} fontSize={TEXTO_MIUDO}>
+            {livro.categoria}
+          </Badge>
+          <Text
+            fontSize={TEXTO_MIUDO}
+            fontWeight="600"
+            color={livro.disponivel ? OK_COR : ERRO_COR}
+          >
+            {livro.disponivel ? "Disponível" : "Emprestado"}
+          </Text>
+        </HStack>
+      </Stack>
+
+      {/* Altura reduzida: os botões herdavam os 48px de campo de formulário,
+          que num cartão de ~200px de largura ficavam maiores que a ficha. */}
+      <Flex gap={2} mt={3} px={1} pb={1}>
+        <BotaoPrimario flex="1" h={ALTURA_ACAO} px={3} fontSize={TEXTO_MIUDO} onClick={() => onEditar(livro)}>
+          <Icon as={FiEdit2} mr={1.5} /> Editar
+        </BotaoPrimario>
+
+        <BotaoSecundario
+          h={ALTURA_ACAO}
+          w={ALTURA_ACAO}
+          px={0}
+          aria-label={livro.disponivel ? "Marcar como emprestado" : "Devolver à estante"}
+          title={livro.disponivel ? "Marcar como emprestado" : "Devolver à estante"}
+          onClick={() => onAlternar(livro)}
+        >
+          <Icon as={livro.disponivel ? FiCheckCircle : FiRotateCcw} />
+        </BotaoSecundario>
+
+        <BotaoSecundario
+          h={ALTURA_ACAO}
+          w={ALTURA_ACAO}
+          px={0}
+          aria-label="Excluir"
+          color={ERRO_COR}
+          borderColor={ERRO_COR}
+          _hover={{ bg: ERRO_BG }}
+          onClick={() => onExcluir(livro)}
+        >
+          <Icon as={FiTrash2} />
+        </BotaoSecundario>
+      </Flex>
+    </Cartao>
   );
 }
 
@@ -77,7 +188,11 @@ function CatalogoConteudo() {
 
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
-  const [categoria, setCategoria] = useState("");
+  const [categoriaId, setCategoriaId] = useState("");
+  // A branch `front` tinha cinco filtros; estes dois a API já suportava e a
+  // tela não usava.
+  const [disponivel, setDisponivel] = useState("");
+  const [ordem, setOrdem] = useState("titulo_asc");
   const [pagina, setPagina] = useState(1);
   const [livros, setLivros] = useState(null);
   const [paginacao, setPaginacao] = useState({ total: 0, totalPaginas: 1 });
@@ -94,7 +209,7 @@ function CatalogoConteudo() {
     let ativo = true;
 
     (async () => {
-    const r = await getLivros({ busca, categoria, pagina, limite: LIMITE });
+    const r = await getLivros({ busca, categoria_id: categoriaId, disponivel, ordem, pagina, limite: LIMITE });
     if (!r?.sucesso) {
       setLivros([]);
       return ativo && toaster.create({ title: "Erro ao carregar", description: r?.mensagem, type: "error" });
@@ -107,7 +222,7 @@ function CatalogoConteudo() {
     return () => {
       ativo = false;
     };
-  }, [busca, categoria, pagina, versao]);
+  }, [busca, categoriaId, disponivel, ordem, pagina, versao]);
   useEffect(() => {
     getCategorias().then((r) => r?.sucesso && setCategorias(r.dados));
   }, [versao]);
@@ -148,78 +263,66 @@ function CatalogoConteudo() {
         </BotaoPrimario>
       }
     >
-      <Cartao mb={6}>
-        <Flex gap={4} flexWrap="wrap" align="flex-end">
+      <Cartao>
+        <Flex gap={GAP_CARTAO} flexWrap="wrap" align="flex-end">
           <Box flex="2" minW="240px">
             <Campo label="Buscar">
               <Flex gap={2}>
                 <Input value={termo} onChange={(e) => setTermo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (setBusca(termo.trim()), setPagina(1))}
-                  placeholder="Título, autor ou categoria" bg="white" border="1px solid #E8DCC4" borderRadius="10px" h="42px" />
+                  placeholder="Título, autor ou categoria" bg="white" border="1px solid" borderColor={BORDA} borderRadius={RAIO_CAMPO} h={ALTURA_CAMPO} fontSize={TEXTO_PEQUENO} />
                 <BotaoSecundario onClick={() => { setBusca(termo.trim()); setPagina(1); }} h="42px"><FiSearch /></BotaoSecundario>
               </Flex>
             </Campo>
           </Box>
-          <Box flex="1" minW="200px">
-            <CampoSelect label="Categoria" value={categoria} onChange={(v) => { setCategoria(v); setPagina(1); }}
-              opcoes={[{ valor: "", label: "Todas" }, ...categorias.map((c) => ({ valor: c, label: c }))]} />
+          <Box flex="1" minW="180px">
+            <CampoSelect label="Categoria" value={categoriaId} onChange={(v) => { setCategoriaId(v); setPagina(1); }}
+              opcoes={[{ valor: "", label: "Todas" }, ...categorias.map((c) => ({ valor: String(c.id), label: c.nome }))]} />
           </Box>
+
+          <Box flex="1" minW="160px">
+            <CampoSelect label="Disponibilidade" value={disponivel} onChange={(v) => { setDisponivel(v); setPagina(1); }}
+              opcoes={[
+                { valor: "", label: "Todos" },
+                { valor: "true", label: "Disponíveis" },
+                { valor: "false", label: "Emprestados" },
+              ]} />
+          </Box>
+
+          <Box flex="1" minW="160px">
+            <CampoSelect label="Ordenar por" value={ordem} onChange={(v) => { setOrdem(v); setPagina(1); }}
+              opcoes={[
+                { valor: "titulo_asc", label: "Título (A-Z)" },
+                { valor: "titulo_desc", label: "Título (Z-A)" },
+                { valor: "recentes", label: "Mais recentes" },
+              ]} />
+          </Box>
+
+          <BotaoSecundario
+            onClick={() => { setTermo(""); setBusca(""); setCategoriaId(""); setDisponivel(""); setOrdem("titulo_asc"); setPagina(1); }}
+          >
+            <Icon as={FiRefreshCcw} mr={2} /> Limpar
+          </BotaoSecundario>
         </Flex>
       </Cartao>
 
-      <Cartao p={0} overflow="hidden">
-        {livros === null ? (
-          <Flex justify="center" py={16}><Spinner color={VINHO} size="lg" /></Flex>
-        ) : livros.length === 0 ? (
-          <Vazio>Nenhum livro encontrado.</Vazio>
-        ) : (
-          <Box overflowX="auto">
-            <Table.Root size="md">
-              <Table.Header>
-                <Table.Row bg="#FAF7F2">
-                  <Table.ColumnHeader>Livro</Table.ColumnHeader>
-                  <Table.ColumnHeader>Categoria</Table.ColumnHeader>
-                  <Table.ColumnHeader>Ano</Table.ColumnHeader>
-                  <Table.ColumnHeader>Disponível</Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="right">Ações</Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {livros.map((livro) => (
-                  <Table.Row key={livro.id}>
-                    <Table.Cell>
-                      <Flex align="center" gap={3}>
-                        {livro.capa_url ? (
-                          <Image src={livro.capa_url} alt={livro.titulo} w="40px" h="58px" objectFit="cover" borderRadius="md" />
-                        ) : (
-                          <Flex w="40px" h="58px" bg="#F2EFE9" borderRadius="md" align="center" justify="center"><Icon as={FiBookOpen} color={VINHO} opacity={0.4} /></Flex>
-                        )}
-                        <Box>
-                          <Text fontWeight="semibold">{livro.titulo}</Text>
-                          <Text fontSize="sm" color={TEXTO_SUAVE}>{livro.autor}</Text>
-                        </Box>
-                      </Flex>
-                    </Table.Cell>
-                    <Table.Cell><Badge bg="#F5EDEE" color={VINHO} borderRadius="full" px={3}>{livro.categoria}</Badge></Table.Cell>
-                    <Table.Cell>{livro.ano_publicacao}</Table.Cell>
-                    <Table.Cell>
-                      <Switch.Root checked={livro.disponivel} onCheckedChange={() => alternarDisponivel(livro)} colorPalette="green">
-                        <Switch.HiddenInput />
-                        <Switch.Control />
-                      </Switch.Root>
-                    </Table.Cell>
-                    <Table.Cell textAlign="right">
-                      <Flex justify="flex-end" gap={2}>
-                        <BotaoSecundario size="sm" onClick={() => setModal({ modo: "editar", livro })}><FiEdit2 /></BotaoSecundario>
-                        <BotaoSecundario size="sm" color="#C5221F" borderColor="#C5221F" _hover={{ bg: "#FCE8E6" }} onClick={() => setModal({ modo: "excluir", livro })}><FiTrash2 /></BotaoSecundario>
-                      </Flex>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Root>
-          </Box>
-        )}
-      </Cartao>
+      {/* LIVROS — grade de cartões com capa, no lugar da tabela */}
+      {livros === null ? (
+        <Flex justify="center" py={16}><Spinner color={VINHO} size="lg" /></Flex>
+      ) : livros.length === 0 ? (
+        <Cartao><Vazio>Nenhum livro encontrado.</Vazio></Cartao>
+      ) : (
+        <SimpleGrid columns={{ base: 2, md: 3, lg: 4, xl: 5 }} gap={GAP_CARTAO}>
+          {livros.map((livro) => (
+            <LivroCard
+              key={livro.id}
+              livro={livro}
+              onEditar={(l) => setModal({ modo: "editar", livro: l })}
+              onExcluir={(l) => setModal({ modo: "excluir", livro: l })}
+              onAlternar={alternarDisponivel}
+            />
+          ))}
+        </SimpleGrid>
+      )}
 
       <Paginacao pagina={pagina} totalPaginas={paginacao.totalPaginas} onChange={setPagina} />
 
@@ -248,7 +351,7 @@ function CatalogoConteudo() {
         rodape={
           <>
             <BotaoSecundario onClick={() => setModal(null)} disabled={salvando}>Cancelar</BotaoSecundario>
-            <BotaoPrimario bg="#C5221F" _hover={{ bg: "#A11B19" }} loading={salvando} onClick={excluir}>Excluir</BotaoPrimario>
+            <BotaoPrimario bg={ERRO_COR} _hover={{ bg: ERRO_HOVER }} loading={salvando} onClick={excluir}>Excluir</BotaoPrimario>
           </>
         }
       >

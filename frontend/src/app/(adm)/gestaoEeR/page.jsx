@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Badge, Box, Flex, Spinner, Table, Tabs, Text } from "@chakra-ui/react";
 
 import Shell, { Cartao, VINHO, TEXTO_SUAVE, formatarData } from "@/components/adm/Shell";
+import { FUNDO, BORDA, HOVER_LINHA, TRANSICAO, TEXTO_APOIO, TEXTO_MIUDO, ERRO_COR, ERRO_BG, ALERTA_BG, ALERTA_COR, OK_BG, OK_COR } from "@/components/adm/tema";
 import Modal from "@/components/adm/Modal";
 import { BotaoPrimario, BotaoSecundario, CampoTexto, Paginacao, Vazio } from "@/components/adm/Campos";
 import { getEmprestimosAdmin, atualizarStatusEmprestimo, estenderPrazo } from "../../../api";
@@ -21,16 +22,16 @@ const ABAS = [
 ];
 
 const CORES = {
-  PENDENTE: { bg: "#FFF3E0", cor: "#B78103", texto: "Pendente" },
-  EMPRESTADO: { bg: "#E8F5E9", cor: "#388E3C", texto: "Emprestado" },
+  PENDENTE: { bg: ALERTA_BG, cor: ALERTA_COR, texto: "Pendente" },
+  EMPRESTADO: { bg: OK_BG, cor: OK_COR, texto: "Emprestado" },
   DEVOLVIDO: { bg: "#E3F2FD", cor: "#1976D2", texto: "Devolvido" },
-  RECUSADO: { bg: "#F1F1F1", cor: "#6B6B6B", texto: "Recusado" },
-  CANCELADO: { bg: "#F1F1F1", cor: "#6B6B6B", texto: "Cancelado" },
+  RECUSADO: { bg: "#F1F1F1", cor: TEXTO_SUAVE, texto: "Recusado" },
+  CANCELADO: { bg: "#F1F1F1", cor: TEXTO_SUAVE, texto: "Cancelado" },
 };
 
 function Situacao({ e }) {
   if (e.status === "EMPRESTADO" && e.atrasado) {
-    return <Badge bg="#FCE8E6" color="#C5221F" borderRadius="full" px={3}>Atrasado há {Math.abs(e.dias_restantes)}d</Badge>;
+    return <Badge bg={ERRO_BG} color={ERRO_COR} borderRadius="full" px={3}>Atrasado há {Math.abs(e.dias_restantes)}d</Badge>;
   }
   const c = CORES[e.status];
   return <Badge bg={c.bg} color={c.cor} borderRadius="full" px={3}>{c.texto}</Badge>;
@@ -106,7 +107,7 @@ function GestaoConteudo() {
   return (
     <Shell titulo="Empréstimos" subtitulo="Aprove pedidos, registre devoluções e acompanhe prazos.">
       <Tabs.Root value={status} onValueChange={(d) => { setStatus(d.value); setPagina(1); }} variant="plain" mb={6}>
-        <Tabs.List borderBottom="1px solid #E8DCC4" gap={2}>
+        <Tabs.List borderBottom="1px solid" borderColor={BORDA} gap={2}>
           {ABAS.map((a) => (
             <Tabs.Trigger key={a.valor} value={a.valor} px={5} py={3} color={TEXTO_SUAVE} cursor="pointer"
               _selected={{ color: VINHO, borderBottom: `3px solid ${VINHO}`, fontWeight: "bold" }}>
@@ -125,7 +126,7 @@ function GestaoConteudo() {
           <Box overflowX="auto">
             <Table.Root size="md">
               <Table.Header>
-                <Table.Row bg="#FAF7F2">
+                <Table.Row bg={FUNDO}>
                   <Table.ColumnHeader>Livro</Table.ColumnHeader>
                   <Table.ColumnHeader>Leitor</Table.ColumnHeader>
                   <Table.ColumnHeader>Solicitado</Table.ColumnHeader>
@@ -137,21 +138,21 @@ function GestaoConteudo() {
               </Table.Header>
               <Table.Body>
                 {lista.map((e) => (
-                  <Table.Row key={e.id_emprestimo}>
+                  <Table.Row key={e.id_emprestimo} _hover={HOVER_LINHA} transition={TRANSICAO}>
                     <Table.Cell>
                       <Text fontWeight="semibold">{e.titulo}</Text>
-                      <Text fontSize="sm" color={TEXTO_SUAVE}>{e.autor}</Text>
+                      <Text fontSize={TEXTO_APOIO} color={TEXTO_SUAVE}>{e.autor}</Text>
                     </Table.Cell>
                     <Table.Cell>
                       <Text>{e.usuario_nome}</Text>
-                      <Text fontSize="sm" color={TEXTO_SUAVE}>{e.usuario_email}</Text>
+                      <Text fontSize={TEXTO_APOIO} color={TEXTO_SUAVE}>{e.usuario_email}</Text>
                     </Table.Cell>
                     <Table.Cell>{formatarData(e.data_solicitacao)}</Table.Cell>
                     <Table.Cell>{formatarData(e.data_emprestimo)}</Table.Cell>
                     <Table.Cell>
                       {formatarData(e.data_devolucao_prevista)}
                       {e.status === "EMPRESTADO" && !e.atrasado && e.dias_restantes !== null && (
-                        <Text fontSize="xs" color={TEXTO_SUAVE}>{e.dias_restantes === 0 ? "vence hoje" : `${e.dias_restantes}d restantes`}</Text>
+                        <Text fontSize={TEXTO_MIUDO} color={TEXTO_SUAVE}>{e.dias_restantes === 0 ? "vence hoje" : `${e.dias_restantes}d restantes`}</Text>
                       )}
                     </Table.Cell>
                     <Table.Cell><Situacao e={e} /></Table.Cell>
@@ -199,8 +200,8 @@ function GestaoConteudo() {
             </Text>
             {modal.acao === "aprovar" && <CampoTexto label="Prazo (dias, 1 a 90)" type="number" min={1} max={90} value={dias} onChange={setDias} />}
             {modal.acao === "estender" && <CampoTexto label="Dias a acrescentar (1 a 90)" type="number" min={1} max={90} value={dias} onChange={setDias} />}
-            {modal.acao === "recusar" && <Text color={TEXTO_SUAVE} fontSize="sm">O leitor será informado de que o pedido não foi aprovado.</Text>}
-            {modal.acao === "devolver" && <Text color={TEXTO_SUAVE} fontSize="sm">O livro volta para a estante e fica disponível para novos pedidos.</Text>}
+            {modal.acao === "recusar" && <Text color={TEXTO_SUAVE} fontSize={TEXTO_APOIO}>O leitor será informado de que o pedido não foi aprovado.</Text>}
+            {modal.acao === "devolver" && <Text color={TEXTO_SUAVE} fontSize={TEXTO_APOIO}>O livro volta para a estante e fica disponível para novos pedidos.</Text>}
           </Flex>
         )}
       </Modal>

@@ -1,5 +1,4 @@
 'use client';
-import Sidebar from "../../../components/sideBar/sideBar";
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -16,11 +15,36 @@ import {
 } from '@chakra-ui/react';
 import { FiBookOpen, FiClock, FiCalendar, FiCheckCircle, FiAlertCircle, FiXCircle, FiVolume2 } from 'react-icons/fi';
 
+import Shell, { Cartao, CartaoAviso, Carregando, Vazio, TelaCarregando, TituloSecao } from '@/components/cliente/Shell';
 import { getMeusEmprestimos, cancelarEmprestimo } from '../../../api';
 import { toaster } from '@/components/ui/toaster';
 
-const PRIMARY = '#4A0E17';
-const BORDA = '#E8DCC4';
+import {
+  PRIMARY_COLOR,
+  PRIMARY_HOVER,
+  CARD_BG,
+  BORDER_COLOR,
+  TEXT_DARK,
+  TEXT_LIGHT,
+  PLACEHOLDER_BG,
+  SUAVE_BG,
+  OK_BG,
+  OK_COR,
+  ALERTA_BG,
+  ALERTA_COR,
+  ERRO_BG,
+  ERRO_COR,
+  FONTE_TITULO,
+  RAIO_CARTAO,
+  RAIO_MEDIO,
+  RAIO_PEQUENO,
+  TITULO_CARTAO,
+  GAP_CARTAO,
+} from "@/components/cliente/tema";
+
+// Nomes curtos usados no corpo desta página.
+const PRIMARY = PRIMARY_COLOR;
+const BORDA = BORDER_COLOR;
 
 const EM_ANDAMENTO = ['PENDENTE', 'EMPRESTADO'];
 
@@ -39,8 +63,8 @@ function descreverSituacao(emprestimo) {
     return {
       rotulo: 'Aguardando aprovação',
       icone: FiClock,
-      bg: '#FFF3E0',
-      cor: '#B78103',
+      bg: ALERTA_BG,
+      cor: ALERTA_COR,
       detalhe: 'Sua solicitação está na fila da biblioteca.',
     };
   }
@@ -49,8 +73,8 @@ function descreverSituacao(emprestimo) {
     return {
       rotulo: 'Devolvido',
       icone: FiCheckCircle,
-      bg: '#E8F5E9',
-      cor: '#388E3C',
+      bg: OK_BG,
+      cor: OK_COR,
       detalhe: `Devolvido em ${formatarData(emprestimo.data_devolucao_real)}.`,
     };
   }
@@ -75,8 +99,8 @@ function descreverSituacao(emprestimo) {
     return {
       rotulo: 'Atrasado',
       icone: FiAlertCircle,
-      bg: '#FCE8E6',
-      cor: '#C5221F',
+      bg: ERRO_BG,
+      cor: ERRO_COR,
       detalhe: `Atrasado há ${atraso} ${atraso === 1 ? 'dia' : 'dias'}. Devolva para poder pegar outro livro.`,
     };
   }
@@ -85,8 +109,8 @@ function descreverSituacao(emprestimo) {
     return {
       rotulo: 'Atenção',
       icone: FiAlertCircle,
-      bg: '#FFF3E0',
-      cor: '#B78103',
+      bg: ALERTA_BG,
+      cor: ALERTA_COR,
       detalhe:
         dias === 0
           ? 'Vence hoje. Não se esqueça de devolver!'
@@ -97,8 +121,8 @@ function descreverSituacao(emprestimo) {
   return {
     rotulo: 'Em dia',
     icone: FiCheckCircle,
-    bg: '#E8F5E9',
-    cor: '#388E3C',
+    bg: OK_BG,
+    cor: OK_COR,
     detalhe: dias === null ? 'Empréstimo em andamento.' : `Faltam ${dias} dias para a devolução.`,
   };
 }
@@ -109,10 +133,10 @@ function CardEmprestimo({ emprestimo, onVerDetalhes, onCancelar, cancelando }) {
 
   return (
     <Box
-      bg="#FFFFFF"
+      bg={CARD_BG}
       border="1px solid"
-      borderColor={emprestimo.atrasado ? '#C5221F' : BORDA}
-      borderRadius="2xl"
+      borderColor={emprestimo.atrasado ? ERRO_COR : BORDA}
+      borderRadius={RAIO_CARTAO}
       p={6}
       boxShadow="sm"
       w="100%"
@@ -130,18 +154,18 @@ function CardEmprestimo({ emprestimo, onVerDetalhes, onCancelar, cancelando }) {
               src={emprestimo.capa_url}
               alt={emprestimo.titulo}
               w="100px"
-              h="145px"
+              h="150px"
               fit="cover"
-              borderRadius="lg"
+              borderRadius={RAIO_MEDIO}
               boxShadow="md"
               flexShrink={0}
             />
           ) : (
             <Flex
               w="100px"
-              h="145px"
-              borderRadius="lg"
-              bg="#F2EFE9"
+              h="150px"
+              borderRadius={RAIO_MEDIO}
+              bg={PLACEHOLDER_BG}
               align="center"
               justify="center"
               color={PRIMARY}
@@ -152,14 +176,14 @@ function CardEmprestimo({ emprestimo, onVerDetalhes, onCancelar, cancelando }) {
           )}
 
           <Flex direction="column" gap={1.5}>
-            <Heading size="md" color="#2D2D2D" fontFamily="serif">
+            <Heading fontSize={TITULO_CARTAO} color={TEXT_DARK} fontFamily={FONTE_TITULO}>
               {emprestimo.titulo}
             </Heading>
-            <Text fontSize="sm" color="#6B6B6B" pb={3}>
+            <Text fontSize="sm" color={TEXT_LIGHT} pb={3}>
               {emprestimo.autor}
             </Text>
 
-            <Flex align="center" gap={2} fontSize="sm" color="#6B6B6B">
+            <Flex align="center" gap={2} fontSize="sm" color={TEXT_LIGHT}>
               <Box color={PRIMARY}><FiCalendar size={16} /></Box>
               <Text>
                 {emprestimo.data_emprestimo ? 'Emprestado em: ' : 'Solicitado em: '}
@@ -170,7 +194,7 @@ function CardEmprestimo({ emprestimo, onVerDetalhes, onCancelar, cancelando }) {
             </Flex>
 
             {emprestimo.data_devolucao_prevista && (
-              <Flex align="center" gap={2} fontSize="sm" color="#6B6B6B">
+              <Flex align="center" gap={2} fontSize="sm" color={TEXT_LIGHT}>
                 <Box color={PRIMARY}><FiCalendar size={16} /></Box>
                 <Text>
                   Devolução até:{' '}
@@ -181,11 +205,13 @@ function CardEmprestimo({ emprestimo, onVerDetalhes, onCancelar, cancelando }) {
           </Flex>
         </Flex>
 
-        <Flex direction="column" gap={2} minW="285px" align="flex-start">
+        {/* Sem minW fixo: os 285px espremiam o título do livro em telas
+            médias antes de o card quebrar para coluna. */}
+        <Flex direction="column" gap={2} minW={{ base: "auto", lg: "220px" }} align="flex-start">
           <Badge
             px={4}
             py={1.5}
-            borderRadius="md"
+            borderRadius={RAIO_PEQUENO}
             textTransform="none"
             fontSize="sm"
             bg={situacao.bg}
@@ -197,7 +223,7 @@ function CardEmprestimo({ emprestimo, onVerDetalhes, onCancelar, cancelando }) {
             <Icone size={16} />
             {situacao.rotulo}
           </Badge>
-          <Text fontSize="sm" color="#6B6B6B" textAlign="left">
+          <Text fontSize="sm" color={TEXT_LIGHT} textAlign="left">
             {situacao.detalhe}
           </Text>
         </Flex>
@@ -219,10 +245,11 @@ function CardEmprestimo({ emprestimo, onVerDetalhes, onCancelar, cancelando }) {
             <Button
               variant="ghost"
               size="sm"
-              color="#C5221F"
+              fontWeight="normal"
+              color={TEXT_LIGHT}
               loading={cancelando}
               onClick={() => onCancelar(emprestimo.id_emprestimo)}
-              _hover={{ bg: '#FCE8E6' }}
+              _hover={{ bg: ERRO_BG, color: ERRO_COR }}
             >
               Cancelar solicitação
             </Button>
@@ -303,37 +330,21 @@ function MeusEmprestimosConteudo() {
   );
 
   return (
-    <Flex minH="100vh" bg="#FAF7F2" color="#2D2D2D" w="100%">
-      {/* Sidebar Lateral */}
-      <Sidebar/>
-
-      {/* Conteúdo Principal */}
-      <Box flex="1" p={{ base: 6, md: 10 }} w="100%">
-        <Box mb={8}>
-          <Heading size="3xl" color={PRIMARY} fontFamily="serif" mb={2}>
-            Meus Empréstimos
-          </Heading>
-          <Text color="#6B6B6B" fontSize="md">
-            Acompanhe os livros que estão com você.
-          </Text>
-        </Box>
+    <Shell titulo="Meus Empréstimos" subtitulo="Acompanhe os livros que estão com você.">
 
         {/* Situação perante as regras */}
         {elegibilidade && (
-          <Flex
-            bg={elegibilidade.podeEmprestar ? '#FAF3EA' : '#FCE8E6'}
-            border="1px solid"
-            borderColor={elegibilidade.podeEmprestar ? BORDA : '#C5221F'}
-            borderRadius="2xl"
-            p={5}
-            mb={8}
+          <Cartao
+            bg={elegibilidade.podeEmprestar ? SUAVE_BG : ERRO_BG}
+            borderColor={elegibilidade.podeEmprestar ? BORDA : ERRO_COR}
+            display="flex"
             gap={4}
-            align="center"
-            justify="space-between"
+            alignItems="center"
+            justifyContent="space-between"
             flexWrap="wrap"
           >
             <Flex gap={4} align="center">
-              <Box color={elegibilidade.podeEmprestar ? PRIMARY : '#C5221F'}>
+              <Box color={elegibilidade.podeEmprestar ? PRIMARY : ERRO_COR}>
                 {elegibilidade.podeEmprestar ? (
                   <FiCheckCircle size={22} />
                 ) : (
@@ -341,43 +352,43 @@ function MeusEmprestimosConteudo() {
                 )}
               </Box>
               <Box>
-                <Text fontWeight="bold" color="#2D2D2D">
+                <Text fontWeight="bold" color={TEXT_DARK}>
                   {elegibilidade.ativos} de {elegibilidade.limite} empréstimos em uso
                 </Text>
-                <Text fontSize="sm" color={elegibilidade.podeEmprestar ? '#6B6B6B' : '#C5221F'}>
+                <Text fontSize="sm" color={elegibilidade.podeEmprestar ? '#6B6B6B' : ERRO_COR}>
                   {elegibilidade.motivo ||
                     `Você ainda pode solicitar ${elegibilidade.vagas} ${elegibilidade.vagas === 1 ? 'livro' : 'livros'}.`}
                 </Text>
               </Box>
             </Flex>
 
-            {elegibilidade.podeEmprestar && (
+            {elegibilidade.podeEmprestar && emAndamento.length > 0 && (
               <Button
                 bg={PRIMARY}
-                color="#FFFFFF"
-                _hover={{ bg: '#360A11' }}
+                color={CARD_BG}
+                _hover={{ bg: PRIMARY_HOVER }}
                 onClick={() => router.push('/buscar_livro')}
               >
                 Buscar livros
               </Button>
             )}
-          </Flex>
+          </Cartao>
         )}
 
         {carregando ? (
           <Flex justify="center" align="center" py={20} direction="column" gap={4}>
             <Spinner color={PRIMARY} size="xl" borderWidth="3px" />
-            <Text color="#6B6B6B" fontSize="sm">Carregando seus empréstimos...</Text>
+            <Text color={TEXT_LIGHT} fontSize="sm">Carregando seus empréstimos...</Text>
           </Flex>
         ) : erro ? (
-          <Text color="#C5221F" fontSize="sm">{erro}</Text>
+          <Text color={ERRO_COR} fontSize="sm">{erro}</Text>
         ) : (
           <Tabs.Root key={abaInicial} defaultValue={abaInicial} variant="plain" w="100%">
             <Tabs.List borderBottom="1px solid" borderColor={BORDA} mb={8} w="100%">
               <Tabs.Trigger
                 value="em-andamento"
                 _selected={{ color: PRIMARY, borderBottom: `3px solid ${PRIMARY}`, fontWeight: 'bold' }}
-                color="#6B6B6B"
+                color={TEXT_LIGHT}
                 px={5}
                 py={3}
                 fontSize="md"
@@ -389,7 +400,7 @@ function MeusEmprestimosConteudo() {
               <Tabs.Trigger
                 value="historico"
                 _selected={{ color: PRIMARY, borderBottom: `3px solid ${PRIMARY}`, fontWeight: 'bold' }}
-                color="#6B6B6B"
+                color={TEXT_LIGHT}
                 px={5}
                 py={3}
                 fontSize="md"
@@ -403,24 +414,29 @@ function MeusEmprestimosConteudo() {
               <Flex direction="column" gap={8} w="100%">
                 <Flex align="center" color={PRIMARY} gap={3}>
                   <FiBookOpen size={24} />
-                  <Heading size="md" fontFamily="serif">
-                    Livros emprestados
-                  </Heading>
+                  <TituloSecao>Livros emprestados</TituloSecao>
                 </Flex>
 
                 {emAndamento.length === 0 ? (
-                  <Text color="#6B6B6B" fontSize="md">
-                    Você não tem empréstimos em andamento.{' '}
-                    <Text
-                      as="a"
-                      href="/buscar_livro"
-                      color={PRIMARY}
-                      fontWeight="semibold"
-                      textDecoration="underline"
+                  <Cartao>
+                    <Vazio
+                      icone={FiBookOpen}
+                      titulo="Nenhum empréstimo em andamento"
+                      acao={
+                        <Button
+                          size="sm"
+                          bg={PRIMARY}
+                          color={CARD_BG}
+                          _hover={{ bg: PRIMARY_HOVER }}
+                          onClick={() => router.push('/buscar_livro')}
+                        >
+                          Buscar livros
+                        </Button>
+                      }
                     >
-                      Buscar livros
-                    </Text>
-                  </Text>
+                      Quando você pedir um livro, ele aparece aqui.
+                    </Vazio>
+                  </Cartao>
                 ) : (
                   emAndamento.map((emprestimo) => (
                     <CardEmprestimo
@@ -436,69 +452,28 @@ function MeusEmprestimosConteudo() {
                 {/* Informações importantes — as regras que a API aplica */}
                 <Flex align="center" color={PRIMARY} gap={3} pt={4}>
                   <FiVolume2 size={24} />
-                  <Heading size="md" fontFamily="serif">
-                    Informações importantes
-                  </Heading>
+                  <TituloSecao>Informações importantes</TituloSecao>
                 </Flex>
 
-                <SimpleGrid columns={{ base: 1, md: 3 }} gap={5} w="100%">
-                  <Box bg="#FAF3EA" p={5} borderRadius="2xl" border="1px solid" borderColor={BORDA} w="100%">
-                    <Flex gap={4} align="start">
-                      <Flex align="center" justify="center" w="44px" h="44px" borderRadius="full" border="2px solid" borderColor={PRIMARY} color={PRIMARY} flexShrink={0}>
-                        <FiClock size={20} />
-                      </Flex>
-                      <Box>
-                        <Text fontWeight="bold" fontSize="md" color="#2D2D2D" mb={1}>
-                          Prazo de Devolução
-                        </Text>
-                        <Text fontSize="sm" color="#6B6B6B" lineHeight="relaxed">
-                          O prazo padrão de empréstimo é de {prazoDias} dias corridos,
-                          contados a partir da aprovação.
-                        </Text>
-                      </Box>
-                    </Flex>
-                  </Box>
+                <SimpleGrid columns={{ base: 1, md: 3 }} gap={GAP_CARTAO} w="100%">
+                  <CartaoAviso icone={FiClock} titulo="Prazo de Devolução">
+                    {`O prazo padrão de empréstimo é de ${prazoDias} dias corridos, contados a partir da aprovação.`}
+                  </CartaoAviso>
 
-                  <Box bg="#FAF3EA" p={5} borderRadius="2xl" border="1px solid" borderColor={BORDA} w="100%">
-                    <Flex gap={4} align="start">
-                      <Flex align="center" justify="center" w="44px" h="44px" borderRadius="full" border="2px solid" borderColor={PRIMARY} color={PRIMARY} flexShrink={0}>
-                        <FiBookOpen size={20} />
-                      </Flex>
-                      <Box>
-                        <Text fontWeight="bold" fontSize="md" color="#2D2D2D" mb={1}>
-                          Limite de {elegibilidade?.limite ?? 2} Livros
-                        </Text>
-                        <Text fontSize="sm" color="#6B6B6B" lineHeight="relaxed">
-                          Você pode ter no máximo {elegibilidade?.limite ?? 2} empréstimos
-                          ao mesmo tempo, contando as solicitações pendentes.
-                        </Text>
-                      </Box>
-                    </Flex>
-                  </Box>
+                  <CartaoAviso icone={FiBookOpen} titulo={`Limite de ${elegibilidade?.limite ?? 2} Livros`}>
+                    {`Você pode ter no máximo ${elegibilidade?.limite ?? 2} empréstimos ao mesmo tempo, contando as solicitações pendentes.`}
+                  </CartaoAviso>
 
-                  <Box bg="#FAF3EA" p={5} borderRadius="2xl" border="1px solid" borderColor={BORDA} w="100%">
-                    <Flex gap={4} align="start">
-                      <Flex align="center" justify="center" w="44px" h="44px" borderRadius="full" border="2px solid" borderColor={PRIMARY} color={PRIMARY} flexShrink={0}>
-                        <FiAlertCircle size={20} />
-                      </Flex>
-                      <Box>
-                        <Text fontWeight="bold" fontSize="md" color="#2D2D2D" mb={1}>
-                          Atrasos
-                        </Text>
-                        <Text fontSize="sm" color="#6B6B6B" lineHeight="relaxed">
-                          Enquanto houver um livro atrasado com você, novos empréstimos
-                          ficam bloqueados até a devolução.
-                        </Text>
-                      </Box>
-                    </Flex>
-                  </Box>
+                  <CartaoAviso icone={FiAlertCircle} titulo="Atrasos">
+                    Enquanto houver um livro atrasado com você, novos empréstimos ficam bloqueados até a devolução.
+                  </CartaoAviso>
                 </SimpleGrid>
               </Flex>
             </Tabs.Content>
 
             <Tabs.Content value="historico" p={0} w="100%">
               {historico.length === 0 ? (
-                <Text color="#6B6B6B" fontSize="md">
+                <Text color={TEXT_LIGHT} fontSize="md">
                   Nenhum empréstimo encerrado para exibir no momento.
                 </Text>
               ) : (
@@ -516,8 +491,7 @@ function MeusEmprestimosConteudo() {
             </Tabs.Content>
           </Tabs.Root>
         )}
-      </Box>
-    </Flex>
+    </Shell>
   );
 }
 
@@ -525,11 +499,7 @@ function MeusEmprestimosConteudo() {
 export default function MeusEmprestimosPage() {
   return (
     <Suspense
-      fallback={
-        <Flex minH="100vh" bg="#FAF7F2" align="center" justify="center">
-          <Spinner color={PRIMARY} size="xl" borderWidth="3px" />
-        </Flex>
-      }
+      fallback={<TelaCarregando />}
     >
       <MeusEmprestimosConteudo />
     </Suspense>

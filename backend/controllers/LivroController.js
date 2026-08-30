@@ -1,4 +1,5 @@
 import { livroModel } from '../models/LivroModel.js';
+import { categoriaModel } from '../models/CategoriaModel.js';
 import { avaliacaoModel } from '../models/AvaliacaoModel.js';
 import EmprestimoModel from '../models/EmprestimosModel.js';
 import { erro, erroInterno } from '../utils/resposta.js';
@@ -19,7 +20,7 @@ function validarLivro(body, parcial) {
     const dados = {};
     const anoMaximo = new Date().getFullYear() + 1;
 
-    for (const campo of ['titulo', 'autor', 'categoria']) {
+    for (const campo of ['titulo', 'autor']) {
         if (body[campo] === undefined) {
             if (!parcial) return { erro: `O campo '${campo}' é obrigatório.` };
             continue;
@@ -27,6 +28,17 @@ function validarLivro(body, parcial) {
         const valor = texto(body[campo]);
         if (!valor) return { erro: `O campo '${campo}' é obrigatório.` };
         dados[campo] = valor;
+    }
+
+    // A categoria agora é FK: chega como id, não mais como texto livre.
+    if (body.categoria_id === undefined) {
+        if (!parcial) return { erro: "O campo 'categoria_id' é obrigatório." };
+    } else {
+        const categoriaId = Number(body.categoria_id);
+        if (!Number.isInteger(categoriaId) || categoriaId <= 0) {
+            return { erro: 'Categoria inválida.' };
+        }
+        dados.categoria_id = categoriaId;
     }
 
     if (body.ano_publicacao === undefined) {
@@ -61,11 +73,14 @@ export const livroController = {
 
     async listarLivros(req, res) {
         try {
-            const { busca, categoria, disponivel, ordem, pagina, limite } = req.query;
+            const { busca, categoria, categoria_id, disponivel, ordem, pagina, limite } = req.query;
+
+            const idCategoria = Number(categoria_id);
 
             const resultado = await livroModel.listar({
                 busca: texto(busca),
                 categoria: texto(categoria),
+                categoriaId: Number.isInteger(idCategoria) && idCategoria > 0 ? idCategoria : null,
                 disponivel:
                     disponivel === undefined || disponivel === ''
                         ? null
@@ -90,12 +105,14 @@ export const livroController = {
         }
     },
 
-    async listarCategorias(req, res) {
+    // Vitrine da home: devolve o critério junto, para a tela rotular certo
+    // ("Mais emprestados" x "Novidades no acervo") em vez de mentir.
+    async listarPopulares(req, res) {
         try {
-            const categorias = await livroModel.listarCategorias();
-            return res.status(200).json({ sucesso: true, dados: categorias });
+            const { criterio, livros } = await livroModel.populares(req.query.limite);
+            return res.status(200).json({ sucesso: true, criterio, dados: livros });
         } catch (error) {
-            return erroInterno(res, 'listarCategorias', error);
+            return erroInterno(res, 'listarPopulares', error);
         }
     },
 
@@ -108,7 +125,7 @@ export const livroController = {
             if (!livro) return erro(res, 404, 'Livro não encontrado.');
 
             const [semelhantes, avaliacoes, estatisticas] = await Promise.all([
-                livroModel.buscarSemelhantes(livro.categoria, id),
+                livroModel.buscarSemelhantes(livro.categoria_id, id),
                 avaliacaoModel.listarPorLivro(id),
                 avaliacaoModel.obterEstatisticas(id)
             ]);
@@ -128,6 +145,11 @@ export const livroController = {
         try {
             const resultado = validarLivro(req.body || {}, false);
             if (resultado.erro) return erro(res, 400, resultado.erro);
+
+            // Sem isto o INSERT quebraria com erro cru de chave estrangeira.
+            if (!await categoriaModel.buscarPorId(resultado.dados.categoria_id)) {
+                return erro(res, 400, 'Categoria não encontrada.', 'CATEGORIA_INVALIDA');
+            }
 
             const livro = await livroModel.criar(resultado.dados);
 
@@ -151,6 +173,11 @@ export const livroController = {
 
             if (Object.keys(resultado.dados).length === 0) {
                 return erro(res, 400, 'Nenhum campo para atualizar.');
+            }
+
+            if (resultado.dados.categoria_id !== undefined
+                && !await categoriaModel.buscarPorId(resultado.dados.categoria_id)) {
+                return erro(res, 400, 'Categoria não encontrada.', 'CATEGORIA_INVALIDA');
             }
 
             // Não dá para "devolver à estante" um livro que está com alguém.

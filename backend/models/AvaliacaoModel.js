@@ -24,17 +24,40 @@ export const avaliacaoModel = {
                     a.comentario,
                     a.criado_em,
                     a.atualizado_em,
-                    u.nome AS usuario_nome
+                    u.nome AS usuario_nome,
+                    -- Quem já teve o livro em mãos ganha selo na tela.
+                    -- Avaliar continua aberto a qualquer usuário; o selo só
+                    -- diz ao leitor quais opiniões vêm de quem leu.
+                    EXISTS (
+                        SELECT 1 FROM emprestimos e
+                        WHERE e.id_usuario = a.id_usuario
+                          AND e.id_livro = a.id_livro
+                          AND e.status IN ('EMPRESTADO', 'DEVOLVIDO')
+                    ) AS leitor_verificado
                 FROM avaliacoes a
                 INNER JOIN usuarios u ON u.id_usuario = a.id_usuario
                 WHERE a.id_livro = ?
-                ORDER BY a.atualizado_em DESC
+                -- Ordena pela data que a tela mostra. Era atualizado_em, e
+                -- editar um comentário antigo o jogava para o topo exibindo a
+                -- data de criação — parecia ordenação quebrada.
+                ORDER BY a.criado_em DESC
                 LIMIT ${limiteSeguro}
                 `,
                 [idLivro]
             );
 
-            return rows;
+            return rows.map((linha) => ({
+                ...linha,
+                leitor_verificado: Boolean(Number(linha.leitor_verificado)),
+                // Marca edição para a tela poder dizer "editado" em vez de
+                // mostrar só a data original.
+                editado:
+                    linha.atualizado_em && linha.criado_em
+                        ? new Date(linha.atualizado_em).getTime() -
+                              new Date(linha.criado_em).getTime() >
+                          1000
+                        : false
+            }));
 
         } finally {
             connection.release();

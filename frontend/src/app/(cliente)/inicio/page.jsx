@@ -17,26 +17,66 @@ import {
   Spinner,
   Badge,
 } from "@chakra-ui/react";
-import { FiSearch, FiBookOpen, FiClock, FiUser, FiArrowRight, FiChevronRight } from "react-icons/fi";
+import { FiBookOpen, FiClock, FiArrowRight, FiAlertTriangle, FiCheckCircle, FiVolume2 } from "react-icons/fi";
 
-import Sidebar from "../../../components/sideBar/sideBar";
+import Shell, { Cartao, CartaoAviso, TituloSecao, Vazio } from "@/components/cliente/Shell";
 import { useUsuario } from "../../../components/auth/RequireAuth";
-import { getLivros, getMeusEmprestimos } from "../../../api";
+import { getLivrosPopulares, getMeusEmprestimos } from "../../../api";
 
-const PRIMARY_COLOR = "#4A0E17";
-const BORDER_COLOR = "#EFEBE3";
-const TEXT_DARK = "#333333";
-const TEXT_LIGHT = "#777777";
-const HOVER_SHADOW = "0 8px 24px rgba(74, 14, 23, 0.08)";
-
-const QUICK_ACTIONS = [
-  { label: "Buscar Livros", icon: FiSearch, href: "/buscar_livro", description: "Encontre livros por título, autor ou assunto" },
-  { label: "Meus Empréstimos", icon: FiBookOpen, href: "/emprestimo_livro", description: "Veja seus livros emprestados e prazos" },
-  { label: "Histórico", icon: FiClock, href: "/emprestimo_livro?aba=historico", description: "Confira seu histórico de empréstimos" },
-  { label: "Meu Cadastro", icon: FiUser, href: "/alterar_cadastro", description: "Atualize seus dados cadastrais" },
-];
+import {
+  PRIMARY_COLOR,
+  CARD_BG,
+  BORDER_COLOR,
+  TEXT_DARK,
+  TEXT_LIGHT,
+  PLACEHOLDER_BG,
+  OK_BG,
+  OK_COR,
+  ALERTA_BG,
+  ALERTA_COR,
+  ERRO_BG,
+  ERRO_COR,
+  RAIO_MEDIO,
+  RAIO_PEQUENO,
+  GAP_CARTAO,
+  HOVER_CARTAO,
+  HOVER_VITRINE,
+  HOVER_CAPA,
+  HOVER_LINK,
+  TRANSICAO,
+  TEXTO_APOIO,
+  TEXTO_MIUDO,
+  RAIO_CAMPO,
+  PRIMARY_HOVER,
+} from "@/components/cliente/tema";
 
 const ATIVOS = ["PENDENTE", "EMPRESTADO"];
+
+// Avisos fixos da biblioteca. O horário é o mesmo que já existia no projeto;
+// se mudar, é aqui que se edita — não há essa informação no banco.
+const AVISOS = [
+  {
+    icone: FiClock,
+    titulo: "Horário de Funcionamento",
+    // `whiteSpace: pre-line` no CartaoAviso respeita a quebra.
+    texto: `Segunda a Sexta: 08h às 18h
+Sábado: 08h às 12h`,
+  },
+  {
+    icone: FiAlertTriangle,
+    titulo: "Devoluções",
+    texto: "Fique atento ao prazo de devolução. Livro atrasado bloqueia novos empréstimos.",
+  },
+  {
+    icone: FiCheckCircle,
+    titulo: "Como funciona",
+    // Substituiu um card de "Novidades" que anunciava novidade sem saber se
+    // havia alguma. Estes são os passos reais que a API impõe.
+    texto: `1. Peça o livro pelo site
+2. A biblioteca aprova o pedido
+3. Retire no balcão`,
+  },
+];
 
 function formatarData(valor) {
   if (!valor) return "—";
@@ -46,14 +86,14 @@ function formatarData(valor) {
 
 // Rótulo do status para o card da home
 function situacao(emprestimo) {
-  if (emprestimo.status === "PENDENTE") return { texto: "Aguardando aprovação", bg: "#FFF3E0", cor: "#B78103" };
-  if (emprestimo.atrasado) return { texto: "Atrasado", bg: "#FCE8E6", cor: "#C5221F" };
-  return { texto: "Emprestado", bg: "#E8F5E9", cor: "#388E3C" };
+  if (emprestimo.status === "PENDENTE") return { texto: "Aguardando aprovação", bg: ALERTA_BG, cor: ALERTA_COR };
+  if (emprestimo.atrasado) return { texto: "Atrasado", bg: ERRO_BG, cor: ERRO_COR };
+  return { texto: "Emprestado", bg: OK_BG, cor: OK_COR };
 }
 
 function Capa({ src, alt, ...props }) {
   return (
-    <AspectRatio ratio={2 / 3} borderRadius="8px" overflow="hidden" bg="#F2EFE9" {...props}>
+    <AspectRatio ratio={2 / 3} borderRadius={RAIO_PEQUENO} overflow="hidden" bg={PLACEHOLDER_BG} {...props}>
       {src ? (
         <Image src={src} alt={alt} objectFit="cover" />
       ) : (
@@ -65,27 +105,12 @@ function Capa({ src, alt, ...props }) {
   );
 }
 
-function Cartao({ children, ...props }) {
-  return (
-    <VStack align="stretch" gap={5} p={6} bg="white" borderRadius="12px" border="1px solid" borderColor={BORDER_COLOR} {...props}>
-      {children}
-    </VStack>
-  );
-}
-
-function Titulo({ children }) {
-  return (
-    <Heading as="h2" fontSize="2xl" fontWeight="bold" color={PRIMARY_COLOR} fontFamily="Georgia, serif">
-      {children}
-    </Heading>
-  );
-}
-
 export default function InicioPage() {
   const usuario = useUsuario();
 
   const [emprestimos, setEmprestimos] = useState(null); // null = carregando
   const [destaques, setDestaques] = useState(null);
+  const [criterio, setCriterio] = useState("recentes");
 
   useEffect(() => {
     let ativo = true;
@@ -96,8 +121,12 @@ export default function InicioPage() {
       setEmprestimos(lista.filter((e) => ATIVOS.includes(e.status)));
     });
 
-    getLivros({ disponivel: "true", ordem: "recentes", limite: 4 }).then((r) => {
-      if (ativo) setDestaques(r?.sucesso ? r.dados : []);
+    // O rótulo segue o critério que a API usou: com histórico são os mais
+    // emprestados; sem histórico, as novidades. Antes dizia "Destaque" sempre.
+    getLivrosPopulares(5).then((r) => {
+      if (!ativo) return;
+      setDestaques(r?.sucesso ? r.dados : []);
+      if (r?.criterio) setCriterio(r.criterio);
     });
 
     return () => {
@@ -105,124 +134,213 @@ export default function InicioPage() {
     };
   }, []);
 
+  // Uma pendência por vez, a mais urgente: atraso vence pedido pendente.
+  const atrasados = (emprestimos || []).filter((e) => e.atrasado);
+  const pendentes = (emprestimos || []).filter((e) => e.status === "PENDENTE");
+
+  const alerta = atrasados.length
+    ? {
+        icone: FiAlertTriangle,
+        bg: ERRO_BG,
+        cor: ERRO_COR,
+        texto: `Você tem ${atrasados.length === 1 ? "um livro atrasado" : `${atrasados.length} livros atrasados`}. Devolva para poder pegar outro.`,
+      }
+    : pendentes.length
+    ? {
+        icone: FiClock,
+        bg: ALERTA_BG,
+        cor: ALERTA_COR,
+        texto: `${pendentes.length === 1 ? "Uma solicitação aguarda" : `${pendentes.length} solicitações aguardam`} aprovação da biblioteca.`,
+      }
+    : null;
+
   const primeiroNome = (usuario?.nome || "").trim().split(" ")[0];
 
   return (
-    <Flex minH="100vh" bg="white">
-      <Sidebar />
+    <Shell
+      titulo={`Bem-vindo(a)${primeiroNome ? `, ${primeiroNome}` : ""}!`}
+      subtitulo="Explore, reserve e gerencie seus livros de forma fácil e rápida."
+    >
+          {/* 9: pendência sobe para o topo em vez de ficar escondida no meio */}
+          {alerta && (
+            <Flex
+              bg={alerta.bg}
+              border="1px solid"
+              borderColor={alerta.cor}
+              borderRadius={RAIO_MEDIO}
+              p={4}
+              gap={3}
+              align="center"
+              flexWrap="wrap"
+            >
+              <Icon as={alerta.icone} color={alerta.cor} boxSize={5} />
+              <Text fontSize={TEXTO_APOIO} color={alerta.cor} flex={1} minW="200px">
+                {alerta.texto}
+              </Text>
+              <Button
+                as={Link}
+                href="/emprestimo_livro"
+                size="sm"
+                variant="outline"
+                borderColor={alerta.cor}
+                color={alerta.cor}
+                borderRadius={RAIO_CAMPO}
+                _hover={{ bg: CARD_BG }}
+              >
+                Ver empréstimos
+              </Button>
+            </Flex>
+          )}
 
-      <Box flex={1} p={{ base: 6, md: 8 }} pb={16}>
-        <VStack gap={12} align="stretch">
-          {/* BOAS-VINDAS */}
-          <VStack align="flex-start" gap={3}>
-            <Heading as="h1" fontSize={{ base: "3xl", md: "4xl" }} fontWeight="bold" color={PRIMARY_COLOR} fontFamily="Georgia, serif">
-              Bem-vindo(a){primeiroNome ? `, ${primeiroNome}` : ""}!
-            </Heading>
-            <Text fontSize="md" color={TEXT_LIGHT}>
-              Explore, reserve e gerencie seus livros de forma fácil e rápida.
-            </Text>
+          {/* EMPRÉSTIMOS — faixa horizontal, largura cheia.
+              Antes era um cartão de meia tela ao lado dos destaques: os dois
+              tinham alturas independentes e ritmos diferentes (lista vertical
+              x grade de capas), e a linha nunca fechava. */}
+          <VStack align="stretch" gap={GAP_CARTAO}>
+            <Flex justify="space-between" align="center" gap={3} flexWrap="wrap">
+              <TituloSecao>Seus empréstimos</TituloSecao>
+              <Text
+                as={Link}
+                href="/emprestimo_livro"
+                _hover={HOVER_LINK}
+                color={PRIMARY_COLOR}
+                fontSize={TEXTO_APOIO}
+                fontWeight="medium"
+              >
+                Ver todos <Icon as={FiArrowRight} ml={1} display="inline" />
+              </Text>
+            </Flex>
+
+            {emprestimos === null ? (
+              <Flex justify="center" py={8}><Spinner color={PRIMARY_COLOR} /></Flex>
+            ) : emprestimos.length === 0 ? (
+              <Cartao>
+                <Vazio
+                  icone={FiBookOpen}
+                  titulo="Nenhum empréstimo em andamento"
+                  acao={
+                    <Button as={Link} href="/buscar_livro" size="sm" bg={PRIMARY_COLOR} color="white" _hover={{ bg: PRIMARY_HOVER }}>
+                      Buscar livros
+                    </Button>
+                  }
+                >
+                  Quando você pedir um livro, ele aparece aqui.
+                </Vazio>
+              </Cartao>
+            ) : (
+              <SimpleGrid columns={{ base: 1, md: 2 }} gap={GAP_CARTAO}>
+                {emprestimos.map((e) => {
+                  const st = situacao(e);
+                  return (
+                    <Cartao
+                      key={e.id_emprestimo}
+                      as={Link}
+                      href={`/detalhe_livro/${e.id_livro}`}
+                      borderColor={e.atrasado ? ERRO_COR : BORDER_COLOR}
+                      display="flex"
+                      gap={4}
+                      alignItems="center"
+                      transition={TRANSICAO}
+                      _hover={HOVER_CARTAO}
+                    >
+                      <Capa src={e.capa_url} alt={e.titulo} w="72px" flexShrink={0} />
+
+                      <VStack align="flex-start" gap={1} flex={1} minW={0}>
+                        <Badge bg={st.bg} color={st.cor} borderRadius="full" px={2} textTransform="none" fontSize={TEXTO_MIUDO}>
+                          {st.texto}
+                        </Badge>
+                        <Heading fontSize={TEXTO_APOIO} fontWeight="semibold" color={PRIMARY_COLOR} lineClamp={1}>
+                          {e.titulo}
+                        </Heading>
+                        <Text fontSize={TEXTO_MIUDO} color={TEXT_LIGHT} lineClamp={1}>
+                          {e.autor}
+                        </Text>
+                        <Text fontSize={TEXTO_MIUDO} color={TEXT_DARK}>
+                          {e.status === "PENDENTE"
+                            ? `Solicitado em ${formatarData(e.data_solicitacao)}`
+                            : `Devolver até ${formatarData(e.data_devolucao_prevista)}`}
+                        </Text>
+                      </VStack>
+                    </Cartao>
+                  );
+                })}
+              </SimpleGrid>
+            )}
           </VStack>
 
-          {/* AÇÕES RÁPIDAS */}
-          <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap={4}>
-            {QUICK_ACTIONS.map((acao) => (
-              <Flex
-                key={acao.href}
+          {/* LIVROS — largura cheia, capas maiores */}
+          <VStack align="stretch" gap={GAP_CARTAO}>
+            <Flex justify="space-between" align="center" gap={3} flexWrap="wrap">
+              <TituloSecao>
+                {criterio === "populares" ? "Mais emprestados" : "Novidades no acervo"}
+              </TituloSecao>
+              <Text
                 as={Link}
-                href={acao.href}
-                align="center"
-                bg="white"
-                p={4}
-                borderRadius="12px"
-                border="1px solid"
-                borderColor={BORDER_COLOR}
-                _hover={{ borderColor: PRIMARY_COLOR, boxShadow: HOVER_SHADOW, transform: "translateY(-2px)" }}
-                transition="all 0.2s ease"
+                href="/buscar_livro"
+                _hover={HOVER_LINK}
+                color={PRIMARY_COLOR}
+                fontSize={TEXTO_APOIO}
+                fontWeight="medium"
               >
-                <Flex w={12} h={12} borderRadius="full" bg={PRIMARY_COLOR} color="white" align="center" justify="center" mr={3} flexShrink={0}>
-                  <Icon as={acao.icon} w={5} h={5} />
-                </Flex>
-                <VStack align="flex-start" gap={0} flex={1}>
-                  <Heading fontSize="sm" fontWeight="semibold" color={PRIMARY_COLOR}>{acao.label}</Heading>
-                  <Text fontSize="xs" color={TEXT_LIGHT} lineClamp={2}>{acao.description}</Text>
-                </VStack>
-                <Icon as={FiChevronRight} color={PRIMARY_COLOR} w={4} h={4} ml={1} />
-              </Flex>
-            ))}
-          </SimpleGrid>
-
-          <SimpleGrid columns={{ base: 1, lg: 2 }} gap={8}>
-            {/* EMPRÉSTIMOS ATIVOS */}
-            <Cartao justify="space-between">
-              <Titulo>Seus empréstimos</Titulo>
-
-              {emprestimos === null ? (
-                <Flex justify="center" py={8}><Spinner color={PRIMARY_COLOR} /></Flex>
-              ) : emprestimos.length === 0 ? (
-                <Flex border="2px dashed" borderColor="#DED6C9" borderRadius="8px" p={4} h="90px" align="center" justify="center" color={TEXT_LIGHT}>
-                  <Text fontSize="xs">Nenhum empréstimo em andamento.</Text>
-                </Flex>
-              ) : (
-                emprestimos.map((e) => {
-                  const s = situacao(e);
-                  return (
-                    <Flex key={e.id_emprestimo} border="1px solid" borderColor={e.atrasado ? "#C5221F" : BORDER_COLOR} borderRadius="8px" p={4} align="center" gap={4}>
-                      <Capa src={e.capa_url} alt={e.titulo} w="80px" flexShrink={0} />
-
-                      <VStack align="flex-start" gap={1} flex={1}>
-                        <Badge bg={s.bg} color={s.cor} borderRadius="full" px={2} textTransform="none" fontSize="xs">{s.texto}</Badge>
-                        <Heading fontSize="md" fontWeight="semibold" color={PRIMARY_COLOR}>{e.titulo}</Heading>
-                        <Text fontSize="xs" color={TEXT_LIGHT}>{e.autor}</Text>
-                        {e.status === "PENDENTE" ? (
-                          <Text fontSize="xs" color={TEXT_DARK}>Solicitado em {formatarData(e.data_solicitacao)}</Text>
-                        ) : (
-                          <Text fontSize="xs" color={TEXT_DARK}>Devolver até {formatarData(e.data_devolucao_prevista)}</Text>
-                        )}
-                      </VStack>
-
-                      <Button as={Link} href={`/detalhe_livro/${e.id_livro}`} variant="outline" size="sm" borderColor={PRIMARY_COLOR} color={PRIMARY_COLOR}>
-                        Ver detalhes
-                      </Button>
-                    </Flex>
-                  );
-                })
-              )}
-
-              <Text as={Link} href="/emprestimo_livro" color={PRIMARY_COLOR} fontSize="sm" fontWeight="medium" textAlign="center" pt={1}>
-                Ver todos os empréstimos <Icon as={FiArrowRight} ml={1} display="inline" />
+                Ver o acervo <Icon as={FiArrowRight} ml={1} display="inline" />
               </Text>
-            </Cartao>
+            </Flex>
 
-            {/* DESTAQUES */}
-            <Cartao>
-              <HStack justify="space-between">
-                <Titulo>Livros em Destaque</Titulo>
-                <Text as={Link} href="/buscar_livro" color={PRIMARY_COLOR} fontSize="xs" fontWeight="medium">
-                  Ver todos <Icon as={FiArrowRight} ml={1} display="inline" />
-                </Text>
-              </HStack>
-
-              {destaques === null ? (
-                <Flex justify="center" py={8}><Spinner color={PRIMARY_COLOR} /></Flex>
-              ) : destaques.length === 0 ? (
-                <Text fontSize="xs" color={TEXT_LIGHT}>Nenhum livro disponível no momento.</Text>
-              ) : (
-                <SimpleGrid columns={{ base: 2, sm: 4 }} gap={5} w="full">
-                  {destaques.map((livro) => (
-                    <VStack key={livro.id} as={Link} href={`/detalhe_livro/${livro.id}`} align="flex-start" gap={2} w="full" _hover={{ transform: "translateY(-4px)" }} transition="all 0.2s ease">
-                      <Capa src={livro.capa_url} alt={livro.titulo} w="full" boxShadow="sm" />
-                      <VStack align="flex-start" gap={0} w="full">
-                        <Text fontSize="xs" fontWeight="semibold" color={PRIMARY_COLOR} lineClamp={2} lineHeight="tight">{livro.titulo}</Text>
-                        <Text fontSize="xs" color={TEXT_LIGHT} lineClamp={1} mt={1}>{livro.autor}</Text>
-                      </VStack>
+            {destaques === null ? (
+              <Flex justify="center" py={8}><Spinner color={PRIMARY_COLOR} /></Flex>
+            ) : destaques.length === 0 ? (
+              <Text fontSize={TEXTO_APOIO} color={TEXT_LIGHT}>Nenhum livro disponível no momento.</Text>
+            ) : (
+              <SimpleGrid columns={{ base: 2, sm: 3, lg: 5 }} gap={GAP_CARTAO}>
+                {destaques.map((livro) => (
+                  <VStack
+                    key={livro.id}
+                    as={Link}
+                    href={`/detalhe_livro/${livro.id}`}
+                    role="group"
+                    align="flex-start"
+                    gap={2}
+                    w="full"
+                    transition={TRANSICAO}
+                    _hover={HOVER_VITRINE}
+                  >
+                    <Capa
+                      src={livro.capa_url}
+                      alt={livro.titulo}
+                      w="full"
+                      boxShadow="sm"
+                      transition={TRANSICAO}
+                      _groupHover={HOVER_CAPA}
+                    />
+                    <VStack align="flex-start" gap={0} w="full">
+                      <Text fontSize={TEXTO_APOIO} fontWeight="semibold" color={PRIMARY_COLOR} lineClamp={2} lineHeight="tight">
+                        {livro.titulo}
+                      </Text>
+                      <Text fontSize={TEXTO_MIUDO} color={TEXT_LIGHT} lineClamp={1} mt={1}>
+                        {livro.autor}
+                      </Text>
                     </VStack>
-                  ))}
-                </SimpleGrid>
-              )}
-            </Cartao>
-          </SimpleGrid>
-        </VStack>
-      </Box>
-    </Flex>
+                  </VStack>
+                ))}
+              </SimpleGrid>
+            )}
+          </VStack>
+
+          {/* AVISOS DA BIBLIOTECA */}
+          <VStack align="stretch" gap={GAP_CARTAO}>
+            <Flex align="center" color={PRIMARY_COLOR} gap={3}>
+              <Icon as={FiVolume2} boxSize={6} />
+              <TituloSecao>Informações importantes</TituloSecao>
+            </Flex>
+
+            <SimpleGrid columns={{ base: 1, md: 3 }} gap={GAP_CARTAO}>
+              {AVISOS.map((aviso) => (
+                <CartaoAviso key={aviso.titulo} icone={aviso.icone} titulo={aviso.titulo}>
+                  {aviso.texto}
+                </CartaoAviso>
+              ))}
+            </SimpleGrid>
+          </VStack>
+    </Shell>
   );
 }

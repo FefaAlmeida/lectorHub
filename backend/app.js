@@ -12,6 +12,7 @@ import helmet from 'helmet';
 import authRotas from './routes/authRotas.js';
 import usuarioRotas from './routes/usuarioRotas.js';
 import livroRotas from './routes/livroRotas.js';
+import categoriaRotas from './routes/categoriaRotas.js';
 import emprestimoRotas from './routes/emprestimoRotas.js';
 
 // Importar middlewares
@@ -45,6 +46,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRotas);
 app.use('/api/usuarios', usuarioRotas);
 app.use('/api/livros', livroRotas);
+app.use('/api/categorias', categoriaRotas);
 app.use('/api/emprestimos', emprestimoRotas);
 
 
@@ -58,6 +60,7 @@ app.get('/', (req, res) => {
             autenticacao: '/api/auth',
             usuarios: '/api/usuarios',
             livros: '/api/livros',
+            categorias: '/api/categorias',
             emprestimos: '/api/emprestimos'
         },
         documentacao: {
@@ -75,13 +78,19 @@ app.get('/', (req, res) => {
             atualizarUsuario: 'PUT /api/usuarios/:id (admin)',
 
             // Livros
-            listarLivros: 'GET /api/livros?busca=&categoria=&disponivel=&ordem=&pagina=&limite=',
-            categoriasLivros: 'GET /api/livros/categorias',
+            listarLivros: 'GET /api/livros?busca=&categoria_id=&disponivel=&ordem=&pagina=&limite=',
             detalhesLivro: 'GET /api/livros/:id',
             criarLivro: 'POST /api/livros (admin)',
             atualizarLivro: 'PUT /api/livros/:id (admin)',
             atualizarDisponibilidade: 'PUT /api/livros/:id/disponibilidade (admin)',
             excluirLivro: 'DELETE /api/livros/:id (admin; 409 se houver empréstimo ativo)',
+
+            // Categorias
+            listarCategorias: 'GET /api/categorias?com_livros=1 (só as usadas) | ?contagem=1 (todas + total)',
+            obterCategoria: 'GET /api/categorias/:id',
+            criarCategoria: 'POST /api/categorias (admin)',
+            atualizarCategoria: 'PUT /api/categorias/:id (admin)',
+            excluirCategoria: 'DELETE /api/categorias/:id (admin; 409 se houver livro na categoria)',
 
             // Avaliações
             listarAvaliacoes: 'GET /api/livros/:id/avaliacoes?limite=',

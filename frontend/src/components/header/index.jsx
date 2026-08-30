@@ -6,9 +6,11 @@ import { motion, useReducedMotion } from "framer-motion";
 import { FiLogOut } from "react-icons/fi";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ehRotaAdmin } from "@/components/rotas";
 
 import { getPerfil, logoutUsuario } from "../../api";
 import { toaster } from "@/components/ui/toaster";
+import { RAIO } from "@/components/tema";
 
 const EASE = [0.16, 1, 0.3, 1];
 const ACCENT = "#4A0E17";
@@ -38,7 +40,10 @@ export default function Header() {
  const [saindo, setSaindo] = useState(false);
  const shouldReduceMotion = useReducedMotion();
 
- const escondido = ROTAS_SEM_HEADER.includes(pathname);
+ // O painel tem a própria navegação na barra lateral. Este cabeçalho é da
+ // área do cliente: o logo e "Minha Biblioteca" levam para /inicio, e o "Sair"
+ // duplica o que já existe na sidebar do admin.
+ const escondido = ROTAS_SEM_HEADER.includes(pathname) || ehRotaAdmin(pathname);
  const carregando = carregandoSessao && !escondido;
 
  // Descobre quem está logado a partir do cookie httpOnly.
@@ -146,7 +151,7 @@ export default function Header() {
           fontFamily="Georgia, 'Source Serif Pro', ui-serif, serif"
           color="black"
          >
-          minha biblioteca
+          Minha Biblioteca
          </Text>
 
          <motion.div
@@ -190,7 +195,7 @@ export default function Header() {
          color="white"
          fontWeight="medium"
          fontSize="0.9rem"
-         borderRadius="8px"
+         borderRadius={RAIO}
          px="1.1rem"
          _hover={{ bg: "#641320" }}
          _active={{ bg: "#4A0E17" }}
@@ -293,7 +298,7 @@ export default function Header() {
                     "
             border="1px solid"
             borderColor="rgba(122,49,49,0.12)"
-            borderRadius="2xl"
+            borderRadius={RAIO}
             bg="rgba(255,255,255,0.92)"
             backdropFilter="blur(16px)"
             zIndex={200}
@@ -386,7 +391,7 @@ export default function Header() {
                color: ACCENT,
                fontWeight: 500,
                padding: "0.6rem 0.75rem",
-               borderRadius: "10px",
+               borderRadius: RAIO,
                width: "100%",
                position: "relative",
                cursor: "pointer",

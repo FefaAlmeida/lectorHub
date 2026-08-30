@@ -2,18 +2,39 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Button, Flex, Heading, Icon, IconButton, Input, InputGroup, Stack, Text, Spinner } from "@chakra-ui/react";
+import { Badge, Box, Button, Flex, Heading, Icon, IconButton, Input, InputGroup, SimpleGrid, Stack, Text } from "@chakra-ui/react";
 import { FiUser, FiMail, FiPhone, FiLock, FiCheck, FiChevronDown, FiChevronUp, FiEye, FiEyeOff, FiLogOut, FiRefreshCw } from "react-icons/fi";
 
-import Sidebar from "../../../components/sideBar/sideBar";
+import Shell, { Cartao, Carregando } from "@/components/cliente/Shell";
 import { getPerfil, atualizarPerfil, logoutUsuario } from "../../../api";
 import { toaster } from "@/components/ui/toaster";
 
-const PRIMARY = "#4A0E17";
-const PRIMARY_DARK = "#360A11";
-const BORDER = "#E7DED8";
-const TEXT_DARK = "#2D2D2D";
-const TEXT_LIGHT = "#777777";
+import {
+  PRIMARY_COLOR,
+  PRIMARY_HOVER,
+  BORDER_COLOR,
+  TEXT_DARK,
+  TEXT_LIGHT,
+  SUAVE_BG,
+  OK_COR,
+  FONTE_TITULO,
+  RAIO_CAMPO,
+  TEXTO_APOIO,
+  LARGURA_FORMULARIO,
+  ERRO_BG,
+  GAP_CARTAO,
+  GAP_ITEM,
+  PADDING_CARTAO,
+  TITULO_SECAO,
+  ALTURA_CAMPO,
+  TITULO_CARTAO,
+  TEXTO_MIUDO,
+} from "@/components/cliente/tema";
+
+// Nomes curtos usados no corpo desta página.
+const PRIMARY = PRIMARY_COLOR;
+const PRIMARY_DARK = PRIMARY_HOVER;
+const BORDER = BORDER_COLOR;
 const ERRO = "#C5221F";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -82,11 +103,11 @@ function Campo({ icone, label, value, onChange, type = "text", placeholder, erro
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          h="48px"
+          h={ALTURA_CAMPO}
           bg="white"
           border="1px solid"
           borderColor={erro ? ERRO : BORDER}
-          borderRadius="10px"
+          borderRadius={RAIO_CAMPO}
           fontSize="md"
           color={TEXT_DARK}
           _placeholder={{ color: "#A8A29E" }}
@@ -98,12 +119,29 @@ function Campo({ icone, label, value, onChange, type = "text", placeholder, erro
   );
 }
 
-function Cartao(props) {
-  return <Box bg="white" border="1px solid" borderColor={BORDER} borderRadius="16px" p={{ base: 5, md: 7 }} {...props} />;
+function Botao(props) {
+  return <Button bg={PRIMARY} color="white" borderRadius={RAIO_CAMPO} px={6} h={ALTURA_CAMPO} _hover={{ bg: PRIMARY_DARK }} {...props} />;
 }
 
-function Botao(props) {
-  return <Button bg={PRIMARY} color="white" borderRadius="10px" px={6} h="48px" _hover={{ bg: PRIMARY_DARK }} {...props} />;
+// Cartão de seção: título à esquerda, ação opcional à direita.
+// Antes os cartões começavam direto nos campos, sem dizer o que eram.
+function Secao({ titulo, icone, acao, children, ...props }) {
+  return (
+    <Cartao {...props}>
+      <Stack gap={GAP_CARTAO}>
+        <Flex align="center" justify="space-between" gap={3}>
+          <Flex align="center" gap={2} color={PRIMARY}>
+            {icone && <Icon as={icone} boxSize={4} />}
+            <Heading fontSize={TITULO_CARTAO} fontFamily={FONTE_TITULO}>
+              {titulo}
+            </Heading>
+          </Flex>
+          {acao}
+        </Flex>
+        {children}
+      </Stack>
+    </Cartao>
+  );
 }
 
 export default function MeuCadastro() {
@@ -218,22 +256,19 @@ export default function MeuCadastro() {
   // --- estados de carregamento / falha ---
   if (!dados) {
     return (
-      <Flex minH="100vh" bg="#F5F2EE">
-        <Sidebar />
-        <Flex flex={1} align="center" justify="center" p={6}>
-          {falhaCarregar ? (
-            <Cartao maxW="420px" textAlign="center">
-              <Stack gap={4} align="center">
-                <Heading size="lg" color={PRIMARY} fontFamily="Georgia, serif">Não foi possível carregar seu perfil</Heading>
-                <Text color={TEXT_LIGHT} fontSize="sm">{falhaCarregar}</Text>
-                <Botao onClick={() => setTentativa((t) => t + 1)}><Icon as={FiRefreshCw} mr={2} /> Tentar de novo</Botao>
-              </Stack>
-            </Cartao>
-          ) : (
-            <Spinner size="xl" color={PRIMARY} />
-          )}
-        </Flex>
-      </Flex>
+      <Shell titulo="Meu cadastro" largura={LARGURA_FORMULARIO}>
+        {falhaCarregar ? (
+          <Cartao textAlign="center">
+            <Stack gap={GAP_CARTAO} align="center">
+              <Heading size="lg" color={PRIMARY} fontFamily={FONTE_TITULO}>Não foi possível carregar seu perfil</Heading>
+              <Text color={TEXT_LIGHT} fontSize={TEXTO_APOIO}>{falhaCarregar}</Text>
+              <Botao onClick={() => setTentativa((t) => t + 1)}><Icon as={FiRefreshCw} mr={2} /> Tentar de novo</Botao>
+            </Stack>
+          </Cartao>
+        ) : (
+          <Carregando texto="Carregando seu perfil..." />
+        )}
+      </Shell>
     );
   }
 
@@ -241,20 +276,17 @@ export default function MeuCadastro() {
   const forca = forcaSenha(senhas.senha);
 
   return (
-    <Flex minH="100vh" bg="#F5F2EE">
-      <Sidebar />
-
-      <Box flex={1} p={{ base: 6, md: 10 }}>
-        <Stack maxW="640px" mx="auto" gap={5}>
+    <Shell
+      titulo="Meu cadastro"
+      subtitulo="Atualize seus dados de acesso e contato."
+      largura={LARGURA_FORMULARIO}
+    >
           {/* IDENTIDADE */}
-          <Box>
-            <Text fontSize="xs" fontWeight="semibold" letterSpacing="wider" textTransform="uppercase" color={TEXT_LIGHT} mb={3}>
-              Meu cadastro
-            </Text>
-            <Flex align="center" gap={4}>
+          <Cartao bg={SUAVE_BG}>
+            <Flex align="center" gap={GAP_CARTAO}>
               <Flex
-                w={{ base: "56px", md: "72px" }}
-                h={{ base: "56px", md: "72px" }}
+                w={{ base: "56px", md: "64px" }}
+                h={{ base: "56px", md: "64px" }}
                 borderRadius="full"
                 bg={corDoNome(perfil?.nome)}
                 color="white"
@@ -266,111 +298,149 @@ export default function MeuCadastro() {
               >
                 {inicial}
               </Flex>
-              <Box minW={0}>
-                <Heading fontSize={{ base: "2xl", md: "3xl" }} color={PRIMARY} fontFamily="Georgia, serif" lineClamp={1}>
-                  {perfil?.nome}
-                </Heading>
-                <Text color={TEXT_LIGHT} lineClamp={1}>
-                  {perfil?.email} · {perfil?.tipo === "admin" ? "Administrador" : "Leitor"}
-                </Text>
-              </Box>
-            </Flex>
-          </Box>
 
-          {/* DADOS */}
-          <Cartao as="form" onSubmit={salvarDados}>
-            <Stack gap={5}>
-              <Campo icone={FiUser} label="Nome completo" value={dados.nome} onChange={alterar("nome")} placeholder="Seu nome" erro={erros.nome} />
-              <Campo icone={FiMail} label="E-mail" type="email" value={dados.email} onChange={alterar("email")} placeholder="voce@exemplo.com" erro={erros.email} />
-              <Campo icone={FiPhone} label="Telefone" type="tel" value={dados.telefone} onChange={alterar("telefone")} placeholder="(00) 00000-0000" erro={erros.telefone} />
-
-              {/* Ações só aparecem quando há algo a salvar */}
-              {(mudouDados || salvo) && (
-                <Flex justify="flex-end" align="center" gap={4}>
-                  {salvo && (
-                    <Text fontSize="sm" color="#388E3C" display="flex" alignItems="center" gap={1}>
-                      <FiCheck /> Salvo
-                    </Text>
-                  )}
-                  {mudouDados && (
-                    <>
-                      <Button type="button" variant="ghost" color={TEXT_LIGHT} h="48px" onClick={desfazer} disabled={salvando}>
-                        Desfazer
-                      </Button>
-                      <Botao type="submit" disabled={temErro} loading={salvando}>Salvar</Botao>
-                    </>
-                  )}
+              <Stack gap={1} minW={0} flex={1}>
+                <Flex align="center" gap={3} flexWrap="wrap">
+                  <Heading fontSize={TITULO_SECAO} color={PRIMARY} fontFamily={FONTE_TITULO} lineClamp={1}>
+                    {perfil?.nome}
+                  </Heading>
+                  <Badge
+                    bg="white"
+                    color={PRIMARY}
+                    border="1px solid"
+                    borderColor={BORDER}
+                    borderRadius="full"
+                    px={3}
+                    fontSize={TEXTO_MIUDO}
+                    textTransform="none"
+                  >
+                    {perfil?.tipo === "admin" ? "Administrador" : "Leitor"}
+                  </Badge>
                 </Flex>
-              )}
-            </Stack>
+                <Text fontSize={TEXTO_APOIO} color={TEXT_LIGHT} lineClamp={1}>
+                  {perfil?.email}
+                </Text>
+              </Stack>
+            </Flex>
           </Cartao>
 
-          {/* SENHA (dobrável) */}
-          <Cartao as="form" onSubmit={salvarSenha} p={0}>
-            <Button
-              type="button"
-              variant="ghost"
-              w="100%"
-              h="56px"
-              px={{ base: 5, md: 7 }}
-              justifyContent="space-between"
-              color={PRIMARY}
-              fontWeight="medium"
-              _hover={{ bg: "#FAF5F6" }}
-              onClick={() => setMostrarSenha((v) => !v)}
-            >
-              <Flex align="center" gap={2}><Icon as={FiLock} /> Alterar senha</Flex>
-              <Icon as={mostrarSenha ? FiChevronUp : FiChevronDown} />
-            </Button>
+          {/* DADOS */}
+          <Secao as="form" onSubmit={salvarDados} titulo="Dados pessoais" icone={FiUser}>
+            <Campo icone={FiUser} label="Nome completo" value={dados.nome} onChange={alterar("nome")} placeholder="Seu nome" erro={erros.nome} />
 
-            {mostrarSenha && (
-              <Stack gap={5} px={{ base: 5, md: 7 }} pb={7} pt={5} borderTop="1px solid" borderColor={BORDER}>
+            <SimpleGrid columns={{ base: 1, md: 2 }} gap={GAP_CARTAO}>
+              <Campo icone={FiMail} label="E-mail" type="email" value={dados.email} onChange={alterar("email")} placeholder="voce@exemplo.com" erro={erros.email} />
+              <Campo icone={FiPhone} label="Telefone" type="tel" value={dados.telefone} onChange={alterar("telefone")} placeholder="(00) 00000-0000" erro={erros.telefone} />
+            </SimpleGrid>
+
+            {/* A linha de ações fica sempre no lugar: antes ela aparecia e
+                sumia conforme o formulário mudava, e o cartão pulava de altura. */}
+            <Flex justify="flex-end" align="center" gap={3} borderTop="1px solid" borderColor={BORDER} pt={GAP_CARTAO}>
+              {salvo && (
+                <Text fontSize={TEXTO_APOIO} color={OK_COR} display="flex" alignItems="center" gap={1} mr="auto">
+                  <FiCheck /> Alterações salvas
+                </Text>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                color={TEXT_LIGHT}
+                borderRadius={RAIO_CAMPO}
+                h={ALTURA_CAMPO}
+                onClick={desfazer}
+                disabled={!mudouDados || salvando}
+              >
+                Desfazer
+              </Button>
+              <Botao type="submit" disabled={!mudouDados || temErro} loading={salvando}>
+                Salvar
+              </Botao>
+            </Flex>
+          </Secao>
+
+          {/* SENHA */}
+          <Secao
+            as="form"
+            onSubmit={salvarSenha}
+            titulo="Segurança"
+            icone={FiLock}
+            acao={
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                color={PRIMARY}
+                borderRadius={RAIO_CAMPO}
+                _hover={{ bg: SUAVE_BG }}
+                onClick={() => setMostrarSenha((v) => !v)}
+              >
+                {mostrarSenha ? "Cancelar" : "Alterar senha"}
+                <Icon as={mostrarSenha ? FiChevronUp : FiChevronDown} ml={2} />
+              </Button>
+            }
+          >
+            {!mostrarSenha ? (
+              <Text fontSize={TEXTO_APOIO} color={TEXT_LIGHT}>
+                Sua senha foi definida no cadastro. Troque quando quiser.
+              </Text>
+            ) : (
+              <Stack gap={GAP_CARTAO} borderTop="1px solid" borderColor={BORDER} pt={GAP_CARTAO}>
                 <Campo senha icone={FiLock} label="Senha atual" value={senhas.senha_atual} onChange={alterarSenha("senha_atual")} placeholder="Sua senha atual" />
 
-                <Stack gap={2}>
-                  <Campo senha icone={FiLock} label="Nova senha" value={senhas.senha} onChange={alterarSenha("senha")} placeholder="Mínimo 6 caracteres" />
-                  {senhas.senha && (
-                    <Flex align="center" gap={3}>
-                      <Flex gap={1} flex={1}>
-                        {[1, 2, 3].map((n) => (
-                          <Box key={n} flex={1} h="4px" borderRadius="full" bg={n <= forca ? FORCA[forca].cor : BORDER} transition="background .2s" />
-                        ))}
+                <SimpleGrid columns={{ base: 1, md: 2 }} gap={GAP_CARTAO}>
+                  <Stack gap={2}>
+                    <Campo senha icone={FiLock} label="Nova senha" value={senhas.senha} onChange={alterarSenha("senha")} placeholder="Mínimo 6 caracteres" />
+                    {senhas.senha && (
+                      <Flex align="center" gap={3}>
+                        <Flex gap={1} flex={1}>
+                          {[1, 2, 3].map((n) => (
+                            <Box key={n} flex={1} h="4px" borderRadius="full" bg={n <= forca ? FORCA[forca].cor : BORDER} transition="background .2s" />
+                          ))}
+                        </Flex>
+                        <Text fontSize={TEXTO_MIUDO} color={FORCA[forca].cor} minW="40px" textAlign="right">
+                          {FORCA[forca].rotulo || "Curta"}
+                        </Text>
                       </Flex>
-                      <Text fontSize="xs" color={FORCA[forca].cor} minW="40px" textAlign="right">
-                        {FORCA[forca].rotulo || "Curta"}
-                      </Text>
-                    </Flex>
-                  )}
-                </Stack>
+                    )}
+                  </Stack>
 
-                <Campo
-                  senha
-                  icone={FiLock}
-                  label="Confirmar nova senha"
-                  value={senhas.confirmar}
-                  onChange={alterarSenha("confirmar")}
-                  placeholder="Repita a nova senha"
-                  erro={senhas.confirmar && senhas.confirmar !== senhas.senha ? "As senhas não coincidem." : undefined}
-                />
+                  <Campo
+                    senha
+                    icone={FiLock}
+                    label="Confirmar nova senha"
+                    value={senhas.confirmar}
+                    onChange={alterarSenha("confirmar")}
+                    placeholder="Repita a nova senha"
+                    erro={senhas.confirmar && senhas.confirmar !== senhas.senha ? "As senhas não coincidem." : undefined}
+                  />
+                </SimpleGrid>
 
                 <Flex justify="flex-end">
-                  <Button type="submit" variant="outline" borderColor={PRIMARY} color={PRIMARY} borderRadius="10px" px={6} h="48px" loading={salvando} _hover={{ bg: "#FAF5F6" }}>
-                    Atualizar senha
-                  </Button>
+                  <Botao type="submit" loading={salvando}>Atualizar senha</Botao>
                 </Flex>
               </Stack>
             )}
-          </Cartao>
+          </Secao>
 
           {/* SESSÃO */}
-          <Flex justify="space-between" align="center" px={1} pt={2} flexWrap="wrap" gap={3}>
-            <Text fontSize="sm" color={TEXT_LIGHT}>Terminou por aqui?</Text>
-            <Button variant="ghost" color={ERRO} _hover={{ bg: "#FCE8E6" }} onClick={sair}>
-              <Icon as={FiLogOut} mr={2} /> Encerrar sessão
-            </Button>
-          </Flex>
-        </Stack>
-      </Box>
-    </Flex>
+          <Secao titulo="Sessão" icone={FiLogOut}>
+            <Flex justify="space-between" align="center" flexWrap="wrap" gap={GAP_ITEM}>
+              <Text fontSize={TEXTO_APOIO} color={TEXT_LIGHT}>
+                Encerre a sessão ao usar um computador compartilhado.
+              </Text>
+              <Button
+                variant="outline"
+                color={ERRO}
+                borderColor={BORDER}
+                borderRadius={RAIO_CAMPO}
+                h={ALTURA_CAMPO}
+                onClick={sair}
+                _hover={{ bg: ERRO_BG }}
+              >
+                <Icon as={FiLogOut} mr={2} /> Encerrar sessão
+              </Button>
+            </Flex>
+          </Secao>
+    </Shell>
   );
 }

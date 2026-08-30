@@ -2,14 +2,17 @@
 
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { usePathname } from "next/navigation";
+import { ehRotaAdmin } from "@/components/rotas";
 
 // Páginas de autenticação usam layout de tela cheia — sem footer embaixo.
-const ROTAS_SEM_FOOTER = ["/login", "/cadastrar"];
+const ROTAS_SEM_FOOTER = ["/login", "/cadastrar", "/redefinir-senha"];
 
 export default function Footer() {
  const pathname = usePathname();
 
- if (ROTAS_SEM_FOOTER.includes(pathname)) return null;
+ // No painel o rodapé institucional também não cabe: ele é a terceira faixa
+ // vinho da tela (com a sidebar e o antigo header) e empurra a rolagem.
+ if (ROTAS_SEM_FOOTER.includes(pathname) || ehRotaAdmin(pathname)) return null;
 
  return (
   <Box
@@ -28,7 +31,7 @@ export default function Footer() {
     align="center"
     fontSize="0.85rem"
    >
-    <Text as="span">© 2026 Sistema de Biblioteca</Text>
+    <Text as="span">© 2026 Lector Hub</Text>
     <Text as="span">Todos os direitos reservados.</Text>
    </Flex>
   </Box>

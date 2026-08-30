@@ -1,11 +1,11 @@
 "use client";
 
+import { RAIO } from "@/components/tema";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { loginUsuario, solicitarRedefinicaoSenha } from "../../api";
 
-import Image from "next/image";
 
 import {
   Flex,
@@ -19,6 +19,8 @@ import {
 } from "@chakra-ui/react";
 
 import { toaster } from "@/components/ui/toaster";
+import AuthShell from "@/components/auth/AuthShell";
+import { ALTURA_CAMPO } from "@/components/cliente/tema";
 
 function Logar() {
   const searchParams = useSearchParams();
@@ -161,201 +163,16 @@ function Logar() {
   }
 
 return (
-  <Flex
-    as="main"
-    w="100%"
-    minH="100vh"
-    position="relative"
-    overflow="hidden"
-    justify="center"
-    align="center"
-    p={{ base: 6, lg: 10 }}
-    bg="#F8F5F0"
-  >
-    {/* =================================================
-        FUNDO ELEGANTE (LUMINOSIDADE SUAVE + CIRCUITOS)
-    ================================================= */}
-    <Box
-      position="absolute"
-      top={0}
-      left={0}
-      right={0}
-      bottom={0}
-      w="100%"
-      h="100%"
-      pointerEvents="none"
-      zIndex={0}
-      overflow="hidden"
-      bg="radial-gradient(circle at 50% 50%, #FAF8F5 0%, #F0EAE1 60%, #E6DCD0 100%)"
-    >
-      {/* Padrão Sutil de Pontos para Textura */}
-      <Box
-        position="absolute"
-        top={0}
-        left={0}
-        right={0}
-        bottom={0}
-        opacity={0.35}
-        backgroundImage="radial-gradient(#A39382 0.8px, transparent 0.8px)"
-        backgroundSize="24px 24px"
-      />
-
-      {/* Holofote Suave Aatrás do Card */}
-      <Box
-        position="absolute"
-        top="50%"
-        left="50%"
-        transform="translate(-50%, -50%)"
-        w={{ base: "700px", md: "1100px" }}
-        h={{ base: "700px", md: "1100px" }}
-        borderRadius="full"
-        bg="radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(232, 220, 196, 0.3) 45%, rgba(248, 245, 240, 0) 70%)"
-        filter="blur(50px)"
-      />
-
-      {/* Glow Suave - Canto Superior Esquerdo */}
-      <Box
-        position="absolute"
-        top="-15%"
-        left="-10%"
-        w="650px"
-        h="650px"
-        borderRadius="full"
-        bg="radial-gradient(circle, rgba(74, 14, 23, 0.06) 0%, rgba(248, 245, 240, 0) 70%)"
-        filter="blur(80px)"
-      />
-
-      {/* Glow Suave - Canto Inferior Direito */}
-      <Box
-        position="absolute"
-        bottom="-15%"
-        right="-10%"
-        w="700px"
-        h="700px"
-        borderRadius="full"
-        bg="radial-gradient(circle, rgba(74, 14, 23, 0.07) 0%, rgba(248, 245, 240, 0) 70%)"
-        filter="blur(80px)"
-      />
-
-      {/* Linhas de Circuito Finas em Tom Champanhe/Taupe */}
-      <svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 1920 1080"
-        preserveAspectRatio="xMidYMid slice"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ opacity: 0.45 }}
-      >
-        <path d="M -50 150 L 300 150 L 420 270 L 650 270" stroke="#8C7A6B" strokeWidth="1.2" />
-        <circle cx="650" cy="270" r="4" fill="#4A0E17" />
-        <circle cx="650" cy="270" r="8" stroke="#8C7A6B" strokeWidth="1" />
-
-        <path d="M 150 -50 L 150 200 L 280 330 L 280 500" stroke="#8C7A6B" strokeWidth="1" strokeDasharray="5 5" />
-        <circle cx="280" cy="500" r="3" fill="#8C7A6B" />
-
-        <path d="M 1970 150 L 1620 150 L 1500 270 L 1270 270" stroke="#8C7A6B" strokeWidth="1.2" />
-        <circle cx="1270" cy="270" r="4" fill="#4A0E17" />
-        <circle cx="1270" cy="270" r="8" stroke="#8C7A6B" strokeWidth="1" />
-
-        <path d="M 1770 -50 L 1770 200 L 1640 330 L 1640 500" stroke="#8C7A6B" strokeWidth="1" strokeDasharray="5 5" />
-        <circle cx="1640" cy="500" r="3" fill="#8C7A6B" />
-
-        <path d="M -50 930 L 300 930 L 450 780 L 680 780" stroke="#8C7A6B" strokeWidth="1.2" />
-        <circle cx="680" cy="780" r="4" fill="#4A0E17" />
-        <circle cx="680" cy="780" r="8" stroke="#8C7A6B" strokeWidth="1" />
-
-        <path d="M 220 1130 L 220 880 L 350 750 L 350 600" stroke="#8C7A6B" strokeWidth="1" strokeDasharray="5 5" />
-        <circle cx="350" cy="600" r="3" fill="#8C7A6B" />
-
-        <path d="M 1970 930 L 1620 930 L 1470 780 L 1240 780" stroke="#8C7A6B" strokeWidth="1.2" />
-        <circle cx="1240" cy="780" r="4" fill="#4A0E17" />
-        <circle cx="1240" cy="780" r="8" stroke="#8C7A6B" strokeWidth="1" />
-
-        <path d="M 1700 1130 L 1700 880 L 1570 750 L 1570 600" stroke="#8C7A6B" strokeWidth="1" strokeDasharray="5 5" />
-        <circle cx="1570" cy="600" r="3" fill="#8C7A6B" />
-
-        <path d="M 960 -50 L 960 180" stroke="#8C7A6B" strokeWidth="1.2" />
-        <circle cx="960" cy="180" r="4" fill="#4A0E17" />
-
-        <path d="M 960 1130 L 960 900" stroke="#8C7A6B" strokeWidth="1.2" />
-        <circle cx="960" cy="900" r="4" fill="#4A0E17" />
-
-        <circle cx="420" cy="270" r="2.5" fill="#8C7A6B" />
-        <circle cx="1500" cy="270" r="2.5" fill="#8C7A6B" />
-        <circle cx="450" cy="780" r="2.5" fill="#8C7A6B" />
-        <circle cx="1470" cy="780" r="2.5" fill="#8C7A6B" />
-      </svg>
-    </Box>
-
-    {/* =================================================
-        CAIXA PRINCIPAL
-    ================================================= */}
-
-    <Flex
-      w="100%"
-      maxW="1150px"
-      h={{ base: "auto", lg: "650px" }}
-      bg="#FFFFFF"
-      borderRadius="22px"
-      overflow="hidden"
-      direction={{ base: "column", lg: "row" }}
-      boxShadow="0 25px 60px -15px rgba(74, 14, 23, 0.12), 0 10px 30px -10px rgba(0, 0, 0, 0.05)"
-      border="1px solid rgba(255, 255, 255, 0.8)"
-      position="relative"
-      zIndex={1}
-    >
-      {/* =================================================
-          LADO ESQUERDO
-      ================================================= */}
-
-      <Flex
-        w={{ base: "100%", lg: "50%" }}
-        bg="#4A0E17"
-        justify="center"
-        align="center"
-        h={{ base: "300px", lg: "auto" }}
-        overflow="hidden"
-      >
-        <Image
-          src="/logoLectorHub.png"
-          alt="Lector Hub"
-          width={350}
-          height={350}
-          style={{
-            width: "100%",
-            height: "auto",
-          }}
-          priority
-        />
-      </Flex>
-
-      {/* =================================================
-          LADO DIREITO
-      ================================================= */}
-
-      <Flex
-        w={{ base: "100%", lg: "50%" }}
-        direction="column"
-        justify="center"
-        align="center"
-        p={{ base: "40px 30px", lg: "70px" }}
-        bg="#FFFFFF"
-      >
-        <VStack
-          w="100%"
-          maxW="420px"
-          gap={0}
-          align="stretch"
-        >
+    <AuthShell>
+      <VStack w="100%" gap={0} align="stretch">
           {/* =================================================
               TÍTULO IMPACTANTE
           ================================================= */}
 
-          <VStack align="center" gap={1} mb="34px">
+          <VStack align="center" gap={1} mb="24px">
             <Heading
               as="h2"
-              fontSize={{ base: "32px", lg: "42px" }}
+              fontSize={{ base: "28px", md: "34px", xl: "40px" }}
               fontFamily="Georgia, serif"
               fontWeight="800"
               lineHeight="1.1"
@@ -376,7 +193,7 @@ return (
                   width: "100%",
                   height: "4px",
                   bg: "#4A0E17",
-                  borderRadius: "2px",
+                  borderRadius: "full",
                 }}
               >
                 LOGIN
@@ -412,8 +229,8 @@ return (
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                h="58px"
-                borderRadius="8px"
+                h={ALTURA_CAMPO}
+                borderRadius={RAIO}
                 border="1px solid"
                 borderColor="#DED8D0"
                 color="#333333"
@@ -445,8 +262,8 @@ return (
                 placeholder="Password"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                h="58px"
-                borderRadius="8px"
+                h={ALTURA_CAMPO}
+                borderRadius={RAIO}
                 border="1px solid"
                 borderColor="#DED8D0"
                 color="#333333"
@@ -491,10 +308,10 @@ return (
             <Button
               type="submit"
               w="100%"
-              h="54px"
+              h={ALTURA_CAMPO}
               bg="#4A0E17"
               color="#FFFFFF"
-              borderRadius="8px"
+              borderRadius={RAIO}
               fontSize="18px"
               fontWeight="600"
               transition="0.3s"
@@ -534,12 +351,10 @@ return (
                 Cadastre-se
               </Box>
             </Text>
-          </VStack>
         </VStack>
-      </Flex>
-    </Flex>
-  </Flex>
-);
+      </VStack>
+    </AuthShell>
+  );
 }
 
 // useSearchParams exige um limite de Suspense na página.

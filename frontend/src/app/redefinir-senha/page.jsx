@@ -1,8 +1,8 @@
 "use client";
 
+import { RAIO } from "@/components/tema";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 
 import {
   Flex,
@@ -17,10 +17,12 @@ import {
 
 import { redefinirSenha } from "../../api";
 import { toaster } from "@/components/ui/toaster";
+import AuthShell from "@/components/auth/AuthShell";
+import { ALTURA_CAMPO } from "@/components/cliente/tema";
 
 const inputProps = {
   h: "54px",
-  borderRadius: "8px",
+  borderRadius: RAIO,
   border: "1px solid",
   borderColor: "#DED8D0",
   color: "#333333",
@@ -112,7 +114,7 @@ function RedefinirSenhaForm() {
           Este link de redefinição está incompleto. Volte ao login e clique em
           &quot;Esqueceu a senha?&quot; para receber um novo.
         </Text>
-        <Button bg="#4A0E17" color="white" h="50px" onClick={() => router.push("/login")}>
+        <Button bg="#4A0E17" color="white" h={ALTURA_CAMPO} onClick={() => router.push("/login")}>
           Voltar ao login
         </Button>
       </VStack>
@@ -121,10 +123,10 @@ function RedefinirSenhaForm() {
 
   return (
     <VStack w="100%" gap={0} align="stretch">
-      <VStack align="center" gap={1} mb="30px">
+      <VStack align="center" gap={1} mb="24px">
         <Heading
           as="h2"
-          fontSize={{ base: "30px", lg: "38px" }}
+          fontSize={{ base: "28px", md: "34px", xl: "40px" }}
           fontFamily="Georgia, serif"
           fontWeight="800"
           lineHeight="1.1"
@@ -145,7 +147,7 @@ function RedefinirSenhaForm() {
               width: "100%",
               height: "4px",
               bg: "#4A0E17",
-              borderRadius: "2px",
+              borderRadius: "full",
             }}
           >
             SENHA
@@ -165,7 +167,7 @@ function RedefinirSenhaForm() {
           handleSubmit();
         }}
       >
-        <Field.Root gap="3px" mb="22px" w="100%">
+        <Field.Root gap="3px" mb="18px" w="100%">
           <Field.Label color="#4A4542" fontSize="13px" m={0}>
             Nova senha
           </Field.Label>
@@ -180,7 +182,7 @@ function RedefinirSenhaForm() {
           />
         </Field.Root>
 
-        <Field.Root gap="3px" mb="26px" w="100%">
+        <Field.Root gap="3px" mb="20px" w="100%">
           <Field.Label color="#4A4542" fontSize="13px" m={0}>
             Confirme a nova senha
           </Field.Label>
@@ -198,10 +200,10 @@ function RedefinirSenhaForm() {
         <Button
           type="submit"
           w="100%"
-          h="50px"
+          h={ALTURA_CAMPO}
           bg="#4A0E17"
           color="#FFFFFF"
-          borderRadius="8px"
+          borderRadius={RAIO}
           fontSize="17px"
           fontWeight="600"
           _hover={{ bg: "#360A11" }}
@@ -211,7 +213,7 @@ function RedefinirSenhaForm() {
           {concluido ? "Senha redefinida" : "Redefinir senha"}
         </Button>
 
-        <Text mt="18px" textAlign="center" fontSize="14px" fontWeight="600" color="#4A0E17">
+        <Text mt="14px" textAlign="center" fontSize="14px" fontWeight="600" color="#4A0E17">
           Lembrou a senha?{" "}
           <Box
             as="span"
@@ -230,57 +232,10 @@ function RedefinirSenhaForm() {
 
 export default function RedefinirSenhaPage() {
   return (
-    <Flex
-      as="main"
-      w="100%"
-      minH="100vh"
-      justify="center"
-      align="center"
-      p={{ base: 6, lg: 10 }}
-      bg="radial-gradient(circle at 50% 50%, #FAF8F5 0%, #F0EAE1 60%, #E6DCD0 100%)"
-    >
-      <Flex
-        w="100%"
-        maxW="1000px"
-        minH={{ base: "auto", lg: "600px" }}
-        bg="#FFFFFF"
-        borderRadius="22px"
-        overflow="hidden"
-        direction={{ base: "column", lg: "row" }}
-        boxShadow="0 25px 60px -15px rgba(74, 14, 23, 0.12), 0 10px 30px -10px rgba(0, 0, 0, 0.05)"
-      >
-        <Flex
-          w={{ base: "100%", lg: "45%" }}
-          bg="#4A0E17"
-          justify="center"
-          align="center"
-          h={{ base: "220px", lg: "auto" }}
-          overflow="hidden"
-        >
-          <Image
-            src="/logoLectorHub.png"
-            alt="Lector Hub"
-            width={320}
-            height={320}
-            style={{ width: "80%", height: "auto" }}
-            priority
-          />
-        </Flex>
-
-        <Flex
-          w={{ base: "100%", lg: "55%" }}
-          direction="column"
-          justify="center"
-          align="center"
-          p={{ base: "35px 25px", lg: "50px 60px" }}
-        >
-          <Box w="100%" maxW="420px">
-            <Suspense fallback={null}>
-              <RedefinirSenhaForm />
-            </Suspense>
-          </Box>
-        </Flex>
-      </Flex>
-    </Flex>
+    <AuthShell>
+      <Suspense fallback={null}>
+        <RedefinirSenhaForm />
+      </Suspense>
+    </AuthShell>
   );
 }

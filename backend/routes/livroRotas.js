@@ -9,8 +9,9 @@ const admin = [authMiddleware, adminMiddleware];
 // --- PÚBLICO ---
 // GET /api/livros?busca=&categoria=&disponivel=&ordem=&pagina=&limite=
 router.get('/', livroController.listarLivros);
+// As categorias viraram recurso próprio: GET /api/categorias
 // precisa vir ANTES de '/:id'
-router.get('/categorias', livroController.listarCategorias);
+router.get('/populares', livroController.listarPopulares);
 router.get('/:id', livroController.obterDetalhesLivro);
 
 // --- ADMIN ---

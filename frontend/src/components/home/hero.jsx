@@ -12,6 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { FiArrowRight } from "react-icons/fi";
 import FadeIn from "@/components/ui/fade-in";
+import { RAIO } from "@/components/tema";
 
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 const ACCENT = "#7A3131"; // vinho — acento pontual
@@ -175,7 +176,7 @@ export default function Hero() {
        {/* Container da imagem com hover sutil */}
        <Box
         position="relative"
-        borderRadius="2xl"
+        borderRadius={RAIO}
         overflow="hidden"
         boxShadow="0 25px 60px -15px rgba(122, 49, 49, 0.2), 0 0 0 1px rgba(0,0,0,0.05)"
         transition={`transform 0.55s ${EASE}, box-shadow 0.55s ${EASE}`}

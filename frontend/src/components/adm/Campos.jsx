@@ -1,20 +1,47 @@
 "use client";
 
 import { Box, Button, Flex, Input, Stack, Text, Textarea } from "@chakra-ui/react";
-import { VINHO, TEXTO_SUAVE } from "./Shell";
+import {
+  VINHO,
+  VINHO_HOVER,
+  BORDA,
+  BRANCO,
+  TEXTO,
+  TEXTO_SUAVE,
+  REALCE,
+  TEXTO_APOIO,
+  RAIO_CAMPO,
+  ALTURA_CAMPO,
+  ALTURA_BOTAO,
+  SOMBRA_BOTAO,
+  HOVER_BOTAO,
+  TRANSICAO,
+} from "./tema";
 
 const estiloInput = {
-  bg: "white",
-  border: "1px solid #E8DCC4",
-  borderRadius: "10px",
-  h: "42px",
+  bg: BRANCO,
+  border: "1px solid",
+  borderColor: BORDA,
+  borderRadius: RAIO_CAMPO,
+  h: ALTURA_CAMPO,
+  fontSize: TEXTO_APOIO,
   _focus: { borderColor: VINHO, boxShadow: `0 0 0 1px ${VINHO}` },
+};
+
+// Botões do painel: baixos, texto pequeno e um leve levantar no hover.
+const estiloBotao = {
+  borderRadius: RAIO_CAMPO,
+  h: ALTURA_BOTAO,
+  px: 5,
+  fontSize: TEXTO_APOIO,
+  fontWeight: "600",
+  transition: TRANSICAO,
 };
 
 export function Campo({ label, children }) {
   return (
-    <Stack gap={1.5}>
-      <Text fontSize="xs" fontWeight="semibold" color="#2D2D2D">
+    <Stack gap={2}>
+      <Text fontSize={TEXTO_APOIO} fontWeight="medium" color={TEXTO}>
         {label}
       </Text>
       {children}
@@ -54,11 +81,29 @@ export function CampoSelect({ label, value, onChange, opcoes, ...props }) {
 }
 
 export function BotaoPrimario(props) {
-  return <Button bg={VINHO} color="white" borderRadius="10px" _hover={{ bg: "#360A11" }} {...props} />;
+  return (
+    <Button
+      bg={VINHO}
+      color={BRANCO}
+      boxShadow={SOMBRA_BOTAO}
+      _hover={{ bg: VINHO_HOVER, ...HOVER_BOTAO }}
+      {...estiloBotao}
+      {...props}
+    />
+  );
 }
 
 export function BotaoSecundario(props) {
-  return <Button variant="outline" borderColor={VINHO} color={VINHO} borderRadius="10px" _hover={{ bg: "#F5EDEE" }} {...props} />;
+  return (
+    <Button
+      variant="outline"
+      borderColor={VINHO}
+      color={VINHO}
+      _hover={{ bg: REALCE, ...HOVER_BOTAO }}
+      {...estiloBotao}
+      {...props}
+    />
+  );
 }
 
 // Paginação simples: anterior / "x de y" / próxima
@@ -70,7 +115,7 @@ export function Paginacao({ pagina, totalPaginas, onChange }) {
       <BotaoSecundario size="sm" disabled={pagina <= 1} onClick={() => onChange(pagina - 1)}>
         Anterior
       </BotaoSecundario>
-      <Text fontSize="sm" color={TEXTO_SUAVE}>
+      <Text fontSize={TEXTO_APOIO} color={TEXTO_SUAVE}>
         Página {pagina} de {totalPaginas}
       </Text>
       <BotaoSecundario size="sm" disabled={pagina >= totalPaginas} onClick={() => onChange(pagina + 1)}>

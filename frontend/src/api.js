@@ -51,10 +51,18 @@ export const atualizarPerfil = (data) => requisitar("/usuarios/me", { method: "P
 export const getUsuarios = (pagina = 1, limite = 10) => requisitar(`/usuarios${query({ pagina, limite })}`);
 export const atualizarUsuario = (id, data) => requisitar(`/usuarios/${id}`, { method: "PUT", body: data });
 
-// LIVROS — filtros: { busca, categoria, disponivel, ordem, pagina, limite }
+// LIVROS — filtros: { busca, categoria_id, disponivel, ordem, pagina, limite }
 export const getLivros = (filtros = {}) => requisitar(`/livros${query(filtros)}`);
-export const getCategorias = () => requisitar("/livros/categorias");
 export const getLivroPorId = (id) => requisitar(`/livros/${id}`);
+// Vitrine da home. A resposta traz `criterio`: "populares" (mais emprestados)
+// ou "recentes" (fallback quando ainda não há histórico de empréstimo).
+export const getLivrosPopulares = (limite = 4) => requisitar(`/livros/populares${query({ limite })}`);
+
+// CATEGORIAS — devolve [{ id, nome, descricao }]
+// com_livros=1 -> só as que têm livro (filtro do cliente)
+// contagem=1   -> todas, com total_livros (gestão do admin)
+export const getCategorias = (opcoes = {}) => requisitar(`/categorias${query(opcoes)}`);
+export const getCategoriasComLivros = () => getCategorias({ com_livros: 1 });
 
 // LIVROS (ADMIN)
 export const criarLivro = (data) => requisitar("/livros", { method: "POST", body: data });
@@ -62,6 +70,11 @@ export const atualizarLivro = (id, data) => requisitar(`/livros/${id}`, { method
 export const excluirLivro = (id) => requisitar(`/livros/${id}`, { method: "DELETE" });
 export const atualizarDisponibilidade = (id, disponivel) =>
   requisitar(`/livros/${id}/disponibilidade`, { method: "PUT", body: { disponivel } });
+
+// CATEGORIAS (ADMIN)
+export const criarCategoria = (data) => requisitar("/categorias", { method: "POST", body: data });
+export const atualizarCategoria = (id, data) => requisitar(`/categorias/${id}`, { method: "PUT", body: data });
+export const excluirCategoria = (id) => requisitar(`/categorias/${id}`, { method: "DELETE" });
 
 // AVALIAÇÕES
 export const getAvaliacoes = (idLivro) => requisitar(`/livros/${idLivro}/avaliacoes`);
