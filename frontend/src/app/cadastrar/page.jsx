@@ -150,11 +150,20 @@ export default function Cadastrar() {
     }
   }
 
-return (
+  return (
     <AuthShell>
-      <VStack w="100%" gap={0} align="stretch">
+      {/* Container principal com dimensões responsivas idênticas à tela de Login */}
+      <Box
+        w="100%"
+        maxW={{ base: "100%", sm: "480px", md: "540px" }}
+        h="auto"
+        mx="auto"
+        px={{ base: "20px", sm: "32px", md: "40px" }}
+        py={{ base: "24px", sm: "32px", md: "40px" }}
+      >
+        <VStack w="100%" gap={0} align="stretch">
           {/* TÍTULO */}
-          <VStack align="center" gap={1} mb="24px">
+          <VStack align="center" gap={1} mb="28px">
             <Heading
               as="h2"
               fontSize={{ base: "28px", md: "34px", xl: "40px" }}
@@ -275,7 +284,7 @@ return (
             </Field.Root>
 
             {/* Confirmação da senha */}
-            <Field.Root gap="3px" mb="20px" w="100%">
+            <Field.Root gap="3px" mb="24px" w="100%">
               <Field.Label color="#4A4542" fontSize="13px" m={0}>
                 Confirme a senha
               </Field.Label>
@@ -327,7 +336,7 @@ return (
 
             {/* Link para Login */}
             <Text
-              mt="14px"
+              mt="20px"
               textAlign="center"
               fontSize="14px"
               fontWeight="600"
@@ -348,9 +357,9 @@ return (
                 Faça login
               </Box>
             </Text>
+          </VStack>
         </VStack>
-      </VStack>
+      </Box>
     </AuthShell>
   );
 }
-

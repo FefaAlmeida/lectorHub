@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 
 import { loginUsuario, solicitarRedefinicaoSenha } from "../../api";
 
-
 import {
   Flex,
   Box,
@@ -67,10 +66,9 @@ function Logar() {
           type: "success",
         });
 
-        // Volta para a rota que pediu login (?next=), senão:
-        // admin cai no catálogo de gestão; cliente, na própria biblioteca.
         const next = searchParams.get("next");
-        const nextSeguro = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+        const nextSeguro =
+          next && next.startsWith("/") && !next.startsWith("//") ? next : null;
         const destino =
           nextSeguro ||
           (response?.dados?.usuario?.tipo === "admin"
@@ -162,14 +160,20 @@ function Logar() {
     }
   }
 
-return (
+  return (
     <AuthShell>
-      <VStack w="100%" gap={0} align="stretch">
-          {/* =================================================
-              TÍTULO IMPACTANTE
-          ================================================= */}
-
-          <VStack align="center" gap={1} mb="24px">
+      {/* Container principal responsável pela largura e altura responsivas do Card */}
+      <Box
+        w="100%"
+        maxW={{ base: "100%", sm: "480px", md: "540px" }}
+        h="auto"
+        mx="auto"
+        px={{ base: "20px", sm: "32px", md: "40px" }}
+        py={{ base: "24px", sm: "32px", md: "40px" }}
+      >
+        <VStack w="100%" gap={0} align="stretch">
+          {/* TÍTULO IMPACTANTE */}
+          <VStack align="center" gap={1} mb="28px">
             <Heading
               as="h2"
               fontSize={{ base: "28px", md: "34px", xl: "40px" }}
@@ -201,10 +205,7 @@ return (
             </Heading>
           </VStack>
 
-          {/* =================================================
-              FORMULÁRIO
-          ================================================= */}
-
+          {/* FORMULÁRIO */}
           <VStack
             as="form"
             w="100%"
@@ -214,12 +215,8 @@ return (
               handleLogin();
             }}
           >
-            <Field.Root mb="18px">
-              <Field.Label
-                color="#4A4542"
-                fontSize="13px"
-                mb="7px"
-              >
+            <Field.Root mb="20px">
+              <Field.Label color="#4A4542" fontSize="14px" mb="8px">
                 Username
               </Field.Label>
 
@@ -247,12 +244,8 @@ return (
               />
             </Field.Root>
 
-            <Field.Root mb="6px">
-              <Field.Label
-                color="#4A4542"
-                fontSize="13px"
-                mb="7px"
-              >
+            <Field.Root mb="8px">
+              <Field.Label color="#4A4542" fontSize="14px" mb="8px">
                 Password
               </Field.Label>
 
@@ -280,11 +273,7 @@ return (
               />
             </Field.Root>
 
-            <Flex
-              w="100%"
-              justify="flex-start"
-              mb="24px"
-            >
+            <Flex w="100%" justify="flex-start" mb="28px">
               <Button
                 variant="link"
                 color="#4A0E17"
@@ -330,7 +319,7 @@ return (
             </Button>
 
             <Text
-              mt="17px"
+              mt="20px"
               textAlign="center"
               fontSize="14px"
               fontWeight="600"
@@ -351,13 +340,13 @@ return (
                 Cadastre-se
               </Box>
             </Text>
+          </VStack>
         </VStack>
-      </VStack>
+      </Box>
     </AuthShell>
   );
 }
 
-// useSearchParams exige um limite de Suspense na página.
 export default function LoginPage() {
   return (
     <Suspense fallback={null}>

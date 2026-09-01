@@ -24,14 +24,12 @@ import {
   ERRO_BG,
   GAP_CARTAO,
   GAP_ITEM,
-  PADDING_CARTAO,
   TITULO_SECAO,
   ALTURA_CAMPO,
   TITULO_CARTAO,
   TEXTO_MIUDO,
 } from "@/components/cliente/tema";
 
-// Nomes curtos usados no corpo desta página.
 const PRIMARY = PRIMARY_COLOR;
 const PRIMARY_DARK = PRIMARY_HOVER;
 const BORDER = BORDER_COLOR;
@@ -40,7 +38,6 @@ const ERRO = "#C5221F";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SENHAS_VAZIAS = { senha_atual: "", senha: "", confirmar: "" };
 
-// Tons de vinho/terra: a cor do avatar vem do nome, estável entre visitas.
 const CORES_AVATAR = ["#4A0E17", "#6B2D3A", "#8C4A2F", "#5C3A21", "#7A3131"];
 function corDoNome(nome = "") {
   let h = 0;
@@ -48,7 +45,6 @@ function corDoNome(nome = "") {
   return CORES_AVATAR[h % CORES_AVATAR.length];
 }
 
-// (00) 00000-0000 — só dígitos, no máximo 11
 function mascaraTelefone(valor) {
   const d = (valor || "").replace(/\D/g, "").slice(0, 11);
   if (d.length <= 2) return d;
@@ -57,7 +53,6 @@ function mascaraTelefone(valor) {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
 
-// 0..3 — comprimento + variedade (letras, números, símbolos)
 function forcaSenha(s) {
   if (!s) return 0;
   let pontos = s.length >= 8 ? 1 : 0;
@@ -123,11 +118,9 @@ function Botao(props) {
   return <Button bg={PRIMARY} color="white" borderRadius={RAIO_CAMPO} px={6} h={ALTURA_CAMPO} _hover={{ bg: PRIMARY_DARK }} {...props} />;
 }
 
-// Cartão de seção: título à esquerda, ação opcional à direita.
-// Antes os cartões começavam direto nos campos, sem dizer o que eram.
 function Secao({ titulo, icone, acao, children, ...props }) {
   return (
-    <Cartao {...props}>
+    <Cartao bg="white" {...props}>
       <Stack gap={GAP_CARTAO}>
         <Flex align="center" justify="space-between" gap={3}>
           <Flex align="center" gap={2} color={PRIMARY}>
@@ -147,14 +140,14 @@ function Secao({ titulo, icone, acao, children, ...props }) {
 export default function MeuCadastro() {
   const router = useRouter();
 
-  const [perfil, setPerfil] = useState({}); // como está no servidor
-  const [dados, setDados] = useState(null); // como está no formulário
+  const [perfil, setPerfil] = useState({});
+  const [dados, setDados] = useState(null);
   const [falhaCarregar, setFalhaCarregar] = useState(null);
   const [tentativa, setTentativa] = useState(0);
   const [senhas, setSenhas] = useState(SENHAS_VAZIAS);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [salvando, setSalvando] = useState(false);
-  const [salvo, setSalvo] = useState(false); // "Salvo ✓" por 2s
+  const [salvo, setSalvo] = useState(false);
 
   useEffect(() => {
     let ativo = true;
@@ -180,7 +173,6 @@ export default function MeuCadastro() {
   const erros = dados ? validarDados(dados) : {};
   const temErro = Object.keys(erros).length > 0;
 
-  // O botão só aparece quando algo realmente mudou.
   const mudouDados =
     Boolean(dados) &&
     (dados.nome !== perfil?.nome ||
@@ -222,7 +214,6 @@ export default function MeuCadastro() {
     if (dados.email !== perfil?.email) payload.email = dados.email.trim();
     if ((dados.telefone || "") !== mascaraTelefone(perfil?.telefone)) payload.telefone = dados.telefone || null;
 
-    // Trocar e-mail exige a senha atual (regra do backend).
     if (payload.email) {
       if (!senhas.senha_atual) {
         setMostrarSenha(true);
@@ -253,7 +244,6 @@ export default function MeuCadastro() {
     router.push("/login");
   }
 
-  // --- estados de carregamento / falha ---
   if (!dados) {
     return (
       <Shell titulo="Meu cadastro" largura={LARGURA_FORMULARIO}>
@@ -279,10 +269,20 @@ export default function MeuCadastro() {
     <Shell
       titulo="Meu cadastro"
       subtitulo="Atualize seus dados de acesso e contato."
-      largura={LARGURA_FORMULARIO}
+      largura={{ base: LARGURA_FORMULARIO, lg: "1300px" }}
     >
+      {/* PAINEL AGRUPADOR COM FUNDO E BORDA */}
+      <Box
+        bg={SUAVE_BG}
+        p={{ base: 4, md: 6 }}
+        borderRadius="2xl"
+        border="1px solid"
+        borderColor={BORDER}
+        w="100%"
+      >
+        <Stack gap={GAP_CARTAO} w="100%">
           {/* IDENTIDADE */}
-          <Cartao bg={SUAVE_BG}>
+          <Cartao bg="white">
             <Flex align="center" gap={GAP_CARTAO}>
               <Flex
                 w={{ base: "56px", md: "64px" }}
@@ -305,7 +305,7 @@ export default function MeuCadastro() {
                     {perfil?.nome}
                   </Heading>
                   <Badge
-                    bg="white"
+                    bg={SUAVE_BG}
                     color={PRIMARY}
                     border="1px solid"
                     borderColor={BORDER}
@@ -324,123 +324,134 @@ export default function MeuCadastro() {
             </Flex>
           </Cartao>
 
-          {/* DADOS */}
-          <Secao as="form" onSubmit={salvarDados} titulo="Dados pessoais" icone={FiUser}>
-            <Campo icone={FiUser} label="Nome completo" value={dados.nome} onChange={alterar("nome")} placeholder="Seu nome" erro={erros.nome} />
-
-            <SimpleGrid columns={{ base: 1, md: 2 }} gap={GAP_CARTAO}>
-              <Campo icone={FiMail} label="E-mail" type="email" value={dados.email} onChange={alterar("email")} placeholder="voce@exemplo.com" erro={erros.email} />
-              <Campo icone={FiPhone} label="Telefone" type="tel" value={dados.telefone} onChange={alterar("telefone")} placeholder="(00) 00000-0000" erro={erros.telefone} />
-            </SimpleGrid>
-
-            {/* A linha de ações fica sempre no lugar: antes ela aparecia e
-                sumia conforme o formulário mudava, e o cartão pulava de altura. */}
-            <Flex justify="flex-end" align="center" gap={3} borderTop="1px solid" borderColor={BORDER} pt={GAP_CARTAO}>
-              {salvo && (
-                <Text fontSize={TEXTO_APOIO} color={OK_COR} display="flex" alignItems="center" gap={1} mr="auto">
-                  <FiCheck /> Alterações salvas
-                </Text>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                color={TEXT_LIGHT}
-                borderRadius={RAIO_CAMPO}
-                h={ALTURA_CAMPO}
-                onClick={desfazer}
-                disabled={!mudouDados || salvando}
-              >
-                Desfazer
-              </Button>
-              <Botao type="submit" disabled={!mudouDados || temErro} loading={salvando}>
-                Salvar
-              </Botao>
-            </Flex>
-          </Secao>
-
-          {/* SENHA */}
-          <Secao
-            as="form"
-            onSubmit={salvarSenha}
-            titulo="Segurança"
-            icone={FiLock}
-            acao={
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                color={PRIMARY}
-                borderRadius={RAIO_CAMPO}
-                _hover={{ bg: SUAVE_BG }}
-                onClick={() => setMostrarSenha((v) => !v)}
-              >
-                {mostrarSenha ? "Cancelar" : "Alterar senha"}
-                <Icon as={mostrarSenha ? FiChevronUp : FiChevronDown} ml={2} />
-              </Button>
-            }
+          {/* ESTRUTURA PRINCIPAL (ROW NO DESKTOP, COLUMN NO MOBILE) */}
+          <Flex
+            direction={{ base: "column", lg: "row" }}
+            gap={GAP_CARTAO}
+            align="start"
+            w="100%"
           >
-            {!mostrarSenha ? (
-              <Text fontSize={TEXTO_APOIO} color={TEXT_LIGHT}>
-                Sua senha foi definida no cadastro. Troque quando quiser.
-              </Text>
-            ) : (
-              <Stack gap={GAP_CARTAO} borderTop="1px solid" borderColor={BORDER} pt={GAP_CARTAO}>
-                <Campo senha icone={FiLock} label="Senha atual" value={senhas.senha_atual} onChange={alterarSenha("senha_atual")} placeholder="Sua senha atual" />
+            {/* COLUNA ESQUERDA: DADOS PESSOAIS */}
+            <Box flex="1" w="100%">
+              <Secao as="form" onSubmit={salvarDados} titulo="Dados pessoais" icone={FiUser}>
+                <Campo icone={FiUser} label="Nome completo" value={dados.nome} onChange={alterar("nome")} placeholder="Seu nome" erro={erros.nome} />
 
                 <SimpleGrid columns={{ base: 1, md: 2 }} gap={GAP_CARTAO}>
-                  <Stack gap={2}>
-                    <Campo senha icone={FiLock} label="Nova senha" value={senhas.senha} onChange={alterarSenha("senha")} placeholder="Mínimo 6 caracteres" />
-                    {senhas.senha && (
-                      <Flex align="center" gap={3}>
-                        <Flex gap={1} flex={1}>
-                          {[1, 2, 3].map((n) => (
-                            <Box key={n} flex={1} h="4px" borderRadius="full" bg={n <= forca ? FORCA[forca].cor : BORDER} transition="background .2s" />
-                          ))}
-                        </Flex>
-                        <Text fontSize={TEXTO_MIUDO} color={FORCA[forca].cor} minW="40px" textAlign="right">
-                          {FORCA[forca].rotulo || "Curta"}
-                        </Text>
-                      </Flex>
-                    )}
-                  </Stack>
-
-                  <Campo
-                    senha
-                    icone={FiLock}
-                    label="Confirmar nova senha"
-                    value={senhas.confirmar}
-                    onChange={alterarSenha("confirmar")}
-                    placeholder="Repita a nova senha"
-                    erro={senhas.confirmar && senhas.confirmar !== senhas.senha ? "As senhas não coincidem." : undefined}
-                  />
+                  <Campo icone={FiMail} label="E-mail" type="email" value={dados.email} onChange={alterar("email")} placeholder="voce@exemplo.com" erro={erros.email} />
+                  <Campo icone={FiPhone} label="Telefone" type="tel" value={dados.telefone} onChange={alterar("telefone")} placeholder="(00) 00000-0000" erro={erros.telefone} />
                 </SimpleGrid>
 
-                <Flex justify="flex-end">
-                  <Botao type="submit" loading={salvando}>Atualizar senha</Botao>
+                <Flex justify="flex-end" align="center" gap={3} borderTop="1px solid" borderColor={BORDER} pt={GAP_CARTAO}>
+                  {salvo && (
+                    <Text fontSize={TEXTO_APOIO} color={OK_COR} display="flex" alignItems="center" gap={1} mr="auto">
+                      <FiCheck /> Alterações salvas
+                    </Text>
+                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    color={TEXT_LIGHT}
+                    borderRadius={RAIO_CAMPO}
+                    h={ALTURA_CAMPO}
+                    onClick={desfazer}
+                    disabled={!mudouDados || salvando}
+                  >
+                    Desfazer
+                  </Button>
+                  <Botao type="submit" disabled={!mudouDados || temErro} loading={salvando}>
+                    Salvar
+                  </Botao>
                 </Flex>
-              </Stack>
-            )}
-          </Secao>
+              </Secao>
+            </Box>
 
-          {/* SESSÃO */}
-          <Secao titulo="Sessão" icone={FiLogOut}>
-            <Flex justify="space-between" align="center" flexWrap="wrap" gap={GAP_ITEM}>
-              <Text fontSize={TEXTO_APOIO} color={TEXT_LIGHT}>
-                Encerre a sessão ao usar um computador compartilhado.
-              </Text>
-              <Button
-                variant="outline"
-                color={ERRO}
-                borderColor={BORDER}
-                borderRadius={RAIO_CAMPO}
-                h={ALTURA_CAMPO}
-                onClick={sair}
-                _hover={{ bg: ERRO_BG }}
+            {/* COLUNA DIREITA: SEGURANÇA E SESSÃO */}
+            <Flex direction="column" gap={GAP_CARTAO} flex="1" w="100%">
+              <Secao
+                as="form"
+                onSubmit={salvarSenha}
+                titulo="Segurança"
+                icone={FiLock}
+                acao={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    color={PRIMARY}
+                    borderRadius={RAIO_CAMPO}
+                    _hover={{ bg: SUAVE_BG }}
+                    onClick={() => setMostrarSenha((v) => !v)}
+                  >
+                    {mostrarSenha ? "Cancelar" : "Alterar senha"}
+                    <Icon as={mostrarSenha ? FiChevronUp : FiChevronDown} ml={2} />
+                  </Button>
+                }
               >
-                <Icon as={FiLogOut} mr={2} /> Encerrar sessão
-              </Button>
+                {!mostrarSenha ? (
+                  <Text fontSize={TEXTO_APOIO} color={TEXT_LIGHT}>
+                    Sua senha foi definida no cadastro. Troque quando quiser.
+                  </Text>
+                ) : (
+                  <Stack gap={GAP_CARTAO} borderTop="1px solid" borderColor={BORDER} pt={GAP_CARTAO}>
+                    <Campo senha icone={FiLock} label="Senha atual" value={senhas.senha_atual} onChange={alterarSenha("senha_atual")} placeholder="Sua senha atual" />
+
+                    <SimpleGrid columns={{ base: 1, md: 2 }} gap={GAP_CARTAO}>
+                      <Stack gap={2}>
+                        <Campo senha icone={FiLock} label="Nova senha" value={senhas.senha} onChange={alterarSenha("senha")} placeholder="Mínimo 6 caracteres" />
+                        {senhas.senha && (
+                          <Flex align="center" gap={3}>
+                            <Flex gap={1} flex={1}>
+                              {[1, 2, 3].map((n) => (
+                                <Box key={n} flex={1} h="4px" borderRadius="full" bg={n <= forca ? FORCA[forca].cor : BORDER} transition="background .2s" />
+                              ))}
+                            </Flex>
+                            <Text fontSize={TEXTO_MIUDO} color={FORCA[forca].cor} minW="40px" textAlign="right">
+                              {FORCA[forca].rotulo || "Curta"}
+                            </Text>
+                          </Flex>
+                        )}
+                      </Stack>
+
+                      <Campo
+                        senha
+                        icone={FiLock}
+                        label="Confirmar nova senha"
+                        value={senhas.confirmar}
+                        onChange={alterarSenha("confirmar")}
+                        placeholder="Repita a nova senha"
+                        erro={senhas.confirmar && senhas.confirmar !== senhas.senha ? "As senhas não coincidem." : undefined}
+                      />
+                    </SimpleGrid>
+
+                    <Flex justify="flex-end">
+                      <Botao type="submit" loading={salvando}>Atualizar senha</Botao>
+                    </Flex>
+                  </Stack>
+                )}
+              </Secao>
+
+              <Secao titulo="Sessão" icone={FiLogOut}>
+                <Flex justify="space-between" align="center" flexWrap="wrap" gap={GAP_ITEM}>
+                  <Text fontSize={TEXTO_APOIO} color={TEXT_LIGHT}>
+                    Encerre a sessão ao usar um computador compartilhado.
+                  </Text>
+                  <Button
+                    variant="outline"
+                    color={ERRO}
+                    borderColor={BORDER}
+                    borderRadius={RAIO_CAMPO}
+                    h={ALTURA_CAMPO}
+                    onClick={sair}
+                    _hover={{ bg: ERRO_BG }}
+                  >
+                    <Icon as={FiLogOut} mr={2} /> Encerrar sessão
+                  </Button>
+                </Flex>
+              </Secao>
             </Flex>
-          </Secao>
+          </Flex>
+        </Stack>
+      </Box>
     </Shell>
   );
 }
