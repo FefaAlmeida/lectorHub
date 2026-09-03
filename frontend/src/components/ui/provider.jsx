@@ -4,16 +4,6 @@ import { ChakraProvider, createSystem, defaultConfig, defineConfig } from "@chak
 
 import { RAIO } from "@/components/tema";
 
-// Arredondamento no nível do tema.
-//
-// Anotar `borderRadius` botão a botão não resolvia: 46 botões do sistema não
-// declaravam raio nenhum e herdavam o padrão do Chakra (6px), enquanto os
-// outros usavam o token (10px). Era essa mistura que aparecia como "botões com
-// arredondamento diferente".
-//
-// Redefinir os tokens de raio faz TODO componente do Chakra — Button, Input,
-// Select, Textarea, Card, Menu, Dialog, Badge... — nascer com o mesmo canto,
-// inclusive os que não passam nada.
 const config = defineConfig({
   theme: {
     tokens: {
