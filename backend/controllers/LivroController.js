@@ -18,7 +18,7 @@ function lerId(req) {
 // Retorna { dados } ou { erro }.
 function validarLivro(body, parcial) {
     const dados = {};
-    const anoMaximo = new Date().getFullYear() + 1;
+    const anoMaximo = new Date().getFullYear();
 
     for (const campo of ['titulo', 'autor']) {
         if (body[campo] === undefined) {
