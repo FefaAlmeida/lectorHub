@@ -131,7 +131,12 @@ class UsuarioController {
                 return erro400(res, 'Página e limite devem ser maiores que zero');
             }
 
-            const resultado = await UsuarioModel.listarTodos(pagina, limite);
+            const resultado = await UsuarioModel.listarTodos(pagina, limite, {
+                busca: req.query.busca,
+                tipo: req.query.tipo,
+                ordem: req.query.ordem,
+                situacao: req.query.situacao
+            });
 
             return res.status(200).json({
                 sucesso: true,
@@ -146,6 +151,57 @@ class UsuarioController {
 
         } catch (error) {
             return erroInterno(res, 'Erro ao listar usuários:', error);
+        }
+    }
+
+    // BANIR / REATIVAR (ADMIN)
+    //
+    // Bloqueia o acesso sem apagar o cadastro — ver UsuarioModel.definirBanimento.
+    static async definirBanimento(req, res) {
+        try {
+            const id = lerId(req.params.id);
+            if (!id) return erro400(res, 'ID de usuário inválido.');
+
+            const { banido, motivo } = req.body;
+
+            if (typeof banido !== 'boolean') {
+                return erro400(res, 'Informe `banido` como true ou false.');
+            }
+
+            // Banir a si mesmo tranca o admin para fora do próprio painel.
+            if (String(req.usuario.id) === String(id)) {
+                return erro(res, 400, 'Você não pode banir a própria conta.');
+            }
+
+            const usuario = await UsuarioModel.buscarPorId(id);
+            if (!usuario) return erro(res, 404, 'Usuário não encontrado');
+
+            // Sem isto, um admin poderia derrubar outro e a recuperação só
+            // seria possível direto no banco.
+            if (usuario.tipo === 'admin') {
+                return erro(res, 403, 'Contas de administrador não podem ser banidas.');
+            }
+
+            if (motivo !== undefined && motivo !== null) {
+                if (!ehTexto(motivo)) return erro400(res, 'Motivo inválido.');
+                if (motivo.trim().length > 255) {
+                    return erro400(res, 'O motivo deve ter no máximo 255 caracteres.');
+                }
+            }
+
+            await UsuarioModel.definirBanimento(
+                id,
+                banido,
+                motivo ? motivo.trim() : null
+            );
+
+            return res.status(200).json({
+                sucesso: true,
+                mensagem: banido ? 'Usuário banido.' : 'Acesso do usuário restaurado.'
+            });
+
+        } catch (error) {
+            return erroInterno(res, 'Erro ao banir usuário:', error);
         }
     }
 

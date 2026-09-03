@@ -13,6 +13,7 @@ import {
   FiCheckCircle,
   FiArrowRight,
   FiTrendingUp,
+  FiZap,
 } from "react-icons/fi";
 
 import Shell, { Cartao, VINHO, TEXTO_SUAVE } from "@/components/adm/Shell";
@@ -24,13 +25,13 @@ import {
   TEXTO_MIUDO,
   BORDA,
   REALCE,
+  BRANCO,
   FUNDO,
   ALERTA_BG,
   ALERTA_COR,
   ERRO_BG,
   ERRO_COR,
   GAP_CARTAO,
-  GAP_ITEM,
   HOVER_CARTAO,
   HOVER_LINHA,
   TRANSICAO,
@@ -39,10 +40,12 @@ import {
 import { getResumoAdmin } from "../../../api";
 import { toaster } from "@/components/ui/toaster";
 
+// Rótulo curto: "Aprovar pedidos pendentes" não cabia numa coluna de três e
+// saía cortado com reticências.
 const ATALHOS = [
-  { label: "Aprovar pedidos pendentes", href: "/gestaoEeR?status=PENDENTE", icon: FiClock },
+  { label: "Aprovar pedidos", href: "/gestaoEeR?status=PENDENTE", icon: FiClock },
   { label: "Cadastrar livro", href: "/catalogoDeLivros?novo=1", icon: FiBook },
-  { label: "Gerenciar usuários", href: "/gestaoUsuarios", icon: FiUsers },
+  { label: "Gerenciar leitores", href: "/gestaoUsuarios", icon: FiUsers },
 ];
 
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -66,16 +69,70 @@ function TituloSecao({ children }) {
 // mesmos três números que já estavam logo acima.
 function Metrica({ icon, label, valor, href }) {
   return (
-    <Cartao as={Link} href={href} transition={TRANSICAO} _hover={HOVER_CARTAO}>
+    <Cartao as={Link} href={href} h="100%" transition={TRANSICAO} _hover={HOVER_CARTAO}>
       <Flex align="center" gap={4}>
         <Flex w="48px" h="48px" borderRadius="full" bg={REALCE} color={VINHO} align="center" justify="center" flexShrink={0}>
           <Icon as={icon} boxSize={5} />
         </Flex>
 
+        {/* Rótulo em uma linha só, sem corte: quem garante que ele cabe é a
+            grade abaixo, que só vai a quatro colunas quando há largura para
+            o mais longo deles ("Disponíveis na estante"). */}
         <Box minW={0}>
-          <Text fontSize={TEXTO_MIUDO} color={TEXTO_SUAVE} lineClamp={1}>{label}</Text>
-          <Heading fontSize={TITULO_SECAO} color={TEXTO}>{valor}</Heading>
+          <Text fontSize={TEXTO_MIUDO} color={TEXTO_SUAVE} whiteSpace="nowrap" lineHeight="1.4">
+            {label}
+          </Text>
+          <Heading fontSize={TITULO_SECAO} color={TEXTO} lineHeight="1.2">
+            {valor}
+          </Heading>
         </Box>
+      </Flex>
+    </Cartao>
+  );
+}
+
+// Atalho do rodapé do painel. Ele carregava o mesmo desenho dos contadores de
+// cima — mesma caixa branca, mesmo ícone solto — e a página terminava com duas
+// fileiras de retângulos idênticos que diziam coisas diferentes. Aqui a
+// superfície é o realce da paleta e a seta anda para a direita no hover, para
+// o cartão se ler como "vá para", não como "veja este número".
+function Atalho({ icon, label, href }) {
+  return (
+    <Cartao
+      as={Link}
+      href={href}
+      h="100%"
+      bg={REALCE}
+      borderColor="transparent"
+      transition={TRANSICAO}
+      css={{ "&:hover .seta-atalho": { transform: "translateX(4px)" } }}
+      _hover={{ ...HOVER_CARTAO, borderColor: VINHO }}
+    >
+      <Flex align="center" gap={4}>
+        <Flex
+          w="40px"
+          h="40px"
+          borderRadius="full"
+          bg={BRANCO}
+          color={VINHO}
+          align="center"
+          justify="center"
+          flexShrink={0}
+        >
+          <Icon as={icon} boxSize={5} />
+        </Flex>
+
+        <Text fontSize={TEXTO_APOIO} fontWeight="600" color={TEXTO} lineClamp={1} flex={1} minW={0}>
+          {label}
+        </Text>
+
+        <Icon
+          as={FiArrowRight}
+          className="seta-atalho"
+          color={VINHO}
+          flexShrink={0}
+          transition={TRANSICAO}
+        />
       </Flex>
     </Cartao>
   );
@@ -118,7 +175,7 @@ export default function InicioAdm() {
     : null;
 
   return (
-    <Shell titulo="Dashboard" subtitulo="Visão geral da biblioteca.">
+    <Shell titulo="Dashboard" subtitulo="Panorama do acervo, da circulação e do que aguarda aprovação.">
       {!resumo ? (
         <Flex justify="center" py={20}><Spinner color={VINHO} size="xl" /></Flex>
       ) : (
@@ -153,10 +210,13 @@ export default function InicioAdm() {
           )}
 
           {/* PANORAMA — cada número aparece uma única vez no painel */}
-          <SimpleGrid columns={{ base: 1, sm: 2, xl: 4 }} gap={GAP_CARTAO}>
+          {/* Quatro colunas só a partir de 2xl. Em xl a área de conteúdo tem
+              ~936px e cada cartão ficaria com ~216px — menos que os 48px do
+              ícone mais o rótulo mais o padding, e o texto era cortado. */}
+          <SimpleGrid columns={{ base: 1, sm: 2, "2xl": 4 }} gap={GAP_CARTAO}>
             <Metrica icon={FiBook} label="Livros no acervo" valor={resumo.livros} href="/catalogoDeLivros" />
             <Metrica icon={FiCheckCircle} label="Disponíveis na estante" valor={resumo.livros_disponiveis} href="/catalogoDeLivros" />
-            <Metrica icon={FiBookOpen} label="Emprestados agora" valor={resumo.emprestados} href="/gestaoEeR?status=EMPRESTADO" />
+            <Metrica icon={FiBookOpen} label="Emprestados" valor={resumo.emprestados} href="/gestaoEeR?status=EMPRESTADO" />
             <Metrica icon={FiUsers} label="Leitores cadastrados" valor={resumo.usuarios} href="/gestaoUsuarios" />
           </SimpleGrid>
 
@@ -244,19 +304,15 @@ export default function InicioAdm() {
 
           {/* AÇÕES RÁPIDAS */}
           <Stack gap={GAP_CARTAO}>
-            <TituloSecao>Ações rápidas</TituloSecao>
+            {/* As outras duas seções têm ícone no título; esta não tinha. */}
+            <HStack gap={3} color={VINHO}>
+              <Icon as={FiZap} boxSize={5} />
+              <TituloSecao>Ações rápidas</TituloSecao>
+            </HStack>
 
             <SimpleGrid columns={{ base: 1, md: 3 }} gap={GAP_CARTAO}>
               {ATALHOS.map((a) => (
-                <Cartao key={a.href} as={Link} href={a.href} transition={TRANSICAO} _hover={HOVER_CARTAO}>
-                  <Flex align="center" justify="space-between" gap={GAP_ITEM}>
-                    <Flex align="center" gap={3} color={VINHO} minW={0}>
-                      <Icon as={a.icon} boxSize={5} flexShrink={0} />
-                      <Text fontSize={TEXTO_APOIO} fontWeight="semibold" lineClamp={1}>{a.label}</Text>
-                    </Flex>
-                    <Icon as={FiArrowRight} color={VINHO} flexShrink={0} />
-                  </Flex>
-                </Cartao>
+                <Atalho key={a.href} {...a} />
               ))}
             </SimpleGrid>
           </Stack>

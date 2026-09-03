@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button, Flex, Input, Stack, Text, Textarea } from "@chakra-ui/react";
+import { Box, Button, Flex, Icon, IconButton, Input, Stack, Text, Textarea } from "@chakra-ui/react";
 import {
   VINHO,
   VINHO_HOVER,
@@ -16,6 +16,10 @@ import {
   SOMBRA_BOTAO,
   HOVER_BOTAO,
   TRANSICAO,
+  TEXTO_MIUDO,
+  GAP_ITEM,
+  ALTURA_ACAO,
+  SOMBRA_MENU,
 } from "./tema";
 
 const estiloInput = {
@@ -130,5 +134,70 @@ export function Vazio({ children }) {
     <Flex justify="center" py={12}>
       <Text color={TEXTO_SUAVE}>{children}</Text>
     </Flex>
+  );
+}
+
+// Botão dentro de uma linha de tabela. Os botões de formulário têm 48px de
+// altura — o alvo de clique do resto do sistema — e dentro da linha isso
+// inflava a tabela inteira. `icone` deixa o botão quadrado, para ação sem
+// rótulo.
+const estiloAcao = (icone) => ({
+  h: ALTURA_ACAO,
+  w: icone ? ALTURA_ACAO : undefined,
+  px: icone ? 0 : 3,
+  fontSize: TEXTO_MIUDO,
+});
+
+export function AcaoPrimaria({ icone, ...props }) {
+  return <BotaoPrimario {...estiloAcao(icone)} {...props} />;
+}
+
+export function AcaoSecundaria({ icone, ...props }) {
+  return <BotaoSecundario {...estiloAcao(icone)} {...props} />;
+}
+
+// Ação sem rótulo: editar e excluir, nas tabelas e sobre a capa dos livros.
+// Branco com borda e sombra baixa porque sobre uma capa escura um ícone vinho
+// sem fundo sumiria; no hover a cor da ação preenche o botão. Sem texto
+// visível, `rotulo` é o que o leitor de tela anuncia.
+export function BotaoIcone({ icone, rotulo, cor = VINHO, ...props }) {
+  return (
+    <IconButton
+      aria-label={rotulo}
+      title={rotulo}
+      w={ALTURA_ACAO}
+      h={ALTURA_ACAO}
+      minW={ALTURA_ACAO}
+      borderRadius={RAIO_CAMPO}
+      bg={BRANCO}
+      color={cor}
+      border="1px solid"
+      borderColor={BORDA}
+      boxShadow={SOMBRA_MENU}
+      transition={TRANSICAO}
+      _hover={{ bg: cor, color: BRANCO, borderColor: cor }}
+      _disabled={{ opacity: 0.4, cursor: "not-allowed", bg: BRANCO, color: cor, borderColor: BORDA }}
+      {...props}
+    >
+      <Icon as={icone} boxSize={4} />
+    </IconButton>
+  );
+}
+
+// Rótulo de grupo dentro de um formulário. A barra vinho à esquerda e a linha
+// que segue até a borda existem porque o miolo do modal era branco de ponta a
+// ponta: só o cabeçalho tinha cor, e os campos vinham todos com o mesmo peso.
+export function GrupoCampos({ titulo, children }) {
+  return (
+    <Stack gap={GAP_ITEM}>
+      <Flex align="center" gap={2}>
+        <Box w="3px" h="14px" bg={VINHO} borderRadius="full" flexShrink={0} />
+        <Text fontSize={TEXTO_MIUDO} fontWeight="700" color={VINHO} letterSpacing="wider" textTransform="uppercase" flexShrink={0}>
+          {titulo}
+        </Text>
+        <Box flex={1} h="1px" bg={REALCE} />
+      </Flex>
+      {children}
+    </Stack>
   );
 }

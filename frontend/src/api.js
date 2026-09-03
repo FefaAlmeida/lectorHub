@@ -48,8 +48,13 @@ export const getPerfil = () => requisitar("/usuarios/me");
 export const atualizarPerfil = (data) => requisitar("/usuarios/me", { method: "PUT", body: data });
 
 // USUÁRIOS (ADMIN)
-export const getUsuarios = (pagina = 1, limite = 10) => requisitar(`/usuarios${query({ pagina, limite })}`);
+// Aceita busca, tipo, situacao e ordem — resolvidos no banco, ver UsuarioModel.listarTodos.
+export const getUsuarios = (filtros = {}) => requisitar(`/usuarios${query(filtros)}`);
 export const atualizarUsuario = (id, data) => requisitar(`/usuarios/${id}`, { method: "PUT", body: data });
+// Banir bloqueia o acesso sem apagar o cadastro (o histórico de empréstimos
+// é FK para o usuário). `motivo` aparece para o leitor na tela de login.
+export const definirBanimento = (id, banido, motivo) =>
+  requisitar(`/usuarios/${id}/banimento`, { method: "PUT", body: { banido, motivo } });
 
 // LIVROS — filtros: { busca, categoria_id, disponivel, ordem, pagina, limite }
 export const getLivros = (filtros = {}) => requisitar(`/livros${query(filtros)}`);

@@ -2,12 +2,13 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Badge, Box, Flex, Spinner, Table, Tabs, Text } from "@chakra-ui/react";
+import { Badge, Flex, Tabs, Text } from "@chakra-ui/react";
 
-import Shell, { Cartao, VINHO, TEXTO_SUAVE, formatarData } from "@/components/adm/Shell";
-import { FUNDO, BORDA, HOVER_LINHA, TRANSICAO, TEXTO_APOIO, TEXTO_MIUDO, ERRO_COR, ERRO_BG, ALERTA_BG, ALERTA_COR, OK_BG, OK_COR } from "@/components/adm/tema";
+import Shell, { VINHO, TEXTO_SUAVE, formatarData } from "@/components/adm/Shell";
+import { Tabela, Linha, Celula, CelulaDupla } from "@/components/adm/Tabela";
+import { BORDA, TEXTO_APOIO, TEXTO_MIUDO, ERRO_COR, ERRO_BG, ALERTA_BG, ALERTA_COR, OK_BG, OK_COR } from "@/components/adm/tema";
 import Modal from "@/components/adm/Modal";
-import { BotaoPrimario, BotaoSecundario, CampoTexto, Paginacao, Vazio } from "@/components/adm/Campos";
+import { AcaoPrimaria, AcaoSecundaria, BotaoPrimario, BotaoSecundario, CampoTexto, Paginacao } from "@/components/adm/Campos";
 import { getEmprestimosAdmin, atualizarStatusEmprestimo, estenderPrazo } from "../../../api";
 import { toaster } from "@/components/ui/toaster";
 
@@ -31,10 +32,10 @@ const CORES = {
 
 function Situacao({ e }) {
   if (e.status === "EMPRESTADO" && e.atrasado) {
-    return <Badge bg={ERRO_BG} color={ERRO_COR} borderRadius="full" px={3}>Atrasado há {Math.abs(e.dias_restantes)}d</Badge>;
+    return <Badge bg={ERRO_BG} color={ERRO_COR} borderRadius="full" px={3} py={1} fontSize={TEXTO_MIUDO} fontWeight="600" whiteSpace="nowrap">Atrasado há {Math.abs(e.dias_restantes)}d</Badge>;
   }
   const c = CORES[e.status];
-  return <Badge bg={c.bg} color={c.cor} borderRadius="full" px={3}>{c.texto}</Badge>;
+  return <Badge bg={c.bg} color={c.cor} borderRadius="full" px={3} py={1} fontSize={TEXTO_MIUDO} fontWeight="600" whiteSpace="nowrap">{c.texto}</Badge>;
 }
 
 function avisar(r, tituloOk) {
@@ -105,7 +106,7 @@ function GestaoConteudo() {
   const TITULOS = { aprovar: "Aprovar empréstimo", recusar: "Recusar pedido", devolver: "Registrar devolução", estender: "Estender prazo" };
 
   return (
-    <Shell titulo="Empréstimos" subtitulo="Aprove pedidos, registre devoluções e acompanhe prazos.">
+    <Shell titulo="Empréstimos" subtitulo="Aprove pedidos, registre devoluções e ajuste prazos.">
       <Tabs.Root value={status} onValueChange={(d) => { setStatus(d.value); setPagina(1); }} variant="plain" mb={6}>
         <Tabs.List borderBottom="1px solid" borderColor={BORDA} gap={2}>
           {ABAS.map((a) => (
@@ -117,68 +118,62 @@ function GestaoConteudo() {
         </Tabs.List>
       </Tabs.Root>
 
-      <Cartao p={0} overflow="hidden">
-        {lista === null ? (
-          <Flex justify="center" py={16}><Spinner color={VINHO} size="lg" /></Flex>
-        ) : lista.length === 0 ? (
-          <Vazio>Nenhum empréstimo nesta situação.</Vazio>
-        ) : (
-          <Box overflowX="auto">
-            <Table.Root size="md">
-              <Table.Header>
-                <Table.Row bg={FUNDO}>
-                  <Table.ColumnHeader>Livro</Table.ColumnHeader>
-                  <Table.ColumnHeader>Leitor</Table.ColumnHeader>
-                  <Table.ColumnHeader>Solicitado</Table.ColumnHeader>
-                  <Table.ColumnHeader>Empréstimo</Table.ColumnHeader>
-                  <Table.ColumnHeader>Devolução prevista</Table.ColumnHeader>
-                  <Table.ColumnHeader>Situação</Table.ColumnHeader>
-                  <Table.ColumnHeader textAlign="right">Ações</Table.ColumnHeader>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {lista.map((e) => (
-                  <Table.Row key={e.id_emprestimo} _hover={HOVER_LINHA} transition={TRANSICAO}>
-                    <Table.Cell>
-                      <Text fontWeight="semibold">{e.titulo}</Text>
-                      <Text fontSize={TEXTO_APOIO} color={TEXTO_SUAVE}>{e.autor}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text>{e.usuario_nome}</Text>
-                      <Text fontSize={TEXTO_APOIO} color={TEXTO_SUAVE}>{e.usuario_email}</Text>
-                    </Table.Cell>
-                    <Table.Cell>{formatarData(e.data_solicitacao)}</Table.Cell>
-                    <Table.Cell>{formatarData(e.data_emprestimo)}</Table.Cell>
-                    <Table.Cell>
-                      {formatarData(e.data_devolucao_prevista)}
-                      {e.status === "EMPRESTADO" && !e.atrasado && e.dias_restantes !== null && (
-                        <Text fontSize={TEXTO_MIUDO} color={TEXTO_SUAVE}>{e.dias_restantes === 0 ? "vence hoje" : `${e.dias_restantes}d restantes`}</Text>
-                      )}
-                    </Table.Cell>
-                    <Table.Cell><Situacao e={e} /></Table.Cell>
-                    <Table.Cell textAlign="right">
-                      <Flex justify="flex-end" gap={2}>
-                        {e.status === "PENDENTE" && (
-                          <>
-                            <BotaoPrimario size="sm" onClick={() => abrir("aprovar", e)}>Aprovar</BotaoPrimario>
-                            <BotaoSecundario size="sm" onClick={() => abrir("recusar", e)}>Recusar</BotaoSecundario>
-                          </>
-                        )}
-                        {e.status === "EMPRESTADO" && (
-                          <>
-                            <BotaoPrimario size="sm" onClick={() => abrir("devolver", e)}>Devolver</BotaoPrimario>
-                            <BotaoSecundario size="sm" onClick={() => abrir("estender", e)}>Estender</BotaoSecundario>
-                          </>
-                        )}
-                      </Flex>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table.Root>
-          </Box>
-        )}
-      </Cartao>
+      <Tabela
+        colunas={[
+          { label: "Livro" },
+          { label: "Leitor" },
+          { label: "Datas", largura: "1%" },
+          { label: "Devolução prevista", largura: "1%" },
+          { label: "Situação", largura: "1%" },
+          { label: "Ações", alinhar: "right", largura: "1%" },
+        ]}
+        carregando={lista === null}
+        vazio={lista?.length === 0 ? "Nenhum empréstimo nesta situação." : null}
+      >
+        {(lista || []).map((e) => (
+          <Linha key={e.id_emprestimo}>
+            <Celula><CelulaDupla topo={e.titulo} base={e.autor} /></Celula>
+            <Celula><CelulaDupla topo={e.usuario_nome} base={e.usuario_email} /></Celula>
+
+            {/* Solicitação e empréstimo ocupavam uma coluna cada, e a segunda
+                ficava vazia em toda linha pendente. Juntas, cabem numa só. */}
+            <Celula whiteSpace="nowrap">
+              <Text fontSize={TEXTO_APOIO}>Pedido {formatarData(e.data_solicitacao)}</Text>
+              <Text fontSize={TEXTO_MIUDO} color={TEXTO_SUAVE}>
+                {e.data_emprestimo ? `Retirado ${formatarData(e.data_emprestimo)}` : "Aguardando aprovação"}
+              </Text>
+            </Celula>
+
+            <Celula whiteSpace="nowrap">
+              <Text fontSize={TEXTO_APOIO}>{formatarData(e.data_devolucao_prevista)}</Text>
+              {e.status === "EMPRESTADO" && !e.atrasado && e.dias_restantes !== null && (
+                <Text fontSize={TEXTO_MIUDO} color={TEXTO_SUAVE}>
+                  {e.dias_restantes === 0 ? "vence hoje" : `${e.dias_restantes}d restantes`}
+                </Text>
+              )}
+            </Celula>
+
+            <Celula><Situacao e={e} /></Celula>
+
+            <Celula textAlign="right">
+              <Flex justify="flex-end" gap={2}>
+                {e.status === "PENDENTE" && (
+                  <>
+                    <AcaoPrimaria onClick={() => abrir("aprovar", e)}>Aprovar</AcaoPrimaria>
+                    <AcaoSecundaria onClick={() => abrir("recusar", e)}>Recusar</AcaoSecundaria>
+                  </>
+                )}
+                {e.status === "EMPRESTADO" && (
+                  <>
+                    <AcaoPrimaria onClick={() => abrir("devolver", e)}>Devolver</AcaoPrimaria>
+                    <AcaoSecundaria onClick={() => abrir("estender", e)}>Estender</AcaoSecundaria>
+                  </>
+                )}
+              </Flex>
+            </Celula>
+          </Linha>
+        ))}
+      </Tabela>
 
       <Paginacao pagina={pagina} totalPaginas={paginacao.totalPaginas} onChange={setPagina} />
 

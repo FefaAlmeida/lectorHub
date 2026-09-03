@@ -3,17 +3,30 @@
 import { RAIO } from "@/components/tema";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { AspectRatio, Badge, Box, Flex, HStack, Image, Input, Spinner, Stack, Switch, Text, Icon, SimpleGrid } from "@chakra-ui/react";
-import { FiBookOpen, FiCheckCircle, FiEdit2, FiLayers, FiPlus, FiRefreshCcw, FiRotateCcw, FiSearch, FiTrash2, FiUser } from "react-icons/fi";
+import { AspectRatio, Badge, Box, Card, Flex, Heading, HStack, Icon, Image, SimpleGrid, Spinner, Stack, Switch, Text } from "@chakra-ui/react";
+import { FiBookOpen, FiEdit2, FiPlus, FiTrash2 } from "react-icons/fi";
 
 import Shell, { Cartao, VINHO, TEXTO_SUAVE } from "@/components/adm/Shell";
-import { FUNDO, BORDA, RAIO_CAMPO, TEXTO_PEQUENO, ALTURA_CAMPO, HOVER_LINHA, TRANSICAO, ERRO_BG, ERRO_COR, ERRO_HOVER, TEXTO_APOIO, GAP_CARTAO, ALTURA_ACAO, BRANCO, REALCE, TEXTO, TITULO_SECAO, TEXTO_MIUDO, HOVER_CARTAO, OK_COR } from "@/components/adm/tema";
+import { FUNDO, BORDA, RAIO_CAMPO, TEXTO_PEQUENO, ALTURA_CAMPO, TRANSICAO, ERRO_COR, ERRO_HOVER, TEXTO_APOIO, GAP_CARTAO, BRANCO, REALCE, TEXTO, TEXTO_MIUDO, HOVER_CARTAO, OK_COR, VINHO_HOVER, SOMBRA_MENU, GAP_ITEM, TITULO_CARTAO } from "@/components/adm/tema";
 import Modal from "@/components/adm/Modal";
-import { BotaoPrimario, BotaoSecundario, Campo, CampoArea, CampoSelect, CampoTexto, Paginacao, Vazio } from "@/components/adm/Campos";
+import { BarraBusca, BotaoLimpar, FiltroMenu } from "@/components/adm/Filtros";
+import { BotaoIcone, BotaoPrimario, BotaoSecundario, Campo, CampoArea, CampoSelect, CampoTexto, GrupoCampos, Paginacao, Vazio } from "@/components/adm/Campos";
 import { getLivros, getCategorias, criarLivro, atualizarLivro, excluirLivro } from "../../../api";
 import { toaster } from "@/components/ui/toaster";
 
 const LIMITE = 10;
+const OPCOES_DISPONIBILIDADE = [
+  { valor: "", label: "Todos" },
+  { valor: "true", label: "Disponíveis" },
+  { valor: "false", label: "Emprestados" },
+];
+
+const OPCOES_ORDEM = [
+  { valor: "titulo_asc", label: "Título (A-Z)" },
+  { valor: "titulo_desc", label: "Título (Z-A)" },
+  { valor: "recentes", label: "Mais recentes" },
+];
+
 const LIVRO_VAZIO = { titulo: "", autor: "", categoria_id: "", ano_publicacao: "", sinopse: "", capa_url: "", disponivel: true };
 
 function avisar(r, tituloOk) {
@@ -26,7 +39,7 @@ function avisar(r, tituloOk) {
 }
 
 // Formulário de criar/editar. Recebe `key` do pai para reiniciar o estado por livro.
-function FormLivro({ inicial, categorias, onSalvar, onFechar, salvando }) {
+function FormLivro({ inicial, categorias, onSalvar }) {
   // O <select> trabalha com string; a API devolve categoria_id como número.
   const [form, setForm] = useState({
     ...LIVRO_VAZIO,
@@ -50,136 +63,193 @@ function FormLivro({ inicial, categorias, onSalvar, onFechar, salvando }) {
 
   return (
     <form onSubmit={enviar} id="form-livro">
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap={GAP_CARTAO}>
-        <CampoTexto label="Título *" value={form.titulo} onChange={set("titulo")} required />
-        <CampoTexto label="Autor *" value={form.autor} onChange={set("autor")} required />
-        <CampoSelect
-          label="Categoria *"
-          value={form.categoria_id}
-          onChange={set("categoria_id")}
-          required
-          opcoes={[
-            { valor: "", label: "Selecione..." },
-            ...categorias.map((c) => ({ valor: String(c.id), label: c.nome })),
-          ]}
-        />
-        <CampoTexto label="Ano de publicação *" type="number" value={form.ano_publicacao} onChange={set("ano_publicacao")} required min={0} max={new Date().getFullYear() + 1} />
-        <Box gridColumn={{ md: "span 2" }}>
-          <CampoTexto label="URL da capa" value={form.capa_url} onChange={set("capa_url")} placeholder="https://..." />
-        </Box>
-        <Box gridColumn={{ md: "span 2" }}>
-          <CampoArea label="Sinopse" value={form.sinopse} onChange={set("sinopse")} />
-        </Box>
-        <Flex align="center" gap={3}>
-          <Switch.Root checked={form.disponivel} onCheckedChange={(e) => set("disponivel")(e.checked)} colorPalette="green">
-            <Switch.HiddenInput />
-            <Switch.Control />
-          </Switch.Root>
-          <Text fontSize={TEXTO_APOIO}>Disponível na estante</Text>
-        </Flex>
-      </SimpleGrid>
+      <Flex gap={GAP_CARTAO} direction={{ base: "column", md: "row" }} align="flex-start">
+        {/* Coluna da capa: o que está sendo cadastrado aparece enquanto se
+            digita, em vez de a URL ser um campo de texto às cegas. */}
+        <Stack gap={GAP_ITEM} w={{ base: "100%", md: "200px" }} flexShrink={0}>
+          <AspectRatio ratio={2 / 3} borderRadius={RAIO} overflow="hidden" bg={FUNDO}>
+            {form.capa_url ? (
+              <Image src={form.capa_url} alt="Prévia da capa" fit="cover" />
+            ) : (
+              <Flex align="center" justify="center" direction="column" gap={2} color={TEXTO_SUAVE}>
+                <Icon as={FiBookOpen} boxSize={8} opacity={0.5} />
+                <Text fontSize={TEXTO_MIUDO} textAlign="center" px={2}>
+                  Prévia da capa
+                </Text>
+              </Flex>
+            )}
+          </AspectRatio>
+
+          <CampoTexto
+            label="URL da capa"
+            value={form.capa_url}
+            onChange={set("capa_url")}
+            placeholder="https://..."
+          />
+        </Stack>
+
+        <Stack gap={GAP_CARTAO} flex={1} minW={0} w="100%">
+          <GrupoCampos titulo="Identificação">
+            <CampoTexto label="Título *" value={form.titulo} onChange={set("titulo")} required />
+            <CampoTexto label="Autor *" value={form.autor} onChange={set("autor")} required />
+          </GrupoCampos>
+
+          <GrupoCampos titulo="Classificação">
+            <SimpleGrid columns={{ base: 1, sm: 2 }} gap={GAP_ITEM}>
+              <CampoSelect
+                label="Categoria *"
+                value={form.categoria_id}
+                onChange={set("categoria_id")}
+                required
+                opcoes={[
+                  { valor: "", label: "Selecione..." },
+                  ...categorias.map((c) => ({ valor: String(c.id), label: c.nome })),
+                ]}
+              />
+              <CampoTexto
+                label="Ano de publicação *"
+                type="number"
+                value={form.ano_publicacao}
+                onChange={set("ano_publicacao")}
+                required
+                min={0}
+                max={new Date().getFullYear() + 1}
+              />
+            </SimpleGrid>
+          </GrupoCampos>
+
+          <GrupoCampos titulo="Sinopse">
+            <CampoArea
+              value={form.sinopse}
+              onChange={set("sinopse")}
+              placeholder="Um resumo curto do livro (opcional)"
+            />
+          </GrupoCampos>
+
+          <GrupoCampos titulo="Disponibilidade">
+            {/* Linha inteira com explicação: o switch solto não dizia o que a
+                posição desligada significava. */}
+            <Flex
+              align="center"
+              justify="space-between"
+              gap={3}
+              p={3}
+              bg={FUNDO}
+              borderRadius={RAIO}
+              border="1px solid"
+              borderColor={BORDA}
+            >
+              <Box minW={0}>
+                <Text fontSize={TEXTO_APOIO} fontWeight="600" color={TEXTO}>
+                  Disponível na estante
+                </Text>
+                <Text fontSize={TEXTO_MIUDO} color={TEXTO_SUAVE}>
+                  Desligue apenas para corrigir o cadastro. Empréstimos são
+                  registrados na tela de Empréstimos.
+                </Text>
+              </Box>
+
+              <Switch.Root
+                checked={form.disponivel}
+                onCheckedChange={(e) => set("disponivel")(e.checked)}
+                colorPalette="green"
+              >
+                <Switch.HiddenInput />
+                <Switch.Control />
+              </Switch.Root>
+            </Flex>
+          </GrupoCampos>
+        </Stack>
+      </Flex>
     </form>
   );
 }
 
-// Cartão de número no topo da tela. Estrutura vinda da branch `front`:
-// ícone em círculo cheio de vinho, rótulo pequeno e valor em destaque.
-function Indicador({ icon, titulo, valor }) {
+// Mesmo cartão da busca do cliente — capa 2/3, título, autor, selos de
+// categoria e ano, ponto colorido de disponibilidade — só que a ação do rodapé
+// é editar, não emprestar.
+//
+// Emprestar/devolver NÃO fica aqui: quem empresta é o leitor (pedido), e quem
+// aprova ou registra devolução é a Gestão de Empréstimos, onde estão o prazo,
+// o leitor e as regras. Um botão de "emprestar" solto no catálogo mudava a
+// disponibilidade sem empréstimo nenhum por trás, deixando o número da tela
+// diferente do que a tabela `emprestimos` diz.
+function LivroCard({ livro, onEditar, onExcluir }) {
   return (
-    <Cartao>
-      <HStack gap={3}>
+    <Card.Root
+      variant="outline"
+      bg={BRANCO}
+      borderRadius={RAIO}
+      border="1px solid"
+      borderColor={BORDA}
+      overflow="hidden"
+      transition={TRANSICAO}
+      _hover={HOVER_CARTAO}
+      css={{
+        // As ações só aparecem com o cursor sobre o cartão. `focus-within`
+        // entra junto porque, escondidas por opacidade, elas continuam
+        // alcançáveis pelo Tab — e ficariam invisíveis ao receber o foco.
+        "&:hover .acoes-livro, &:focus-within .acoes-livro": {
+          opacity: 1,
+          pointerEvents: "auto",
+        },
+      }}
+    >
+      <Box p={3} pb={0} position="relative">
+        <AspectRatio ratio={2 / 3} borderRadius={RAIO} overflow="hidden" bg={FUNDO}>
+          {livro.capa_url ? (
+            <Image src={livro.capa_url} alt={livro.titulo} fit="cover" />
+          ) : (
+            <Flex align="center" justify="center">
+              <Icon as={FiBookOpen} boxSize={8} color={TEXTO_SUAVE} opacity={0.5} />
+            </Flex>
+          )}
+        </AspectRatio>
+
         <Flex
-          w="48px"
-          h="48px"
-          flexShrink={0}
-          borderRadius="full"
-          bg={VINHO}
-          align="center"
-          justify="center"
+          className="acoes-livro"
+          position="absolute"
+          top={5}
+          right={5}
+          gap={2}
+          opacity={0}
+          pointerEvents="none"
+          transition={TRANSICAO}
         >
-          <Icon as={icon} color={BRANCO} boxSize={5} />
+          <BotaoIcone icone={FiEdit2} rotulo="Editar livro" onClick={() => onEditar(livro)} />
+          <BotaoIcone icone={FiTrash2} rotulo="Excluir livro" cor={ERRO_COR} onClick={() => onExcluir(livro)} />
         </Flex>
+      </Box>
 
-        <Stack gap={0}>
-          <Text fontSize={TEXTO_MIUDO} color={TEXTO_SUAVE}>{titulo}</Text>
-          <Text fontSize={TITULO_SECAO} fontWeight="700" color={TEXTO}>{valor}</Text>
-        </Stack>
-      </HStack>
-    </Cartao>
-  );
-}
-
-// Livro como cartão com capa, no lugar da linha de tabela. É a diferença
-// visual mais forte da branch `front`: o acervo vira vitrine, não planilha.
-function LivroCard({ livro, onEditar, onExcluir, onAlternar }) {
-  return (
-    <Cartao p={2} overflow="hidden" transition={TRANSICAO} _hover={HOVER_CARTAO}>
-      {/* Proporção 2/3, a mesma das capas na área do cliente. A altura fixa
-          de 220px desalinhava as capas conforme a largura da coluna. */}
-      <AspectRatio ratio={2 / 3} borderRadius={RAIO} overflow="hidden" bg={FUNDO}>
-        {livro.capa_url ? (
-          <Image src={livro.capa_url} alt={livro.titulo} fit="cover" />
-        ) : (
-          <Flex align="center" justify="center">
-            <Icon as={FiBookOpen} boxSize={8} color={TEXTO_SUAVE} opacity={0.5} />
-          </Flex>
-        )}
-      </AspectRatio>
-
-      <Stack gap={0.5} px={1} pt={3}>
-        <Text fontSize={TEXTO_APOIO} fontWeight="700" color={TEXTO} lineClamp={1}>
+      <Card.Body pt={3} pb={3} px={3} gap={1}>
+        <Heading fontSize={TEXTO_APOIO} color={TEXTO} lineClamp={1}>
           {livro.titulo}
-        </Text>
-        <Text fontSize={TEXTO_MIUDO} color={TEXTO_SUAVE} lineClamp={1}>
+        </Heading>
+
+        <Text color={TEXTO_SUAVE} fontSize={TEXTO_MIUDO} mb={1} lineClamp={1}>
           {livro.autor}
         </Text>
 
-        <HStack gap={2} pt={1}>
-          <Badge bg={REALCE} color={VINHO} borderRadius="full" px={2} fontSize={TEXTO_MIUDO}>
+        <HStack flexWrap="wrap" gap={1} mb={2}>
+          <Badge bg={REALCE} color={VINHO} fontWeight="600" borderRadius="full" px={3}>
             {livro.categoria}
           </Badge>
-          <Text
-            fontSize={TEXTO_MIUDO}
-            fontWeight="600"
-            color={livro.disponivel ? OK_COR : ERRO_COR}
-          >
+          {livro.ano_publicacao && (
+            <Badge bg={REALCE} color={VINHO} fontWeight="600" borderRadius="full" px={3}>
+              {livro.ano_publicacao}
+            </Badge>
+          )}
+        </HStack>
+
+        <HStack align="center" gap={1.5}>
+          <Box w={2} h={2} borderRadius="full" bg={livro.disponivel ? OK_COR : ERRO_COR} />
+          <Text fontSize={TEXTO_MIUDO} color={TEXTO} fontWeight="medium">
             {livro.disponivel ? "Disponível" : "Emprestado"}
           </Text>
         </HStack>
-      </Stack>
+      </Card.Body>
 
-      {/* Altura reduzida: os botões herdavam os 48px de campo de formulário,
-          que num cartão de ~200px de largura ficavam maiores que a ficha. */}
-      <Flex gap={2} mt={3} px={1} pb={1}>
-        <BotaoPrimario flex="1" h={ALTURA_ACAO} px={3} fontSize={TEXTO_MIUDO} onClick={() => onEditar(livro)}>
-          <Icon as={FiEdit2} mr={1.5} /> Editar
-        </BotaoPrimario>
-
-        <BotaoSecundario
-          h={ALTURA_ACAO}
-          w={ALTURA_ACAO}
-          px={0}
-          aria-label={livro.disponivel ? "Marcar como emprestado" : "Devolver à estante"}
-          title={livro.disponivel ? "Marcar como emprestado" : "Devolver à estante"}
-          onClick={() => onAlternar(livro)}
-        >
-          <Icon as={livro.disponivel ? FiCheckCircle : FiRotateCcw} />
-        </BotaoSecundario>
-
-        <BotaoSecundario
-          h={ALTURA_ACAO}
-          w={ALTURA_ACAO}
-          px={0}
-          aria-label="Excluir"
-          color={ERRO_COR}
-          borderColor={ERRO_COR}
-          _hover={{ bg: ERRO_BG }}
-          onClick={() => onExcluir(livro)}
-        >
-          <Icon as={FiTrash2} />
-        </BotaoSecundario>
-      </Flex>
-    </Cartao>
+    </Card.Root>
   );
 }
 
@@ -227,6 +297,20 @@ function CatalogoConteudo() {
     getCategorias().then((r) => r?.sucesso && setCategorias(r.dados));
   }, [versao]);
 
+  function buscar() {
+    setBusca(termo.trim());
+    setPagina(1);
+  }
+
+  function limparFiltros() {
+    setTermo("");
+    setBusca("");
+    setCategoriaId("");
+    setDisponivel("");
+    setOrdem("titulo_asc");
+    setPagina(1);
+  }
+
   async function salvar(dados) {
     setSalvando(true);
     const editando = modal?.modo === "editar";
@@ -248,62 +332,56 @@ function CatalogoConteudo() {
     }
   }
 
-  async function alternarDisponivel(livro) {
-    const r = await atualizarLivro(livro.id, { disponivel: !livro.disponivel });
-    if (avisar(r, "Disponibilidade atualizada")) carregar();
-  }
 
   return (
     <Shell
-      titulo="Catálogo de Livros"
-      subtitulo={`${paginacao.total} ${paginacao.total === 1 ? "livro" : "livros"} no acervo`}
+      titulo="Livros"
+      subtitulo="Cadastre, edite e classifique os livros do acervo."
       acoes={
         <BotaoPrimario onClick={() => setModal({ modo: "novo" })}>
           <Icon as={FiPlus} mr={2} /> Adicionar livro
         </BotaoPrimario>
       }
     >
-      <Cartao>
-        <Flex gap={GAP_CARTAO} flexWrap="wrap" align="flex-end">
-          <Box flex="2" minW="240px">
-            <Campo label="Buscar">
-              <Flex gap={2}>
-                <Input value={termo} onChange={(e) => setTermo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (setBusca(termo.trim()), setPagina(1))}
-                  placeholder="Título, autor ou categoria" bg="white" border="1px solid" borderColor={BORDA} borderRadius={RAIO_CAMPO} h={ALTURA_CAMPO} fontSize={TEXTO_PEQUENO} />
-                <BotaoSecundario onClick={() => { setBusca(termo.trim()); setPagina(1); }} h="42px"><FiSearch /></BotaoSecundario>
-              </Flex>
-            </Campo>
-          </Box>
-          <Box flex="1" minW="180px">
-            <CampoSelect label="Categoria" value={categoriaId} onChange={(v) => { setCategoriaId(v); setPagina(1); }}
-              opcoes={[{ valor: "", label: "Todas" }, ...categorias.map((c) => ({ valor: String(c.id), label: c.nome }))]} />
-          </Box>
+      <BarraBusca
+        valor={termo}
+        onChange={setTermo}
+        onBuscar={buscar}
+        placeholder="Digite título, autor ou assunto..."
+      />
 
-          <Box flex="1" minW="160px">
-            <CampoSelect label="Disponibilidade" value={disponivel} onChange={(v) => { setDisponivel(v); setPagina(1); }}
-              opcoes={[
-                { valor: "", label: "Todos" },
-                { valor: "true", label: "Disponíveis" },
-                { valor: "false", label: "Emprestados" },
-              ]} />
-          </Box>
+      {/* FILTROS */}
+      <Flex gap={4} wrap="wrap" align="flex-start">
+        <FiltroMenu
+          label="Categoria"
+          opcoes={[{ valor: "", label: "Todas" }, ...categorias.map((c) => ({ valor: String(c.id), label: c.nome }))]}
+          valor={categoriaId}
+          onChange={(v) => { setCategoriaId(v); setPagina(1); }}
+        />
+        <FiltroMenu
+          label="Disponibilidade"
+          opcoes={OPCOES_DISPONIBILIDADE}
+          valor={disponivel}
+          onChange={(v) => { setDisponivel(v); setPagina(1); }}
+        />
+        <FiltroMenu
+          label="Ordenar por"
+          opcoes={OPCOES_ORDEM}
+          valor={ordem}
+          onChange={(v) => { setOrdem(v); setPagina(1); }}
+        />
 
-          <Box flex="1" minW="160px">
-            <CampoSelect label="Ordenar por" value={ordem} onChange={(v) => { setOrdem(v); setPagina(1); }}
-              opcoes={[
-                { valor: "titulo_asc", label: "Título (A-Z)" },
-                { valor: "titulo_desc", label: "Título (Z-A)" },
-                { valor: "recentes", label: "Mais recentes" },
-              ]} />
-          </Box>
+        <BotaoLimpar onClick={limparFiltros} />
+      </Flex>
 
-          <BotaoSecundario
-            onClick={() => { setTermo(""); setBusca(""); setCategoriaId(""); setDisponivel(""); setOrdem("titulo_asc"); setPagina(1); }}
-          >
-            <Icon as={FiRefreshCcw} mr={2} /> Limpar
-          </BotaoSecundario>
-        </Flex>
-      </Cartao>
+      {/* Contagem saiu do subtítulo, que agora descreve a página. Fica aqui,
+          no mesmo lugar em que a busca do cliente mostra o total. */}
+      <Flex align="center" gap={2} color={VINHO} borderBottom="1px solid" borderColor={BORDA} pb={3}>
+        <Icon as={FiBookOpen} boxSize={5} />
+        <Text fontWeight="bold" fontSize={TITULO_CARTAO}>
+          {paginacao.total} {paginacao.total === 1 ? "livro" : "livros"}
+        </Text>
+      </Flex>
 
       {/* LIVROS — grade de cartões com capa, no lugar da tabela */}
       {livros === null ? (
@@ -318,7 +396,6 @@ function CatalogoConteudo() {
               livro={livro}
               onEditar={(l) => setModal({ modo: "editar", livro: l })}
               onExcluir={(l) => setModal({ modo: "excluir", livro: l })}
-              onAlternar={alternarDisponivel}
             />
           ))}
         </SimpleGrid>
@@ -330,8 +407,14 @@ function CatalogoConteudo() {
       <Modal
         aberto={modal?.modo === "novo" || modal?.modo === "editar"}
         titulo={modal?.modo === "editar" ? "Editar livro" : "Novo livro"}
+        icone={FiBookOpen}
+        descricao={
+          modal?.modo === "editar"
+            ? "Altere a ficha deste título no acervo."
+            : "Cadastre um novo título no acervo da biblioteca."
+        }
         onFechar={() => setModal(null)}
-        largura="720px"
+        largura="820px"
         rodape={
           <>
             <BotaoSecundario onClick={() => setModal(null)} disabled={salvando}>Cancelar</BotaoSecundario>
@@ -347,6 +430,8 @@ function CatalogoConteudo() {
       <Modal
         aberto={modal?.modo === "excluir"}
         titulo="Excluir livro"
+        icone={FiTrash2}
+        descricao="Esta ação não pode ser desfeita."
         onFechar={() => setModal(null)}
         rodape={
           <>

@@ -38,6 +38,19 @@ class AuthController {
                 return erro(res, 401, 'Credenciais inválidas');
             }
 
+            // A checagem vem depois da senha de propósito: respondida antes,
+            // ela diria a qualquer um se um e-mail existe e está banido.
+            if (usuario.banido) {
+                return erro(
+                    res,
+                    403,
+                    usuario.motivo_banimento
+                        ? `Sua conta foi bloqueada. Motivo: ${usuario.motivo_banimento}`
+                        : 'Sua conta foi bloqueada. Procure a biblioteca.',
+                    'CONTA_BANIDA'
+                );
+            }
+
             const token = jwt.sign(
                 {
                     id: usuario.id,

@@ -19,6 +19,14 @@ router.get(
     UsuarioController.listarUsuarios
 );
 
+// BANIR / REATIVAR
+router.put(
+    '/:id/banimento',
+    authMiddleware,
+    adminMiddleware,
+    UsuarioController.definirBanimento
+);
+
 // ATUALIZAR QUALQUER USUÁRIO
 router.put(
     '/:id',

@@ -32,13 +32,30 @@ export default function Shell({ titulo, subtitulo, acoes, children }) {
       <Box flex="1" minW={0} p={PADDING_PAGINA}>
         {/* Conteúdo centralizado: em tela larga a tabela não estica sem fim. */}
         <Stack maxW={LARGURA_CONTEUDO} mx="auto" gap={GAP_SECAO}>
-          <Flex justify="space-between" align="flex-end" gap={4} flexWrap="wrap">
-            <Stack gap={1}>
+          {/* Cabeçalho em caixa própria: título e legenda soltos sobre o bege
+              do fundo não tinham onde se apoiar, e a descrição da página ficava
+              boiando entre o título e o primeiro cartão. A barra vinho à
+              esquerda é a mesma marca dos grupos de campo dos formulários. */}
+          <Flex
+            justify="space-between"
+            align="flex-end"
+            gap={4}
+            flexWrap="wrap"
+            bg={BRANCO}
+            border="1px solid"
+            borderColor={BORDA}
+            borderLeft="4px solid"
+            borderLeftColor={VINHO}
+            borderRadius={RAIO_CARTAO}
+            px={PADDING_CARTAO}
+            py={5}
+          >
+            <Stack gap={1} minW={0} flex="1">
               <Heading fontFamily={FONTE_TITULO} fontSize={TITULO_PAGINA} fontWeight="bold" color={VINHO} lineHeight="1.1">
                 {titulo}
               </Heading>
               {subtitulo && (
-                <Text fontSize={TEXTO_APOIO} color={TEXTO_SUAVE}>
+                <Text fontSize={TEXTO_APOIO} color={TEXTO_SUAVE} maxW="70ch">
                   {subtitulo}
                 </Text>
               )}

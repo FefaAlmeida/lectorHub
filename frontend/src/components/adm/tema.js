@@ -9,6 +9,13 @@ import { RAIO as RAIO_BASE } from "../tema";
 export const VINHO = "#4A0E17";
 export const VINHO_HOVER = "#360A11";
 export const VINHO_ATIVO = "#69333C"; // item selecionado na sidebar
+
+// Dourado da logo. Não é um tom escolhido a olho: é a média ponderada dos
+// pixels dourados de public/logoLectorHub.png (208,160,112 / 224,176,128 /
+// 208,144,96), que dá rgb(218,165,118). Serve só para fios e realces sobre o
+// vinho — não tem contraste para texto corrido.
+export const DOURADO = "#DAA576";
+export const DOURADO_FIO = "rgba(218,165,118,0.35)";
 export const TEXTO_SIDEBAR = "#F8EEE8";
 
 export const FUNDO = "#F5F2EE";
@@ -32,8 +39,12 @@ export const ERRO_HOVER = "#A11B19"; // botão destrutivo em hover
 // a própria — título em px fixo, campo 12px, rótulo 11px — e ficava com um
 // texto visivelmente menor que o resto do sistema.
 export const FONTE_TITULO = "Georgia, serif";
-export const TITULO_PAGINA = { base: "3xl", md: "4xl" }; // h1 da página
-export const TITULO_SECAO = "2xl"; // h2 dentro da página
+// Um degrau abaixo da escala do cliente. As telas do cliente têm um título por
+// página e muito espaço em volta; o painel empilha título, contagem e títulos
+// de seção na mesma dobra, e no 4xl/2xl a página virava uma sequência de
+// manchetes.
+export const TITULO_PAGINA = { base: "2xl", md: "3xl" }; // h1 da página
+export const TITULO_SECAO = "xl"; // h2 dentro da página
 export const TITULO_CARTAO = "md"; // h3 dentro de um cartão
 export const TEXTO_APOIO = "sm"; // subtítulo, campos e botões
 export const TEXTO_MIUDO = "xs"; // rótulos e metadados

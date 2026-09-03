@@ -9,7 +9,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { logoutUsuario } from "../../api";
 import { useUsuario } from "@/components/auth/RequireAuth";
 import { RAIO } from "@/components/tema";
-import { TEXTO_APOIO, TEXTO_MIUDO, TEXTO_MENU } from "@/components/adm/tema";
+import { TEXTO_APOIO, TEXTO_MIUDO, TEXTO_MENU, DOURADO, DOURADO_FIO } from "@/components/adm/tema";
 
 const VINHO = "#4A0E17";
 const VINHO_ATIVO = "#69333C";
@@ -23,6 +23,9 @@ const NAV_ITEMS = [
   { label: "Empréstimos", icon: FiRefreshCw, href: "/gestaoEeR" },
 ];
 
+// O dourado entra como fio e realce, nunca como superfície: é a cor da logo e,
+// espalhada, brigaria com o vinho em vez de acompanhá-lo. No item aberto ele
+// aparece como um traço à esquerda e no ícone.
 function ItemSidebar({ icon, label, ativo, ...props }) {
   return (
     <Flex
@@ -35,11 +38,15 @@ function ItemSidebar({ icon, label, ativo, ...props }) {
       bg={ativo ? VINHO_ATIVO : "transparent"}
       color={TEXTO}
       fontWeight={ativo ? "600" : "400"}
+      // A borda existe nos dois estados, transparente quando inativo: sem
+      // isso o item saltaria 3px para o lado ao ser selecionado.
+      borderLeft="3px solid"
+      borderLeftColor={ativo ? DOURADO : "transparent"}
       transition="all 0.2s ease"
       _hover={{ bg: ativo ? VINHO_ATIVO : "rgba(255,255,255,0.08)" }}
       {...props}
     >
-      <Icon as={icon} boxSize={5} />
+      <Icon as={icon} boxSize={5} color={ativo ? DOURADO : "inherit"} />
       <Text fontSize={TEXTO_MENU}>{label}</Text>
     </Flex>
   );
@@ -72,7 +79,7 @@ export default function SideBarAdm() {
     <ItemSidebar as="button" type="button" w="100%" icon={FiLogOut} label="Sair" ativo={false} onClick={handleLogout} />
   );
 
-  const divisoria = <Box h="1px" bg="rgba(255,255,255,0.18)" />;
+  const divisoria = <Box h="1px" bg={DOURADO_FIO} />;
 
   // O menu de usuário vivia no cabeçalho da área do cliente, que não aparece
   // mais no painel. Sem isto, o admin não veria com que conta está logado.
@@ -82,7 +89,10 @@ export default function SideBarAdm() {
         w="34px"
         h="34px"
         borderRadius="full"
-        bg="rgba(255,255,255,0.15)"
+        bg="rgba(255,255,255,0.10)"
+        border="1px solid"
+        borderColor={DOURADO_FIO}
+        color={DOURADO}
         align="center"
         justify="center"
         fontWeight="bold"
@@ -106,32 +116,50 @@ export default function SideBarAdm() {
   return (
     <>
       {/* Coluna fixa a partir de lg. O painel tem tabelas largas, então ele
-          precisa de mais espaço que a área do cliente antes de empilhar. */}
-      <Box
+          precisa de mais espaço que a área do cliente antes de empilhar.
+          `sticky` prende a coluna no topo durante a rolagem sem tirá-la do
+          fluxo, então o conteúdo continua ocupando o espaço restante sozinho.
+          `alignSelf` é obrigatório: o Flex do Shell estica o item até a altura
+          da página, e um elemento dessa altura não tem onde grudar. */}
+      <Flex
+        as="nav"
+        direction="column"
         w="280px"
-        minH="100vh"
+        h="100vh"
+        position="sticky"
+        top={0}
+        alignSelf="flex-start"
         bg={VINHO}
         color={TEXTO}
+        borderRight="1px solid"
+        borderColor={DOURADO_FIO}
         px={6}
         py={8}
         flexShrink={0}
-        display={{ base: "none", lg: "block" }}
+        display={{ base: "none", lg: "flex" }}
       >
-        <Flex justify="center" mb={7}>
-          <Box as="img" src="/logoLectorHub.png" alt="Logo Lector Hub" w="210px" h="210px" objectFit="contain" />
+        {/* A logo é a única parte elástica da coluna: ela ocupa o que sobra
+            depois do menu, até 252px (20% acima dos 210px anteriores), e
+            encolhe em tela baixa.
+            Com altura fixa, o "Sair" caía abaixo da dobra e a coluna passava a
+            ter barra de rolagem própria. */}
+        <Flex justify="center" align="center" flex="1 1 auto" minH={0} maxH="252px" mb={7}>
+          <Box as="img" src="/logoLectorHub.png" alt="Logo Lector Hub" maxH="100%" maxW="100%" objectFit="contain" />
         </Flex>
 
         {divisoria}
 
-        <VStack align="stretch" gap={2} mt={6}>
+        <VStack align="stretch" gap={2} mt={6} flexShrink={0}>
           {itens}
         </VStack>
 
-        <Box h="1px" bg="rgba(255,255,255,0.18)" my={6} />
+        <Box h="1px" bg={DOURADO_FIO} my={6} flexShrink={0} />
 
-        {identidade}
-        {sair}
-      </Box>
+        <Box flexShrink={0}>
+          {identidade}
+          {sair}
+        </Box>
+      </Flex>
 
       {/* Barra no topo abaixo de lg. Antes a coluna de 280px era fixa em
           qualquer largura e engolia a tela num notebook estreito. */}
@@ -142,6 +170,8 @@ export default function SideBarAdm() {
         zIndex="sticky"
         bg={VINHO}
         color={TEXTO}
+        borderBottom="1px solid"
+        borderColor={DOURADO_FIO}
         w="100%"
       >
         <Flex align="center" justify="space-between" px={4} py={3}>

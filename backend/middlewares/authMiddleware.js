@@ -23,6 +23,13 @@ const authMiddleware = async (req, res, next) => {
 
         if (!usuario) return erro(res, 401, 'Usuário não encontrado.', 'NAO_AUTENTICADO');
 
+        // O usuário é relido do banco a cada requisição, então banir alguém
+        // com sessão aberta tem efeito imediato — sem isso o token continuaria
+        // valendo até expirar.
+        if (usuario.banido) {
+            return erro(res, 403, 'Sua conta foi bloqueada.', 'CONTA_BANIDA');
+        }
+
         req.usuario = { id: usuario.id, tipo: usuario.tipo, email: usuario.email };
         next();
     } catch (error) {
